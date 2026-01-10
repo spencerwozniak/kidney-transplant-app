@@ -99,6 +99,7 @@ export const typography = {
 
   // Body Text
   body: {
+    xlarge: 'text-xl text-gray-800',
     large: 'text-lg text-gray-700',
     medium: 'text-base text-gray-700',
     small: 'text-sm text-gray-600',
@@ -177,6 +178,15 @@ export const buttons = {
     text: 'text-center text-lg font-semibold',
     textSelected: 'text-green-700',
     textUnselected: 'text-gray-700',
+  },
+
+  // Danger/Red Button
+  danger: {
+    base: 'rounded-2xl border-2 px-6 py-4 shadow-sm active:opacity-90',
+    enabled: 'border-red-500 bg-red-50',
+    disabled: 'border-gray-200 bg-gray-50',
+    text: 'text-center text-lg font-semibold text-red-600',
+    textDisabled: 'text-center text-lg font-semibold text-gray-400',
   },
 } as const;
 

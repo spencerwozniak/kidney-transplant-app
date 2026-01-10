@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -10,30 +10,85 @@ import {
   combineClasses,
   layout,
 } from '../styles/theme';
+import { apiService, PatientStatus, TransplantChecklist } from '../services/api';
 
-type ResultsSummary = {
-  hasAbsolute: boolean;
-  hasRelative: boolean;
-  absoluteContraindications: Array<{ id: string; question: string }>;
-  relativeContraindications: Array<{ id: string; question: string }>;
+type ChecklistSummary = {
+  currentStep: number;
+  totalSteps: number;
+  completedSteps: number;
+  currentStepTitle: string;
+  progressPercentage: number;
 };
 
 type HomeScreenProps = {
   patientName: string;
-  results?: ResultsSummary;
   onViewResults?: () => void;
+  onViewChecklist?: () => void;
   onNavigateToQuestionnaire?: () => void;
   onNavigateToExamples?: () => void;
+  onDeletePatient?: () => void;
 };
 
 export const HomeScreen = ({
   patientName,
-  results,
   onViewResults,
+  onViewChecklist,
   onNavigateToQuestionnaire,
   onNavigateToExamples,
+  onDeletePatient,
 }: HomeScreenProps) => {
+  const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
+  const [checklist, setChecklist] = useState<ChecklistSummary | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [isLoadingChecklist, setIsLoadingChecklist] = useState(true);
 
+  useEffect(() => {
+    fetchPatientStatus();
+    fetchChecklist();
+  }, []);
+
+  const fetchPatientStatus = async () => {
+    setIsLoadingStatus(true);
+    try {
+      const status = await apiService.getPatientStatus();
+      setPatientStatus(status);
+    } catch (error: any) {
+      // If status not found (404), that's okay - patient hasn't completed questionnaire yet
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        setPatientStatus(null);
+      } else {
+        console.error('Error fetching patient status:', error);
+      }
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
+
+  const fetchChecklist = async () => {
+    setIsLoadingChecklist(true);
+    try {
+      const checklistData = await apiService.getChecklist();
+      const sortedItems = [...checklistData.items].sort((a, b) => a.order - b.order);
+      const completedSteps = sortedItems.filter((item) => item.is_complete).length;
+      const totalSteps = sortedItems.length;
+      const currentStepIndex = sortedItems.findIndex((item) => !item.is_complete);
+      const currentStep = currentStepIndex >= 0 ? currentStepIndex + 1 : totalSteps;
+      const currentStepItem = sortedItems.find((item) => item.order === currentStep);
+
+      setChecklist({
+        currentStep,
+        totalSteps,
+        completedSteps,
+        currentStepTitle: currentStepItem?.title || 'All Complete',
+        progressPercentage: Math.round((completedSteps / totalSteps) * 100),
+      });
+    } catch (error: any) {
+      console.error('Error fetching checklist:', error);
+      setChecklist(null);
+    } finally {
+      setIsLoadingChecklist(false);
+    }
+  };
   return (
     <SafeAreaView className={layout.container.default}>
       <ScrollView
@@ -70,14 +125,14 @@ export const HomeScreen = ({
             </View>
 
             {/* Transplant Status Card */}
-            {results && (
+            {!isLoadingStatus && patientStatus && onViewResults && (
               <TouchableOpacity
                 className={combineClasses(
                   cards.default.container,
                   'mb-6 w-full',
-                  results.hasAbsolute
+                  patientStatus.has_absolute
                     ? 'border-l-4 border-red-500'
-                    : results.hasRelative
+                    : patientStatus.has_relative
                       ? 'border-l-4 border-yellow-500'
                       : 'border-l-4 border-green-500'
                 )}
@@ -89,24 +144,24 @@ export const HomeScreen = ({
                   </Text>
                   <Text className="text-lg">→</Text>
                 </View>
-                {results.hasAbsolute ? (
+                {patientStatus.has_absolute ? (
                   <View>
                     <Text className={combineClasses(typography.body.small, 'mb-1 text-red-700')}>
                       ⚠️ Absolute contraindications identified
                     </Text>
                     <Text className="text-xs text-gray-600">
-                      {results.absoluteContraindications.length} condition(s) require discussion with
-                      your care team
+                      {patientStatus.absolute_contraindications.length} condition(s) require
+                      discussion with your care team
                     </Text>
                   </View>
-                ) : results.hasRelative ? (
+                ) : patientStatus.has_relative ? (
                   <View>
                     <Text className={combineClasses(typography.body.small, 'mb-1 text-yellow-700')}>
                       ⚠️ Relative contraindications identified
                     </Text>
                     <Text className="text-xs text-gray-600">
-                      {results.relativeContraindications.length} factor(s) may need to be addressed
-                      before evaluation
+                      {patientStatus.relative_contraindications.length} factor(s) may need to be
+                      addressed before evaluation
                     </Text>
                   </View>
                 ) : (
@@ -123,10 +178,40 @@ export const HomeScreen = ({
               </TouchableOpacity>
             )}
 
-            {/* Subtitle - Using typography styles */}
-            <Text className={combineClasses(typography.body.large, 'mb-12 text-left')}>
-              We're excited to have you here!
-            </Text>
+            {/* Transplant Checklist Card */}
+            {checklist && onViewChecklist && (
+              <TouchableOpacity
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 w-full border-l-4 border-blue-500'
+                )}
+                onPress={onViewChecklist}
+                activeOpacity={0.7}>
+                <View className="mb-2 flex-row items-center justify-between">
+                  <Text className={combineClasses(typography.h5, 'font-semibold')}>
+                    Transplant Checklist
+                  </Text>
+                  <Text className="text-lg">→</Text>
+                </View>
+                <View className="mb-2">
+                  <Text className={combineClasses(typography.body.small, 'mb-1 text-blue-700')}>
+                    Step {checklist.currentStep} of {checklist.totalSteps}:{' '}
+                    {checklist.currentStepTitle}
+                  </Text>
+                  <Text className="text-xs text-gray-600">
+                    {checklist.completedSteps} of {checklist.totalSteps} steps completed (
+                    {checklist.progressPercentage}%)
+                  </Text>
+                </View>
+                {/* Progress Bar */}
+                <View className="h-2 w-full rounded-full bg-gray-200">
+                  <View
+                    className="h-full rounded-full bg-blue-500"
+                    style={{ width: `${checklist.progressPercentage}%` }}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
 
             {/* Decorative Divider - Using divider styles */}
             <View className={dividers.full.container}>
@@ -144,7 +229,7 @@ export const HomeScreen = ({
                   className={combineClasses(buttons.primary.base, buttons.primary.enabled, 'mb-3')}
                   onPress={onNavigateToQuestionnaire}
                   activeOpacity={0.8}>
-                  <Text className={buttons.primary.text}>Start Eligibility Assessment</Text>
+                  <Text className={buttons.primary.text}>Retake Eligibility Assessment</Text>
                 </TouchableOpacity>
               )}
 
@@ -154,6 +239,15 @@ export const HomeScreen = ({
                   onPress={onNavigateToExamples}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>View Style Examples</Text>
+                </TouchableOpacity>
+              )}
+
+              {onDeletePatient && (
+                <TouchableOpacity
+                  className={combineClasses(buttons.danger.base, buttons.danger.enabled, 'mb-3')}
+                  onPress={onDeletePatient}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.danger.text}>Delete Patient Data</Text>
                 </TouchableOpacity>
               )}
             </View>

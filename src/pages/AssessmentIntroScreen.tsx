@@ -9,7 +9,10 @@ type AssessmentIntroScreenProps = {
   onBack?: () => void;
 };
 
-export const AssessmentIntroScreen = ({ onBeginAssessment, onBack }: AssessmentIntroScreenProps) => {
+export const AssessmentIntroScreen = ({
+  onBeginAssessment,
+  onBack,
+}: AssessmentIntroScreenProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
 
@@ -46,7 +49,7 @@ export const AssessmentIntroScreen = ({ onBeginAssessment, onBack }: AssessmentI
   };
 
   return (
-    <View className={layout.container.default}>
+    <SafeAreaView className={layout.container.default}>
       <NavigationBar onBack={onBack} />
       <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
         <Animated.View
@@ -60,12 +63,12 @@ export const AssessmentIntroScreen = ({ onBeginAssessment, onBack }: AssessmentI
             className={combineClasses(
               decorative.circles.small,
               decorative.circles.green,
-              'absolute right-10 top-20 opacity-30'
+              'top-30 absolute right-10 opacity-30'
             )}
           />
 
           {/* Header */}
-          <View className="mb-6">
+          <View className="mb-6 mt-[80px]">
             <Text className={combineClasses(typography.h2, 'mb-3')}>
               Transplant Eligibility Self-Assessment
             </Text>
@@ -73,34 +76,27 @@ export const AssessmentIntroScreen = ({ onBeginAssessment, onBack }: AssessmentI
           </View>
 
           {/* Description Card */}
-          <View className={combineClasses(cards.default.container, 'mb-6')}>
-            <Text className={combineClasses(typography.body.medium, 'mb-4 leading-6')}>
-              This educational tool helps you understand whether you might be a candidate for
-              transplant evaluation. It's designed to help you understand general criteria and
-              identify whether you should discuss referral with your care team.
+          <View className={combineClasses('mb-6')}>
+            <Text className={combineClasses(typography.body.xlarge, 'mb-4 leading-6')}>
+              This assessment helps you understand whether you might be a candidate for transplant
+              evaluation.
             </Text>
 
-            <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
+            <Text className={combineClasses(typography.body.large, 'mb-2 font-semibold')}>
               What to expect:
             </Text>
             <View className="mb-2">
-              <Text className={combineClasses(typography.body.small, 'mb-1')}>
-                • Answer questions about your health and medical history
+              <Text className={combineClasses(typography.body.large, 'mb-1')}>
+                • Questions about medical conditions
               </Text>
-              <Text className={combineClasses(typography.body.small, 'mb-1')}>
-                • Learn about absolute and relative contraindications
+              <Text className={combineClasses(typography.body.large, 'mb-1')}>
+                • Questions about lifestyle factors
               </Text>
-              <Text className={combineClasses(typography.body.small, 'mb-1')}>
-                • Receive an assessment summary to discuss with your care team
+              <Text className={combineClasses(typography.body.large, 'mb-1')}>
+                • Questions about social situation
               </Text>
-            </View>
-
-            <View className={combineClasses(cards.colored.blue, 'mt-4')}>
-              <Text className="text-sm font-semibold text-blue-900">Important Note</Text>
-              <Text className="mt-1 text-sm leading-5 text-blue-800">
-                There is no absolute age limit for transplantation. Advanced age alone is not a
-                contraindication. Patients over 70 can and do receive successful transplants with
-                significant survival benefit.
+              <Text className={combineClasses(typography.body.large, 'mb-1')}>
+                • Identification of contraindications
               </Text>
             </View>
           </View>
@@ -114,7 +110,6 @@ export const AssessmentIntroScreen = ({ onBeginAssessment, onBack }: AssessmentI
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
-

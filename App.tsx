@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import { OnboardingScreen } from './src/pages/OnboardingScreen';
 import { PatientDetailsScreen1 } from './src/pages/PatientDetailsScreen1';
 import { PatientDetailsScreen2 } from './src/pages/PatientDetailsScreen2';
@@ -7,6 +7,7 @@ import { AssessmentIntroScreen } from './src/pages/AssessmentIntroScreen';
 import { HomeScreen } from './src/pages/HomeScreen';
 import { TransplantQuestionnaire } from './src/pages/TransplantQuestionnaire';
 import { ResultsDetailScreen } from './src/pages/ResultsDetailScreen';
+import { ChecklistTimelineScreen } from './src/pages/ChecklistTimelineScreen';
 import { StyleExamples } from './src/pages/StyleExamples';
 import { StatusBar } from 'expo-status-bar';
 import { apiService, Patient } from './src/services/api';
@@ -21,19 +22,12 @@ type Screen =
   | 'home'
   | 'questionnaire'
   | 'results-detail'
+  | 'checklist-timeline'
   | 'examples';
-
-type ResultsSummary = {
-  hasAbsolute: boolean;
-  hasRelative: boolean;
-  absoluteContraindications: Array<{ id: string; question: string }>;
-  relativeContraindications: Array<{ id: string; question: string }>;
-};
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [results, setResults] = useState<ResultsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if patient exists on mount
@@ -45,9 +39,8 @@ export default function App() {
     try {
       const existingPatient = await apiService.getPatient();
       setPatient(existingPatient);
-      // If patient exists, check for existing questionnaire results
+      // If patient exists, navigate to home
       if (existingPatient.id) {
-        // TODO: Fetch latest questionnaire submission and set results
         setCurrentScreen('home');
       }
     } catch (error) {
@@ -56,10 +49,18 @@ export default function App() {
     }
   };
 
+
   const [patientDataPart1, setPatientDataPart1] = useState<{
     name: string;
     email?: string;
     phone?: string;
+  } | null>(null);
+
+  const [patientDataPart2, setPatientDataPart2] = useState<{
+    date_of_birth: string;
+    sex?: string;
+    height?: number;
+    weight?: number;
   } | null>(null);
 
   const handleGetStarted = () => {
@@ -81,6 +82,9 @@ export default function App() {
       console.error('Patient data part 1 is missing');
       return;
     }
+
+    // Cache the data before proceeding
+    setPatientDataPart2(data);
 
     setIsLoading(true);
     try {
@@ -106,6 +110,8 @@ export default function App() {
       console.log('Patient saved successfully:', savedPatient);
       setPatient(savedPatient);
       setPatientDataPart1(null); // Clear temporary data
+      setPatientDataPart2(null); // Clear temporary data
+      // Checklist is automatically created on backend when patient is created
       setCurrentScreen('assessment-intro');
     } catch (error: any) {
       console.error('Error saving patient:', error);
@@ -127,16 +133,54 @@ export default function App() {
     }
   };
 
-  const handleQuestionnaireComplete = (questionnaireResults: ResultsSummary) => {
-    // Results are saved and passed back, set them and navigate to home
-    setResults(questionnaireResults);
+  const handleQuestionnaireComplete = () => {
+    // Questionnaire is saved, status will be computed on backend
+    // Navigate to home where status will be fetched
     setCurrentScreen('home');
   };
 
   const handleViewResults = () => {
-    if (results) {
-      setCurrentScreen('results-detail');
-    }
+    // Navigate to results detail screen, which will fetch status from API
+    setCurrentScreen('results-detail');
+  };
+
+  const handleViewChecklist = () => {
+    setCurrentScreen('checklist-timeline');
+  };
+
+  const handleDeletePatient = () => {
+    // Confirm deletion
+    Alert.alert(
+      'Delete Patient Data',
+      'Are you sure you want to delete all patient data? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              await apiService.deletePatient();
+              // Clear all state
+              setPatient(null);
+              setPatientDataPart1(null);
+              setPatientDataPart2(null);
+              // Navigate back to onboarding
+              setCurrentScreen('onboarding');
+            } catch (error: any) {
+              console.error('Error deleting patient:', error);
+              Alert.alert('Error', `Failed to delete patient: ${error?.message || 'Unknown error'}`);
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -157,28 +201,38 @@ export default function App() {
         <PatientDetailsScreen2
           onNext={handlePatientDetails2Next}
           onBack={() => setCurrentScreen('patient-details-1')}
+          initialData={patientDataPart2 || undefined}
         />
       ) : currentScreen === 'assessment-intro' ? (
         <AssessmentIntroScreen
           onBeginAssessment={handleBeginAssessment}
-          onBack={() => setCurrentScreen('patient-details-2')}
+          onBack={() => {
+            // Navigate back to patient details (first time) or home (retaking)
+            setCurrentScreen('patient-details-2');
+          }}
         />
       ) : currentScreen === 'home' ? (
         <HomeScreen
           patientName={patient?.name || 'Friend'}
-          results={results || undefined}
           onViewResults={handleViewResults}
-          onNavigateToQuestionnaire={() => setCurrentScreen('questionnaire')}
+          onViewChecklist={handleViewChecklist}
+          onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
           onNavigateToExamples={() => setCurrentScreen('examples')}
+          onDeletePatient={handleDeletePatient}
         />
       ) : currentScreen === 'questionnaire' ? (
         <TransplantQuestionnaire
           patientId={patient?.id || ''}
           onComplete={handleQuestionnaireComplete}
           onNavigateToHome={() => setCurrentScreen('home')}
+          onNavigateToAssessmentIntro={() => setCurrentScreen('assessment-intro')}
         />
       ) : currentScreen === 'results-detail' ? (
-        <ResultsDetailScreen results={results!} onNavigateToHome={() => setCurrentScreen('home')} />
+        <ResultsDetailScreen onNavigateToHome={() => setCurrentScreen('home')} />
+      ) : currentScreen === 'checklist-timeline' ? (
+        <ChecklistTimelineScreen
+          onNavigateToHome={() => setCurrentScreen('home')}
+        />
       ) : (
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />
       )}

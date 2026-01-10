@@ -49,11 +49,15 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
           transparent={true}
           animationType="fade"
           onRequestClose={() => setShowInfoModal(false)}>
-          <View className="flex-1 items-center justify-center bg-black/50 px-4">
-            <View className={combineClasses(cards.default.elevated, 'max-h-[80%] w-full max-w-md')}>
+          <View className="flex-1 items-center justify-center bg-black/50 px-4 py-8">
+            <View
+              className={combineClasses(cards.default.elevated, 'w-full max-w-md p-6')}
+              style={{ maxHeight: '80%' }}>
               {/* Modal Header */}
               <View className="mb-4 flex-row items-center justify-between">
-                <Text className={combineClasses(typography.h4, 'flex-1')}>{infoModal.heading}</Text>
+                <Text className={combineClasses(typography.h4, 'flex-1 pr-2')}>
+                  {infoModal.heading}
+                </Text>
                 <TouchableOpacity
                   onPress={() => setShowInfoModal(false)}
                   activeOpacity={0.7}
@@ -63,11 +67,14 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
               </View>
 
               {/* Modal Content */}
-              <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: 400 }}
+                contentContainerStyle={{ paddingBottom: 8 }}>
                 <Text
                   className={combineClasses(
                     typography.body.medium,
-                    'whitespace-pre-line leading-7'
+                    'whitespace-pre-line leading-7 text-gray-700'
                   )}>
                   {infoModal.description}
                 </Text>

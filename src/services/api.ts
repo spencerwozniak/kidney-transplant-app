@@ -2,9 +2,12 @@
  * API Service for backend communication
  */
 
-const API_BASE_URL = __DEV__
-  ? 'http://0.0.0.0:8000' // Development
-  : 'https://your-production-api.com'; // Production
+import { Platform } from 'react-native';
+// - iOS Simulator: use 'http://localhost:8000'
+// - Android Emulator: use 'http://10.0.2.2:8000'
+// - Physical Device: use your machine's local IP (e.g., 'http://192.168.1.81:8000')
+//   Find your IP with: ipconfig (Windows) or ifconfig (Mac/Linux)
+const API_BASE_URL = __DEV__ ? 'http://192.168.1.81:8000' : 'https://your-production-api.com'; // Production
 
 export type Patient = {
   id?: string;
@@ -21,8 +24,40 @@ export type QuestionnaireSubmission = {
   id?: string;
   patient_id: string;
   answers: Record<string, string>; // question_id -> 'yes' | 'no'
-  results?: Record<string, any>;
   submitted_at?: string;
+};
+
+export type Contraindication = {
+  id: string;
+  question: string;
+};
+
+export type PatientStatus = {
+  id?: string;
+  patient_id: string;
+  has_absolute: boolean;
+  has_relative: boolean;
+  absolute_contraindications: Contraindication[];
+  relative_contraindications: Contraindication[];
+  updated_at?: string;
+};
+
+export type ChecklistItem = {
+  id: string;
+  title: string;
+  description?: string;
+  is_complete: boolean;
+  notes?: string;
+  completed_at?: string;
+  order: number;
+};
+
+export type TransplantChecklist = {
+  id?: string;
+  patient_id: string;
+  items: ChecklistItem[];
+  created_at?: string;
+  updated_at?: string;
 };
 
 class ApiService {
@@ -34,6 +69,7 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    console.log(`[API] Making request to: ${url}`);
 
     try {
       const response = await fetch(url, {
@@ -69,21 +105,35 @@ class ApiService {
   }
 
   async createPatient(patient: Patient): Promise<Patient> {
-    return this.request<Patient>('/patients', {
+    return this.request<Patient>('/api/v1/patients', {
       method: 'POST',
       body: JSON.stringify(patient),
     });
   }
 
   async getPatient(): Promise<Patient> {
-    return this.request<Patient>('/patients');
+    return this.request<Patient>('/api/v1/patients');
   }
 
   async submitQuestionnaire(submission: QuestionnaireSubmission): Promise<QuestionnaireSubmission> {
-    return this.request<QuestionnaireSubmission>('/questionnaire', {
+    return this.request<QuestionnaireSubmission>('/api/v1/questionnaire', {
       method: 'POST',
       body: JSON.stringify(submission),
     });
+  }
+
+  async deletePatient(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/v1/patients', {
+      method: 'DELETE',
+    });
+  }
+
+  async getPatientStatus(): Promise<PatientStatus> {
+    return this.request<PatientStatus>('/api/v1/patient-status');
+  }
+
+  async getChecklist(): Promise<TransplantChecklist> {
+    return this.request<TransplantChecklist>('/api/v1/checklist');
   }
 }
 
