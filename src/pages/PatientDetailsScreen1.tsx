@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Animated } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Animated,
+  Platform,
+  InputAccessoryView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { buttons, typography, inputs, combineClasses, layout } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
@@ -26,6 +35,15 @@ export const PatientDetailsScreen1 = ({
   });
 
   const [errors, setErrors] = useState<{ name?: string }>({});
+  const nameInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const phoneInputRef = useRef<TextInput>(null);
+  const nameInputAccessoryViewID = 'nameInputAccessoryView';
+  const emailInputAccessoryViewID = 'emailInputAccessoryView';
+  const phoneInputAccessoryViewID = 'phoneInputAccessoryView';
+  const previousNameRef = useRef<string>(initialData?.name || '');
+  const previousEmailRef = useRef<string>(initialData?.email || '');
+  const previousPhoneRef = useRef<string>(initialData?.phone || '');
 
   React.useEffect(() => {
     Animated.parallel([
@@ -83,6 +101,55 @@ export const PatientDetailsScreen1 = ({
     }
   };
 
+  const handleNameChange = (value: string) => {
+    const previousValue = previousNameRef.current;
+    previousNameRef.current = value;
+    updateField('name', value);
+
+    // Detect autocomplete: if value changed significantly (likely autocomplete was used)
+    // Check if it went from empty/short to a longer complete value
+    const wasShort = !previousValue || previousValue.length < 2;
+    const isComplete = value.length >= 3 && (value.includes(' ') || value.length > 8);
+
+    if (wasShort && isComplete && value.length > (previousValue?.length || 0) + 2) {
+      setTimeout(() => {
+        emailInputRef.current?.focus();
+      }, 0);
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    const previousValue = previousEmailRef.current;
+    previousEmailRef.current = value;
+    updateField('email', value);
+
+    // Detect autocomplete: if value changed significantly to include @ and .
+    const wasShort = !previousValue || previousValue.length < 3;
+    const isComplete = value.includes('@') && value.includes('.');
+
+    if (wasShort && isComplete && value.length > (previousValue?.length || 0) + 5) {
+      setTimeout(() => {
+        phoneInputRef.current?.focus();
+      }, 0);
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const previousValue = previousPhoneRef.current;
+    previousPhoneRef.current = value;
+    updateField('phone', value);
+
+    // Detect autocomplete: if value changed significantly to a complete phone number
+    const wasShort = !previousValue || previousValue.length < 3;
+    const isComplete = value.length >= 10;
+
+    if (wasShort && isComplete && value.length > (previousValue?.length || 0) + 5) {
+      setTimeout(() => {
+        phoneInputRef.current?.blur();
+      }, 0);
+    }
+  };
+
   return (
     <SafeAreaView className={layout.container.default}>
       <NavigationBar onBack={onBack} />
@@ -105,11 +172,19 @@ export const PatientDetailsScreen1 = ({
             </Text>
             <View className={inputs.default.container}>
               <TextInput
+                ref={nameInputRef}
                 className={inputs.default.input}
                 placeholder="Enter your full name"
                 placeholderTextColor={inputs.default.placeholder}
                 value={formData.name}
-                onChangeText={(value) => updateField('name', value)}
+                onChangeText={handleNameChange}
+                textContentType="name"
+                autoComplete="name"
+                inputAccessoryViewID={null}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  emailInputRef.current?.focus();
+                }}
               />
             </View>
             {errors.name && <Text className="mt-1 text-xs text-red-500">{errors.name}</Text>}
@@ -122,13 +197,21 @@ export const PatientDetailsScreen1 = ({
             </Text>
             <View className={inputs.default.container}>
               <TextInput
+                ref={emailInputRef}
                 className={inputs.default.input}
                 placeholder="Enter your email"
                 placeholderTextColor={inputs.default.placeholder}
                 value={formData.email}
-                onChangeText={(value) => updateField('email', value)}
+                onChangeText={handleEmailChange}
+                textContentType="emailAddress"
+                autoComplete="email"
                 keyboardType="email-address"
+                inputAccessoryViewID={null}
                 autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  phoneInputRef.current?.focus();
+                }}
               />
             </View>
           </View>
@@ -140,12 +223,20 @@ export const PatientDetailsScreen1 = ({
             </Text>
             <View className={inputs.default.container}>
               <TextInput
+                ref={phoneInputRef}
                 className={inputs.default.input}
                 placeholder="Enter your phone number"
                 placeholderTextColor={inputs.default.placeholder}
                 value={formData.phone}
-                onChangeText={(value) => updateField('phone', value)}
+                onChangeText={handlePhoneChange}
+                textContentType="telephoneNumber"
+                autoComplete="tel"
                 keyboardType="phone-pad"
+                inputAccessoryViewID={Platform.OS === 'ios' ? phoneInputAccessoryViewID : undefined}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  phoneInputRef.current?.blur();
+                }}
               />
             </View>
           </View>
@@ -159,7 +250,23 @@ export const PatientDetailsScreen1 = ({
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* Input Accessory Views for Keyboard Toolbars */}
+      {Platform.OS === 'ios' && (
+        <>
+          {/* Phone Input Accessory View */}
+          <InputAccessoryView nativeID={phoneInputAccessoryViewID}>
+            <View className="flex-row items-center justify-end border-t border-gray-200 bg-gray-100 px-4 py-2">
+              <TouchableOpacity
+                onPress={() => {
+                  phoneInputRef.current?.blur();
+                }}>
+                <Text className="text-xl font-semibold text-blue-500">Done</Text>
+              </TouchableOpacity>
+            </View>
+          </InputAccessoryView>
+        </>
+      )}
     </SafeAreaView>
   );
 };
-

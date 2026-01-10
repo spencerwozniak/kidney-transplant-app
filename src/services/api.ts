@@ -3,7 +3,7 @@
  */
 
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:8000' // Development
+  ? 'http://0.0.0.0:8000' // Development
   : 'https://your-production-api.com'; // Production
 
 export type Patient = {
@@ -34,20 +34,38 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: response.statusText }));
-      throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const error = await response.json();
+          errorMessage = error.detail || error.message || errorMessage;
+        } catch {
+          // If JSON parsing fails, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      // Handle network errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error(
+          `Unable to connect to server. Please ensure the backend is running at ${this.baseUrl}`
+        );
+      }
+      throw error;
     }
-
-    return response.json();
   }
 
   async createPatient(patient: Patient): Promise<Patient> {

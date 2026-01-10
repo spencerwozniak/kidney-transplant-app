@@ -77,7 +77,10 @@ export default function App() {
     height?: number;
     weight?: number;
   }) => {
-    if (!patientDataPart1) return;
+    if (!patientDataPart1) {
+      console.error('Patient data part 1 is missing');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -85,13 +88,34 @@ export default function App() {
         ...patientDataPart1,
         ...data,
       };
+      
+      // Ensure height and weight are numbers, not strings
+      if (patientData.height !== undefined) {
+        patientData.height = typeof patientData.height === 'string' 
+          ? parseFloat(patientData.height) 
+          : patientData.height;
+      }
+      if (patientData.weight !== undefined) {
+        patientData.weight = typeof patientData.weight === 'string' 
+          ? parseFloat(patientData.weight) 
+          : patientData.weight;
+      }
+      
+      console.log('Saving patient data:', JSON.stringify(patientData, null, 2));
       const savedPatient = await apiService.createPatient(patientData);
+      console.log('Patient saved successfully:', savedPatient);
       setPatient(savedPatient);
       setPatientDataPart1(null); // Clear temporary data
       setCurrentScreen('assessment-intro');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving patient:', error);
-      // TODO: Show error message
+      console.error('Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        response: error?.response,
+      });
+      // TODO: Show error message to user
+      alert(`Failed to save patient: ${error?.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -154,10 +178,7 @@ export default function App() {
           onNavigateToHome={() => setCurrentScreen('home')}
         />
       ) : currentScreen === 'results-detail' ? (
-        <ResultsDetailScreen
-          results={results!}
-          onNavigateToHome={() => setCurrentScreen('home')}
-        />
+        <ResultsDetailScreen results={results!} onNavigateToHome={() => setCurrentScreen('home')} />
       ) : (
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />
       )}
