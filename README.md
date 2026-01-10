@@ -57,3 +57,31 @@ Hackathon MVP — focused on demonstrating:
 - Patient-controlled data portability
 - Explainable navigation of the transplant pathway
 - Clear value in under 2 minutes of demo time
+
+---
+
+## Directory Structure
+
+```
+my-expo-app/
+├── src/
+|   ├── App.tsx
+│   ├── pages/           # Full page/screen components
+│   │   ├── HomeScreen.tsx
+│   │   ├── TransplantQuestionnaire.tsx
+│   │   └── StyleExamples.tsx
+│   ├── components/      # Reusable UI/UX components
+│   │   ├── Container.tsx
+│   │   ├── EditScreenInfo.tsx
+│   │   └── ScreenContent.tsx
+│   └── styles/          # Theme and style definitions
+│       ├── global.css
+│       ├── theme.ts
+│       ├── index.ts
+│       └── README.md
+├── app.json
+├── metro.config.js
+├── package.json
+├── tailwind.config.js
+└── tsconfig.json
+```
