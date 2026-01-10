@@ -61,6 +61,14 @@ export type TransplantChecklist = {
   updated_at?: string;
 };
 
+export type FinancialProfile = {
+  id?: string;
+  patient_id: string;
+  answers: Record<string, string | null>; // question_id -> answer or null
+  submitted_at?: string;
+  updated_at?: string;
+};
+
 class ApiService {
   public baseUrl: string;
 
@@ -198,6 +206,24 @@ class ApiService {
       }
       throw error;
     }
+  }
+
+  async saveFinancialProfile(profile: FinancialProfile): Promise<FinancialProfile> {
+    return this.request<FinancialProfile>('/api/v1/financial-profile', {
+      method: 'POST',
+      body: JSON.stringify(profile),
+    });
+  }
+
+  async submitFinancialProfile(profile: FinancialProfile): Promise<FinancialProfile> {
+    return this.request<FinancialProfile>('/api/v1/financial-profile/submit', {
+      method: 'POST',
+      body: JSON.stringify(profile),
+    });
+  }
+
+  async getFinancialProfile(): Promise<FinancialProfile> {
+    return this.request<FinancialProfile>('/api/v1/financial-profile');
   }
 }
 

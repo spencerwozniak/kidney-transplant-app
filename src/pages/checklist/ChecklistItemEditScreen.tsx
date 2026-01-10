@@ -237,7 +237,11 @@ export const ChecklistItemEditScreen = ({
                 </Text>
                 <TouchableOpacity
                   className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={onRequestDocuments}
+                  onPress={async () => {
+                    // Save changes before navigating to documents screen
+                    await handleSave();
+                    onRequestDocuments();
+                  }}
                   disabled={!isComplete}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>Request Documents</Text>

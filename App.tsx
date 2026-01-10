@@ -4,9 +4,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingScreen } from './src/pages/onboarding/OnboardingScreen';
 import { PatientDetailsScreen1 } from './src/pages/onboarding/PatientDetailsScreen1';
 import { PatientDetailsScreen2 } from './src/pages/onboarding/PatientDetailsScreen2';
-import { AssessmentIntroScreen } from './src/pages/assessment/AssessmentIntroScreen';
+import { AssessmentIntroScreen } from './src/pages/transplant-assessment/AssessmentIntroScreen';
 import { HomeScreen } from './src/pages/HomeScreen';
-import { TransplantQuestionnaire } from './src/pages/assessment/TransplantQuestionnaire';
+import { TransplantQuestionnaire } from './src/pages/transplant-assessment/TransplantQuestionnaire';
+import { FinancialIntroScreen } from './src/pages/financial-assessment/FinancialIntroScreen';
+import { FinanceQuestionnaire } from './src/pages/financial-assessment/FinanceQuestionnaire';
 import { ResultsDetailScreen } from './src/pages/ResultsDetailScreen';
 import { ChecklistTimelineScreen } from './src/pages/checklist/ChecklistTimelineScreen';
 import { ChecklistItemEditScreen } from './src/pages/checklist/ChecklistItemEditScreen';
@@ -24,6 +26,8 @@ type Screen =
   | 'assessment-intro'
   | 'home'
   | 'questionnaire'
+  | 'financial-intro'
+  | 'financial-questionnaire'
   | 'results-detail'
   | 'checklist-timeline'
   | 'checklist-item-edit'
@@ -34,6 +38,7 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFirstTimeFinancialFlow, setIsFirstTimeFinancialFlow] = useState(false);
   const [editingChecklistItem, setEditingChecklistItem] = useState<{
     itemId: string;
     item: any;
@@ -145,6 +150,27 @@ export default function App() {
 
   const handleQuestionnaireComplete = () => {
     // Questionnaire is saved, status will be computed on backend
+    // Navigate to financial assessment intro (first-time flow)
+    setIsFirstTimeFinancialFlow(true);
+    setCurrentScreen('financial-intro');
+  };
+
+  const handleBeginFinancialAssessment = () => {
+    if (patient?.id) {
+      setCurrentScreen('financial-questionnaire');
+    }
+  };
+
+  const handleEditFinancialAssessment = () => {
+    if (patient?.id) {
+      // Coming from home screen - this is editing, not first time
+      setIsFirstTimeFinancialFlow(false);
+      setCurrentScreen('financial-intro');
+    }
+  };
+
+  const handleFinancialQuestionnaireComplete = () => {
+    // Financial questionnaire is saved
     // Navigate to home where status will be fetched
     setCurrentScreen('home');
   };
@@ -234,6 +260,7 @@ export default function App() {
           onViewResults={handleViewResults}
           onViewChecklist={handleViewChecklist}
           onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
+          onNavigateToFinancialAssessment={() => setCurrentScreen('financial-intro')}
           onNavigateToExamples={() => setCurrentScreen('examples')}
           onDeletePatient={handleDeletePatient}
         />
@@ -243,6 +270,29 @@ export default function App() {
           onComplete={handleQuestionnaireComplete}
           onNavigateToHome={() => setCurrentScreen('home')}
           onNavigateToAssessmentIntro={() => setCurrentScreen('assessment-intro')}
+        />
+      ) : currentScreen === 'financial-intro' ? (
+        <FinancialIntroScreen
+          onBeginAssessment={handleBeginFinancialAssessment}
+          onBack={() => {
+            // Navigate back to assessment intro (if no financial profile exists)
+            setCurrentScreen('assessment-intro');
+          }}
+          onNavigateToHome={() => {
+            // Navigate to home (if financial profile exists)
+            setCurrentScreen('home');
+          }}
+        />
+      ) : currentScreen === 'financial-questionnaire' ? (
+        <FinanceQuestionnaire
+          patientId={patient?.id || ''}
+          onComplete={() => {
+            setIsFirstTimeFinancialFlow(false); // Reset after completion
+            handleFinancialQuestionnaireComplete();
+          }}
+          onNavigateToHome={() => setCurrentScreen('home')}
+          onNavigateToFinancialIntro={() => setCurrentScreen('financial-intro')}
+          skipInitialLoad={isFirstTimeFinancialFlow}
         />
       ) : currentScreen === 'results-detail' ? (
         <ResultsDetailScreen onNavigateToHome={() => setCurrentScreen('home')} />

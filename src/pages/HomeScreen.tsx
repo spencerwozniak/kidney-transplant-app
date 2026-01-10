@@ -25,6 +25,7 @@ type HomeScreenProps = {
   onViewResults?: () => void;
   onViewChecklist?: () => void;
   onNavigateToQuestionnaire?: () => void;
+  onNavigateToFinancialAssessment?: () => void;
   onNavigateToExamples?: () => void;
   onDeletePatient?: () => void;
 };
@@ -34,6 +35,7 @@ export const HomeScreen = ({
   onViewResults,
   onViewChecklist,
   onNavigateToQuestionnaire,
+  onNavigateToFinancialAssessment,
   onNavigateToExamples,
   onDeletePatient,
 }: HomeScreenProps) => {
@@ -230,6 +232,15 @@ export const HomeScreen = ({
                   onPress={onNavigateToQuestionnaire}
                   activeOpacity={0.8}>
                   <Text className={buttons.primary.text}>Retake Eligibility Assessment</Text>
+                </TouchableOpacity>
+              )}
+
+              {onNavigateToFinancialAssessment && (
+                <TouchableOpacity
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled, 'mb-3')}
+                  onPress={onNavigateToFinancialAssessment}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.outline.text}>Edit Financial Information</Text>
                 </TouchableOpacity>
               )}
 
