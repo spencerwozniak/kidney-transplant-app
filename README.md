@@ -1,4 +1,4 @@
-# Kidney Transplant Navigation | Mobile App
+# Kidney Transplant Navigation — Mobile App
 
 Patient-facing mobile app that helps dialysis patients understand, track, and navigate the kidney transplant pathway using **patient-owned data**, **clear explanations**, and **actionable next steps**.
 
