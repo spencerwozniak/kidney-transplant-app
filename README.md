@@ -4,7 +4,7 @@ Patient-facing mobile app that helps dialysis patients understand, track, and na
 
 This app is designed to function independently of dialysis facilities and puts patients in control of their own health information.
 
-> **Disclaimer**
+> **Disclaimer**  
 > This project is for educational and informational purposes only and does not provide medical advice.  
 > It is intended to support patient understanding and navigation, not replace clinical judgment or professional care.
 
