@@ -1,0 +1,81 @@
+[
+  {
+    "id": "metastatic_cancer",
+    "category": "absolute",
+    "question": "Do you have metastatic cancer or active malignancy?",
+    "description": "Cancer that has spread to other parts of the body or active cancer that is currently being treated"
+  },
+  {
+    "id": "decompensated_cirrhosis",
+    "category": "absolute",
+    "question": "Do you have decompensated cirrhosis?",
+    "description": "Advanced liver disease with complications such as fluid buildup, confusion, or bleeding"
+  },
+  {
+    "id": "severe_lung_disease",
+    "category": "absolute",
+    "question": "Do you have severe irreversible lung disease?",
+    "description": "Lung conditions that significantly limit your breathing and cannot be improved"
+  },
+  {
+    "id": "severe_cardiac_disease",
+    "category": "absolute",
+    "question": "Do you have severe uncorrectable cardiac disease?",
+    "description": "Serious heart conditions that cannot be fixed and would make surgery too risky"
+  },
+  {
+    "id": "neurodegenerative",
+    "category": "absolute",
+    "question": "Do you have progressive central neurodegenerative disease?",
+    "description": "Conditions like advanced dementia or progressive neurological disorders affecting the brain"
+  },
+  {
+    "id": "non_compliance",
+    "category": "absolute",
+    "question": "Have you demonstrated non-compliance that would place an organ at risk?",
+    "description": "History of not following medical instructions or treatment plans that could endanger a transplanted organ"
+  },
+  {
+    "id": "psychiatric",
+    "category": "relative",
+    "question": "Do you have unstable psychiatric conditions?",
+    "description": "Mental health conditions that are not currently well-managed"
+  },
+  {
+    "id": "substance_use",
+    "category": "relative",
+    "question": "Do you have an active substance use disorder?",
+    "description": "Current problematic use of alcohol, drugs, or other substances"
+  },
+  {
+    "id": "severe_obesity",
+    "category": "relative",
+    "question": "Do you have severe obesity?",
+    "description": "Body Mass Index (BMI) of 40 or higher, or BMI of 35+ with obesity-related health problems"
+  },
+  {
+    "id": "social_support",
+    "category": "relative",
+    "question": "Do you have limited social support?",
+    "description": "Lack of family, friends, or caregivers who can help with post-transplant care"
+  },
+  {
+    "id": "symptomatic_cardiac",
+    "category": "relative",
+    "question": "Do you have active symptomatic cardiac disease that has not yet been evaluated?",
+    "description": "Heart-related symptoms (chest pain, shortness of breath, irregular heartbeat) that need medical evaluation"
+  },
+  {
+    "id": "recent_stroke",
+    "category": "relative",
+    "question": "Have you had a recent stroke or TIA (transient ischemic attack)?",
+    "description": "Stroke or mini-stroke within the past 6 months"
+  },
+  {
+    "id": "age_concern",
+    "category": "general",
+    "question": "Are you concerned about your age affecting transplant eligibility?",
+    "description": "Note: There is no absolute age limit. Patients over 70 can receive successful transplants."
+  }
+]
+
