@@ -80,12 +80,6 @@ export const HomeScreen = ({
                   <Text className={buttons.outline.text}>View Style Examples</Text>
                 </TouchableOpacity>
               )}
-
-              <TouchableOpacity
-                className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                activeOpacity={0.8}>
-                <Text className={buttons.outline.text}>Explore More</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>

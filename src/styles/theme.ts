@@ -96,7 +96,7 @@ export const typography = {
   h4: 'text-2xl font-bold text-gray-900',
   h5: 'text-xl font-semibold text-gray-900',
   h6: 'text-lg font-semibold text-gray-900',
-  
+
   // Body Text
   body: {
     large: 'text-lg text-gray-700',
@@ -104,12 +104,12 @@ export const typography = {
     small: 'text-sm text-gray-600',
     xsmall: 'text-xs text-gray-600',
   },
-  
+
   // Special Text
   label: 'text-sm font-semibold text-gray-700',
   caption: 'text-xs text-gray-500',
   link: 'text-base font-medium text-green-600',
-  
+
   // Colors
   primary: 'text-green-600',
   secondary: 'text-orange-600',
@@ -127,12 +127,12 @@ export const buttons = {
   // Primary Button (Green)
   primary: {
     base: 'rounded-2xl px-6 py-4 shadow-lg active:opacity-90',
-    enabled: 'bg-green-500',
+    enabled: 'bg-green-600',
     disabled: 'bg-gray-300',
     text: 'text-center text-lg font-semibold text-white',
     textDisabled: 'text-center text-lg font-semibold text-gray-500',
   },
-  
+
   // Secondary Button (Orange)
   secondary: {
     base: 'rounded-2xl px-6 py-4 shadow-lg active:opacity-90',
@@ -141,7 +141,7 @@ export const buttons = {
     text: 'text-center text-lg font-semibold text-white',
     textDisabled: 'text-center text-lg font-semibold text-gray-500',
   },
-  
+
   // Outline Button
   outline: {
     base: 'rounded-2xl border-2 px-6 py-4 shadow-sm active:opacity-90',
@@ -150,13 +150,13 @@ export const buttons = {
     text: 'text-center text-lg font-semibold text-gray-700',
     textDisabled: 'text-center text-lg font-semibold text-gray-400',
   },
-  
+
   // Ghost Button (No background)
   ghost: {
     base: 'px-4 py-2 active:opacity-70',
     text: 'text-base font-medium text-green-600',
   },
-  
+
   // Small Button
   small: {
     base: 'rounded-xl px-4 py-2 shadow-sm active:opacity-90',
@@ -168,7 +168,7 @@ export const buttons = {
     textSecondary: 'text-white',
     textOutline: 'text-gray-700',
   },
-  
+
   // Answer Button (for questionnaires)
   answer: {
     base: 'rounded-xl border-2 px-6 py-4',
@@ -190,7 +190,7 @@ export const cards = {
     container: 'rounded-2xl bg-white p-6 shadow-sm',
     elevated: 'rounded-2xl bg-white p-6 shadow-lg',
   },
-  
+
   // Colored Cards
   colored: {
     green: 'rounded-xl bg-green-50 p-5 border-l-4 border-green-500',
@@ -200,13 +200,13 @@ export const cards = {
     blue: 'rounded-xl bg-blue-50 p-5 border-l-4 border-blue-500',
     amber: 'rounded-xl bg-amber-50 p-4 border-l-4 border-amber-500',
   },
-  
+
   // Question Card
   question: {
     container: 'rounded-2xl bg-green-50 p-6 shadow-sm',
     description: 'rounded-lg bg-white p-3',
   },
-  
+
   // Result Card
   result: {
     container: 'mb-2 rounded-lg bg-white p-3',
@@ -372,24 +372,24 @@ export const getButtonClasses = (
   size?: 'small'
 ): { container: string; text: string } => {
   const button = buttons[variant];
-  
+
   if (variant === 'small' && size === 'small') {
     return {
       container: combineClasses(button.base, button.primary),
       text: combineClasses(button.text, button.textPrimary),
     };
   }
-  
+
   if (variant === 'ghost') {
     return {
       container: button.base,
       text: button.text,
     };
   }
-  
+
   const stateKey = state === 'enabled' ? 'enabled' : 'disabled';
   const textKey = state === 'enabled' ? 'text' : 'textDisabled';
-  
+
   return {
     container: combineClasses(button.base, button[stateKey]),
     text: button[textKey],
@@ -399,7 +399,9 @@ export const getButtonClasses = (
 /**
  * Gets card classes based on variant
  */
-export const getCardClasses = (variant: 'default' | 'elevated' | 'question' | keyof typeof cards.colored): string => {
+export const getCardClasses = (
+  variant: 'default' | 'elevated' | 'question' | keyof typeof cards.colored
+): string => {
   if (variant === 'default') return cards.default.container;
   if (variant === 'elevated') return cards.default.elevated;
   if (variant === 'question') return cards.question.container;
@@ -410,7 +412,8 @@ export const getCardClasses = (variant: 'default' | 'elevated' | 'question' | ke
 /**
  * Gets badge classes based on type
  */
-export const getBadgeClasses = (type: 'absolute' | 'relative' | 'general' | 'success'): { container: string; text: string } => {
+export const getBadgeClasses = (
+  type: 'absolute' | 'relative' | 'general' | 'success'
+): { container: string; text: string } => {
   return badges[type];
 };
-

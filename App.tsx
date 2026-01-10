@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { HomeScreen } from './pages/HomeScreen';
-import { TransplantQuestionnaire } from './pages/TransplantQuestionnaire';
-import { StyleExamples } from './pages/StyleExamples';
+import { HomeScreen } from './src/pages/HomeScreen';
+import { TransplantQuestionnaire } from './src/pages/TransplantQuestionnaire';
+import { StyleExamples } from './src/pages/StyleExamples';
 import { StatusBar } from 'expo-status-bar';
 
-import './styles/global.css';
+import './src/styles/global.css';
 
 type Screen = 'home' | 'questionnaire' | 'examples';
 

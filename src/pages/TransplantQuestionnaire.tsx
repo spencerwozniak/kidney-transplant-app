@@ -196,7 +196,7 @@ Important note: There is no absolute age limit for transplantation. Advanced age
   if (showResults) {
     const results = calculateResults();
     return (
-      <View className={layout.container.default}>
+      <SafeAreaView className={layout.container.default}>
         <NavigationBar onBack={onNavigateToHome} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <View className="px-6 py-8">
@@ -328,7 +328,7 @@ Important note: There is no absolute age limit for transplantation. Advanced age
             </View>
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -336,7 +336,7 @@ Important note: There is no absolute age limit for transplantation. Advanced age
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <View className={layout.container.default}>
+    <SafeAreaView className={layout.container.default}>
       <NavigationBar onBack={onNavigateToHome} infoModal={infoModalContent} />
       <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-8">
@@ -442,6 +442,6 @@ Important note: There is no absolute age limit for transplantation. Advanced age
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };

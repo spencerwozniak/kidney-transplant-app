@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import {
   buttons,
@@ -32,7 +33,7 @@ export const StyleExamples = ({ onNavigateToHome }: StyleExamplesProps) => {
   const badgeStyles = getBadgeClasses('absolute');
 
   return (
-    <View className={layout.container.default}>
+    <SafeAreaView className={layout.container.default}>
       <NavigationBar onBack={onNavigateToHome} />
       <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-8">
@@ -176,6 +177,6 @@ export const StyleExamples = ({ onNavigateToHome }: StyleExamplesProps) => {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };

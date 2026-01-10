@@ -3,7 +3,6 @@
     "name": "my-expo-app",
     "slug": "my-expo-app",
     "version": "1.0.0",
-    "main": "src/App.tsx",
 
     "web": {
       "favicon": "./assets/favicon.png"
