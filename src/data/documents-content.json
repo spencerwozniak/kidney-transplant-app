@@ -1,0 +1,83 @@
+{
+  "physical_exam": {
+    "title": "Complete Physical Examination",
+    "description": "Comprehensive medical evaluation by transplant team",
+    "requests": [
+      "Full clinic note / H&P (History & Physical)",
+      "Problem list (active + historical diagnoses)",
+      "Medication list (with doses, routes, start dates)",
+      "Provider contact info (clinic name, physician, NPI if available)"
+    ],
+    "why": "Transplant centers will not accept \"verbal summaries.\" They need documented clinical judgment."
+  },
+  "lab_work": {
+    "title": "Laboratory Work & Viral Serology",
+    "description": "Hepatitis profile, HIV, CMV, tissue typing, viral panel (repeated annually while waitlisted)",
+    "requests": [
+      "Complete lab result reports with: test name, value, units, reference range, date/time drawn",
+      "Serology reports",
+      "Blood type & tissue typing results (HLA typing if done)",
+      "Chronological lab history if labs were repeated"
+    ],
+    "why": "Complete lab reports provide the detailed information transplant centers need for evaluation."
+  },
+  "cardiac_eval": {
+    "title": "Cardiac Evaluation",
+    "description": "12-lead ECG for all candidates, stress testing especially for diabetics and those over 50",
+    "requests": [
+      "12-lead ECG image and/or raw waveform file",
+      "Stress test report",
+      "Narrative interpretation",
+      "Exercise tolerance (METs)",
+      "Ischemia findings",
+      "Cardiology clearance note",
+      "Explicit written statement: \"Cleared for transplant evaluation\"",
+      "Echocardiogram report (if performed)"
+    ],
+    "why": "Transplant centers often reject summaries and want the original cardiology interpretation."
+  },
+  "cancer_screening": {
+    "title": "Cancer Screening",
+    "description": "Colonoscopy for age over 50, PSA for men over 45, age-appropriate screenings",
+    "requests": [
+      "Procedure report (not just pathology)",
+      "Colonoscopy findings",
+      "Completeness of exam",
+      "Bowel prep adequacy",
+      "Pathology reports",
+      "Polyp histology, margins, staging if relevant",
+      "PSA lab reports (actual values + dates)",
+      "Imaging reports (mammogram, CT, etc. if applicable)"
+    ],
+    "why": "Ask explicitly for pathology PDFs — these are often stored separately and forgotten."
+  },
+  "pulmonary_tests": {
+    "title": "Pulmonary Function Tests",
+    "description": "Lung capacity and respiratory evaluation",
+    "requests": [
+      "Full PFT report",
+      "FEV1, FVC, DLCO, ratios",
+      "Pre/post bronchodilator results",
+      "Pulmonologist interpretation",
+      "Any clearance letter if required"
+    ],
+    "why": "Numbers alone are insufficient — interpretation matters for transplant risk stratification."
+  },
+  "psychosocial_eval": {
+    "title": "Psychosocial Evaluation",
+    "description": "Assessment by social worker and transplant coordinator covering adherence potential, social support, financial clearance",
+    "requests": [
+      "Psychosocial assessment note",
+      "Adherence assessment",
+      "Social support summary",
+      "Transportation plan",
+      "Housing stability",
+      "Financial clearance documentation",
+      "Insurance verification",
+      "Coverage limits",
+      "Coordinator contact info",
+      "Explicit statement of psychosocial clearance (if given)"
+    ],
+    "why": "Comprehensive psychosocial documentation helps transplant centers assess readiness and support systems."
+  }
+}

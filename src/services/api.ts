@@ -50,6 +50,7 @@ export type ChecklistItem = {
   notes?: string;
   completed_at?: string;
   order: number;
+  documents?: string[];
 };
 
 export type TransplantChecklist = {
@@ -142,12 +143,61 @@ class ApiService {
       is_complete?: boolean;
       completed_at?: string;
       notes?: string;
+      documents?: string[];
     }
   ): Promise<TransplantChecklist> {
     return this.request<TransplantChecklist>(`/api/v1/checklist/items/${itemId}`, {
       method: 'PATCH',
       body: JSON.stringify(updates),
     });
+  }
+
+  async uploadChecklistItemDocument(
+    itemId: string,
+    fileUri: string,
+    fileName: string,
+    fileType: string
+  ): Promise<TransplantChecklist> {
+    const url = `${this.baseUrl}/api/v1/checklist/items/${itemId}/documents`;
+    console.log(`[API] Uploading file to: ${url}`);
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('file', {
+      uri: fileUri,
+      name: fileName,
+      type: fileType,
+    } as any);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          // Don't set Content-Type, let the browser set it with boundary
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const error = await response.json();
+          errorMessage = error.detail || error.message || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error(
+          `Unable to connect to server. Please ensure the backend is running at ${this.baseUrl}`
+        );
+      }
+      throw error;
+    }
   }
 }
 

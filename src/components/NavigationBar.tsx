@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { buttons, typography, cards, combineClasses, layout } from '../styles/theme';
 import { InfoIcon } from './InfoIcon';
 
@@ -17,7 +16,7 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
 
   return (
     <>
-      <SafeAreaView edges={['top']} className="bg-white">
+      <View className="bg-white">
         <View className="flex-row items-center justify-between px-4 py-3">
           {/* Back Button */}
           {onBack ? (
@@ -40,7 +39,7 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
             <View className="w-10" />
           )}
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* Info Modal */}
       {infoModal && (
@@ -96,4 +95,3 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
     </>
   );
 };
-

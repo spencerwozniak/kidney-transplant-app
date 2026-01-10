@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Alert } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingScreen } from './src/pages/onboarding/OnboardingScreen';
 import { PatientDetailsScreen1 } from './src/pages/onboarding/PatientDetailsScreen1';
 import { PatientDetailsScreen2 } from './src/pages/onboarding/PatientDetailsScreen2';
@@ -196,7 +197,7 @@ export default function App() {
   };
 
   return (
-    <>
+    <SafeAreaProvider>
       {isLoading ? (
         <View className="flex-1 items-center justify-center bg-white">
           {/* Loading indicator */}
@@ -219,8 +220,12 @@ export default function App() {
         <AssessmentIntroScreen
           onBeginAssessment={handleBeginAssessment}
           onBack={() => {
-            // Navigate back to patient details (first time) or home (retaking)
-            setCurrentScreen('patient-details-2');
+            // Navigate back to home if patient exists (already onboarded), otherwise to patient details
+            if (patient?.id) {
+              setCurrentScreen('home');
+            } else {
+              setCurrentScreen('patient-details-2');
+            }
           }}
         />
       ) : currentScreen === 'home' ? (
@@ -276,6 +281,6 @@ export default function App() {
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />
       )}
       <StatusBar style="dark" />
-    </>
+    </SafeAreaProvider>
   );
 }
