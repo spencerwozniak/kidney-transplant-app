@@ -16,10 +16,10 @@ import {
   combineClasses,
   layout,
   getBadgeClasses,
-} from '../styles/theme';
-import { NavigationBar } from '../components/NavigationBar';
-import questionsData from '../data/questions.json';
-import { apiService } from '../services/api';
+} from '../../styles/theme';
+import { NavigationBar } from '../../components/NavigationBar';
+import questionsData from '../../data/questions.json';
+import { apiService } from '../../services/api';
 
 type QuestionType = {
   id: string;

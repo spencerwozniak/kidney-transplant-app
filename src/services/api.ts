@@ -135,6 +135,20 @@ class ApiService {
   async getChecklist(): Promise<TransplantChecklist> {
     return this.request<TransplantChecklist>('/api/v1/checklist');
   }
+
+  async updateChecklistItem(
+    itemId: string,
+    updates: {
+      is_complete?: boolean;
+      completed_at?: string;
+      notes?: string;
+    }
+  ): Promise<TransplantChecklist> {
+    return this.request<TransplantChecklist>(`/api/v1/checklist/items/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+  }
 }
 
 export const apiService = new ApiService();

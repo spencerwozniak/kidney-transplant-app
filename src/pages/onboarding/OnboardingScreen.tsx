@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { buttons, typography, decorative, combineClasses, layout } from '../styles/theme';
-import { KidneyIcon } from '../components/KidneyIcon';
+import { buttons, typography, decorative, combineClasses, layout } from '../../styles/theme';
+import { KidneyIcon } from '../../components/KidneyIcon';
 
 type OnboardingScreenProps = {
   onGetStarted: () => void;

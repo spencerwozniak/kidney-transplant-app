@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { View, Alert } from 'react-native';
-import { OnboardingScreen } from './src/pages/OnboardingScreen';
-import { PatientDetailsScreen1 } from './src/pages/PatientDetailsScreen1';
-import { PatientDetailsScreen2 } from './src/pages/PatientDetailsScreen2';
-import { AssessmentIntroScreen } from './src/pages/AssessmentIntroScreen';
+import { OnboardingScreen } from './src/pages/onboarding/OnboardingScreen';
+import { PatientDetailsScreen1 } from './src/pages/onboarding/PatientDetailsScreen1';
+import { PatientDetailsScreen2 } from './src/pages/onboarding/PatientDetailsScreen2';
+import { AssessmentIntroScreen } from './src/pages/assessment/AssessmentIntroScreen';
 import { HomeScreen } from './src/pages/HomeScreen';
-import { TransplantQuestionnaire } from './src/pages/TransplantQuestionnaire';
+import { TransplantQuestionnaire } from './src/pages/assessment/TransplantQuestionnaire';
 import { ResultsDetailScreen } from './src/pages/ResultsDetailScreen';
-import { ChecklistTimelineScreen } from './src/pages/ChecklistTimelineScreen';
+import { ChecklistTimelineScreen } from './src/pages/checklist/ChecklistTimelineScreen';
+import { ChecklistItemEditScreen } from './src/pages/checklist/ChecklistItemEditScreen';
+import { ChecklistDocumentsScreen } from './src/pages/checklist/ChecklistDocumentsScreen';
 import { StyleExamples } from './src/pages/StyleExamples';
 import { StatusBar } from 'expo-status-bar';
 import { apiService, Patient } from './src/services/api';
@@ -23,12 +25,18 @@ type Screen =
   | 'questionnaire'
   | 'results-detail'
   | 'checklist-timeline'
+  | 'checklist-item-edit'
+  | 'checklist-documents'
   | 'examples';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingChecklistItem, setEditingChecklistItem] = useState<{
+    itemId: string;
+    item: any;
+  } | null>(null);
 
   // Check if patient exists on mount
   useEffect(() => {
@@ -48,7 +56,6 @@ export default function App() {
       setCurrentScreen('onboarding');
     }
   };
-
 
   const [patientDataPart1, setPatientDataPart1] = useState<{
     name: string;
@@ -92,19 +99,21 @@ export default function App() {
         ...patientDataPart1,
         ...data,
       };
-      
+
       // Ensure height and weight are numbers, not strings
       if (patientData.height !== undefined) {
-        patientData.height = typeof patientData.height === 'string' 
-          ? parseFloat(patientData.height) 
-          : patientData.height;
+        patientData.height =
+          typeof patientData.height === 'string'
+            ? parseFloat(patientData.height)
+            : patientData.height;
       }
       if (patientData.weight !== undefined) {
-        patientData.weight = typeof patientData.weight === 'string' 
-          ? parseFloat(patientData.weight) 
-          : patientData.weight;
+        patientData.weight =
+          typeof patientData.weight === 'string'
+            ? parseFloat(patientData.weight)
+            : patientData.weight;
       }
-      
+
       console.log('Saving patient data:', JSON.stringify(patientData, null, 2));
       const savedPatient = await apiService.createPatient(patientData);
       console.log('Patient saved successfully:', savedPatient);
@@ -173,7 +182,10 @@ export default function App() {
               setCurrentScreen('onboarding');
             } catch (error: any) {
               console.error('Error deleting patient:', error);
-              Alert.alert('Error', `Failed to delete patient: ${error?.message || 'Unknown error'}`);
+              Alert.alert(
+                'Error',
+                `Failed to delete patient: ${error?.message || 'Unknown error'}`
+              );
             } finally {
               setIsLoading(false);
             }
@@ -232,6 +244,33 @@ export default function App() {
       ) : currentScreen === 'checklist-timeline' ? (
         <ChecklistTimelineScreen
           onNavigateToHome={() => setCurrentScreen('home')}
+          onEditItem={(itemId, item) => {
+            setEditingChecklistItem({ itemId, item });
+            setCurrentScreen('checklist-item-edit');
+          }}
+        />
+      ) : currentScreen === 'checklist-item-edit' && editingChecklistItem ? (
+        <ChecklistItemEditScreen
+          itemId={editingChecklistItem.itemId}
+          initialItem={editingChecklistItem.item}
+          onSave={() => {
+            setEditingChecklistItem(null);
+            setCurrentScreen('checklist-timeline');
+          }}
+          onNavigateBack={() => {
+            setEditingChecklistItem(null);
+            setCurrentScreen('checklist-timeline');
+          }}
+          onRequestDocuments={() => {
+            setCurrentScreen('checklist-documents');
+          }}
+        />
+      ) : currentScreen === 'checklist-documents' && editingChecklistItem ? (
+        <ChecklistDocumentsScreen
+          checklistItem={editingChecklistItem.item}
+          onNavigateBack={() => {
+            setCurrentScreen('checklist-item-edit');
+          }}
         />
       ) : (
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />

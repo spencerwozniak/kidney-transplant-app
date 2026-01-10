@@ -13,9 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { buttons, typography, inputs, combineClasses, layout } from '../styles/theme';
-import { NavigationBar } from '../components/NavigationBar';
-import { Patient } from '../services/api';
+import { buttons, typography, inputs, combineClasses, layout } from '../../styles/theme';
+import { NavigationBar } from '../../components/NavigationBar';
+import { Patient } from '../../services/api';
 
 type PatientDetailsScreen2Props = {
   onNext: (data: { date_of_birth: string; sex?: string; height?: number; weight?: number }) => void;

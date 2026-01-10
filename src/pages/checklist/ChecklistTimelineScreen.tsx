@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView } from 'react-native';
-import {
-  cards,
-  typography,
-  combineClasses,
-  layout,
-} from '../styles/theme';
-import { NavigationBar } from '../components/NavigationBar';
-import { apiService, TransplantChecklist } from '../services/api';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { cards, typography, combineClasses, layout } from '../../styles/theme';
+import { NavigationBar } from '../../components/NavigationBar';
+import { apiService, TransplantChecklist, ChecklistItem } from '../../services/api';
 
 type ChecklistTimelineScreenProps = {
   onNavigateToHome?: () => void;
+  onEditItem?: (itemId: string, item: ChecklistItem) => void;
 };
 
 export const ChecklistTimelineScreen = ({
   onNavigateToHome,
+  onEditItem,
 }: ChecklistTimelineScreenProps) => {
   const [checklist, setChecklist] = useState<TransplantChecklist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,7 +133,9 @@ export const ChecklistTimelineScreen = ({
 
                     {/* Content Card */}
                     <View className="flex-1">
-                      <View
+                      <TouchableOpacity
+                        onPress={() => onEditItem?.(item.id, item)}
+                        activeOpacity={0.7}
                         className={combineClasses(
                           cards.default.container,
                           isCurrent ? 'border-l-4 border-blue-500' : '',
@@ -150,11 +149,6 @@ export const ChecklistTimelineScreen = ({
                             )}>
                             {item.title}
                           </Text>
-                          {isCurrent && (
-                            <View className="rounded-full bg-blue-500 px-2 py-1">
-                              <Text className="text-xs font-semibold text-white">Current</Text>
-                            </View>
-                          )}
                         </View>
 
                         {item.description && (
@@ -170,10 +164,18 @@ export const ChecklistTimelineScreen = ({
 
                         {item.notes && (
                           <View className="mb-3 rounded-lg bg-white/70 p-3">
-                            <Text className={combineClasses(typography.body.small, 'font-semibold text-gray-900')}>
+                            <Text
+                              className={combineClasses(
+                                typography.body.small,
+                                'font-semibold text-gray-900'
+                              )}>
                               Your Notes:
                             </Text>
-                            <Text className={combineClasses(typography.body.small, 'mt-1 text-gray-700')}>
+                            <Text
+                              className={combineClasses(
+                                typography.body.small,
+                                'mt-1 text-gray-700'
+                              )}>
                               {item.notes}
                             </Text>
                           </View>
@@ -184,7 +186,7 @@ export const ChecklistTimelineScreen = ({
                             Completed: {new Date(item.completed_at).toLocaleDateString()}
                           </Text>
                         )}
-                      </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -209,4 +211,3 @@ export const ChecklistTimelineScreen = ({
     </SafeAreaView>
   );
 };
-

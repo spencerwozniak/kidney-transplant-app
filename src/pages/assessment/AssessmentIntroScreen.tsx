@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { buttons, typography, cards, combineClasses, layout, decorative } from '../styles/theme';
-import { NavigationBar } from '../components/NavigationBar';
+import { buttons, typography, cards, combineClasses, layout, decorative } from '../../styles/theme';
+import { NavigationBar } from '../../components/NavigationBar';
 
 type AssessmentIntroScreenProps = {
   onBeginAssessment: () => void;

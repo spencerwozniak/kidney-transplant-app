@@ -10,9 +10,9 @@ import {
   InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { buttons, typography, inputs, combineClasses, layout } from '../styles/theme';
-import { NavigationBar } from '../components/NavigationBar';
-import { Patient } from '../services/api';
+import { buttons, typography, inputs, combineClasses, layout } from '../../styles/theme';
+import { NavigationBar } from '../../components/NavigationBar';
+import { Patient } from '../../services/api';
 
 type PatientDetailsScreen1Props = {
   onNext: (data: { name: string; email?: string; phone?: string }) => void;
