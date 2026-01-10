@@ -90,6 +90,7 @@ export const ChecklistTimelineScreen = ({
             {sortedItems.map((item, index) => {
               const isCurrent = item.order === currentStep;
               const isComplete = item.is_complete;
+              const isFuture = item.order > currentStep && !isComplete;
 
               return (
                 <View key={item.id} className="mb-6">
@@ -98,14 +99,14 @@ export const ChecklistTimelineScreen = ({
                     <View
                       className={combineClasses(
                         'absolute left-6 top-12 w-0.5',
-                        isComplete ? 'bg-green-500' : 'bg-gray-300'
+                        isComplete ? 'bg-green-500' : isFuture ? 'bg-gray-200' : 'bg-gray-300'
                       )}
                       style={{ height: 80 }}
                     />
                   )}
 
                   {/* Timeline Item */}
-                  <View className="flex-row">
+                  <View className={combineClasses('flex-row', isFuture ? 'opacity-50' : '')}>
                     {/* Timeline Dot */}
                     <View className="mr-4">
                       <View
@@ -115,7 +116,9 @@ export const ChecklistTimelineScreen = ({
                             ? 'border-green-500 bg-green-100'
                             : isCurrent
                               ? 'border-blue-500 bg-blue-100'
-                              : 'border-gray-300 bg-gray-100'
+                              : isFuture
+                                ? 'border-gray-200 bg-gray-50'
+                                : 'border-gray-300 bg-gray-100'
                         )}>
                         {isComplete ? (
                           <Text className="text-xl text-green-700">✓</Text>
@@ -123,7 +126,11 @@ export const ChecklistTimelineScreen = ({
                           <Text
                             className={combineClasses(
                               'text-lg font-semibold',
-                              isCurrent ? 'text-blue-700' : 'text-gray-500'
+                              isCurrent
+                                ? 'text-blue-700'
+                                : isFuture
+                                  ? 'text-gray-400'
+                                  : 'text-gray-500'
                             )}>
                             {item.order}
                           </Text>
@@ -134,18 +141,26 @@ export const ChecklistTimelineScreen = ({
                     {/* Content Card */}
                     <View className="flex-1">
                       <TouchableOpacity
-                        onPress={() => onEditItem?.(item.id, item)}
-                        activeOpacity={0.7}
+                        onPress={() => !isFuture && onEditItem?.(item.id, item)}
+                        disabled={isFuture}
+                        activeOpacity={isFuture ? 1 : 0.7}
                         className={combineClasses(
                           cards.default.container,
                           isCurrent ? 'border-l-4 border-blue-500' : '',
-                          isComplete ? 'bg-green-50' : ''
+                          isComplete ? 'bg-green-50' : '',
+                          isFuture ? 'bg-gray-50' : ''
                         )}>
                         <View className="mb-2 flex-row items-center justify-between">
                           <Text
                             className={combineClasses(
                               typography.h5,
-                              isComplete ? 'text-green-900' : isCurrent ? 'text-blue-900' : ''
+                              isComplete
+                                ? 'text-green-900'
+                                : isCurrent
+                                  ? 'text-blue-900'
+                                  : isFuture
+                                    ? 'text-gray-400'
+                                    : ''
                             )}>
                             {item.title}
                           </Text>
@@ -156,7 +171,11 @@ export const ChecklistTimelineScreen = ({
                             className={combineClasses(
                               typography.body.small,
                               'mb-3 leading-6',
-                              isComplete ? 'text-green-800' : 'text-gray-700'
+                              isComplete
+                                ? 'text-green-800'
+                                : isFuture
+                                  ? 'text-gray-400'
+                                  : 'text-gray-700'
                             )}>
                             {item.description}
                           </Text>

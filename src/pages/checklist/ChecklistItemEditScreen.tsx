@@ -42,6 +42,34 @@ export const ChecklistItemEditScreen = ({
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const notesInputRef = useRef<TextInput>(null);
   const insets = useSafeAreaInsets();
+  const notesModifiedRef = useRef(false);
+
+  // Refresh item data when component mounts or when returning to this screen
+  useEffect(() => {
+    const refreshItemData = async () => {
+      try {
+        const checklist = await apiService.getChecklist();
+        const updatedItem = checklist.items.find((item) => item.id === itemId);
+        if (updatedItem) {
+          // Update state with latest data from backend, but preserve local notes if user is typing
+          setIsComplete(updatedItem.is_complete);
+          if (updatedItem.completed_at) {
+            setCompletedAt(new Date(updatedItem.completed_at));
+          }
+          // Only update notes from backend if notes haven't been locally modified
+          // This preserves what the user is currently typing
+          if (!notesModifiedRef.current) {
+            setNotes(updatedItem.notes || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing item data:', error);
+      }
+    };
+
+    refreshItemData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId]);
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -73,6 +101,12 @@ export const ChecklistItemEditScreen = ({
     Keyboard.dismiss();
   };
 
+  // Track when notes are modified to preserve user input
+  const handleNotesChange = (text: string) => {
+    notesModifiedRef.current = true;
+    setNotes(text);
+  };
+
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
@@ -88,8 +122,10 @@ export const ChecklistItemEditScreen = ({
       await apiService.updateChecklistItem(itemId, {
         is_complete: isComplete,
         completed_at: isComplete ? completedAt.toISOString() : undefined,
-        notes: notes.trim() || undefined,
+        notes: notes.trim() || '', // Send empty string instead of undefined to ensure it saves
       });
+      // Reset the modified flag after successful save
+      notesModifiedRef.current = false;
       onSave();
     } catch (error: any) {
       console.error('Error saving checklist item:', error);
@@ -99,9 +135,17 @@ export const ChecklistItemEditScreen = ({
     }
   };
 
+  const handleBack = async () => {
+    // Save changes before navigating back
+    await handleSave();
+    if (onNavigateBack) {
+      onNavigateBack();
+    }
+  };
+
   return (
     <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateBack} />
+      <NavigationBar onBack={handleBack} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -184,7 +228,8 @@ export const ChecklistItemEditScreen = ({
               <View
                 className={combineClasses(
                   cards.default.container,
-                  'mb-6 border-l-4 border-blue-500'
+                  'mb-6 border-l-4 border-blue-500',
+                  !isComplete ? 'opacity-50' : ''
                 )}>
                 <Text className={combineClasses(typography.h5, 'mb-2')}>Request Documents</Text>
                 <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
@@ -193,6 +238,7 @@ export const ChecklistItemEditScreen = ({
                 <TouchableOpacity
                   className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                   onPress={onRequestDocuments}
+                  disabled={!isComplete}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>Request Documents</Text>
                 </TouchableOpacity>
@@ -213,7 +259,7 @@ export const ChecklistItemEditScreen = ({
               <TextInput
                 ref={notesInputRef}
                 value={notes}
-                onChangeText={setNotes}
+                onChangeText={handleNotesChange}
                 placeholder="Enter your notes here..."
                 placeholderTextColor="#9ca3af"
                 multiline
@@ -228,21 +274,6 @@ export const ChecklistItemEditScreen = ({
                 textAlignVertical="top"
               />
             </View>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              className={combineClasses(
-                buttons.primary.base,
-                buttons.primary.enabled,
-                isSaving ? 'opacity-50' : '',
-                'mb-6'
-              )}
-              onPress={handleSave}
-              disabled={isSaving}>
-              <Text className={buttons.primary.text}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

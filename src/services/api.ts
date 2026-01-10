@@ -62,7 +62,7 @@ export type TransplantChecklist = {
 };
 
 class ApiService {
-  private baseUrl: string;
+  public baseUrl: string;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;

@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  ActionSheetIOS,
+  Linking,
+} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as WebBrowser from 'expo-web-browser';
 import { cards, typography, combineClasses, layout, buttons } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
 import { ChecklistItem, apiService } from '../../services/api';
@@ -56,24 +67,37 @@ export const ChecklistDocumentsScreen = ({
     }
   };
 
-  const pickPDF = async () => {
+  const takePhoto = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        copyToCacheDirectory: true,
+      // Request camera permissions
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      if (cameraStatus !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant permission to access your camera to take photos.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const file = result.assets[0];
-        await uploadFile(file.uri, file.name || 'document.pdf', 'application/pdf');
+        const asset = result.assets[0];
+        const fileName = asset.fileName || `photo_${Date.now()}.jpg`;
+        const mimeType = asset.type === 'image' ? 'image/jpeg' : 'image/png';
+        await uploadFiles([{ uri: asset.uri, fileName, fileType: mimeType }]);
       }
     } catch (error: any) {
-      console.error('Error picking PDF:', error);
-      Alert.alert('Error', 'Failed to pick PDF file. Please try again.');
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
     }
   };
 
-  const pickImage = async () => {
+  const choosePhoto = async () => {
     try {
       // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -92,11 +116,12 @@ export const ChecklistDocumentsScreen = ({
       });
 
       if (!result.canceled && result.assets) {
-        for (const asset of result.assets) {
-          const fileName = asset.fileName || `image_${Date.now()}.jpg`;
-          const mimeType = asset.type === 'image' ? 'image/jpeg' : 'image/png';
-          await uploadFile(asset.uri, fileName, mimeType);
-        }
+        const files = result.assets.map((asset) => ({
+          uri: asset.uri,
+          fileName: asset.fileName || `image_${Date.now()}.jpg`,
+          fileType: asset.type === 'image' ? 'image/jpeg' : 'image/png',
+        }));
+        await uploadFiles(files);
       }
     } catch (error: any) {
       console.error('Error picking image:', error);
@@ -104,16 +129,118 @@ export const ChecklistDocumentsScreen = ({
     }
   };
 
+  const chooseDocuments = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+        multiple: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const files = result.assets.map((file) => ({
+          uri: file.uri,
+          fileName: file.name || 'document.pdf',
+          fileType: file.mimeType || 'application/pdf',
+        }));
+        await uploadFiles(files);
+      }
+    } catch (error: any) {
+      console.error('Error picking documents:', error);
+      Alert.alert('Error', 'Failed to pick documents. Please try again.');
+    }
+  };
+
+  const showUploadOptions = () => {
+    if (Platform.OS === 'ios') {
+      // Use native iOS ActionSheet
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Take Photo', 'Choose Photo', 'Choose Documents'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            takePhoto();
+          } else if (buttonIndex === 2) {
+            choosePhoto();
+          } else if (buttonIndex === 3) {
+            chooseDocuments();
+          }
+        }
+      );
+    } else {
+      // Use Alert for Android
+      Alert.alert(
+        'Upload Documents',
+        'Select how you would like to upload your documents',
+        [
+          {
+            text: 'Take Photo',
+            onPress: takePhoto,
+          },
+          {
+            text: 'Choose Photo',
+            onPress: choosePhoto,
+          },
+          {
+            text: 'Choose Documents',
+            onPress: chooseDocuments,
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
   const uploadFile = async (fileUri: string, fileName: string, fileType: string) => {
-    setIsUploading(true);
     try {
       await apiService.uploadChecklistItemDocument(checklistItem.id, fileUri, fileName, fileType);
-      // Refresh the documents list
-      await refreshDocuments();
-      Alert.alert('Success', 'File uploaded successfully!');
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      Alert.alert('Upload Failed', error.message || 'Failed to upload file. Please try again.');
+      throw error; // Re-throw to let caller handle
+    }
+  };
+
+  const uploadFiles = async (files: Array<{ uri: string; fileName: string; fileType: string }>) => {
+    setIsUploading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const file of files) {
+        try {
+          await uploadFile(file.uri, file.fileName, file.fileType);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error('Error uploading file:', file.fileName, error);
+        }
+      }
+
+      // Refresh the documents list after all uploads
+      await refreshDocuments();
+
+      // Show appropriate message
+      if (successCount > 0 && errorCount === 0) {
+        Alert.alert(
+          'Success',
+          successCount === 1
+            ? 'File uploaded successfully!'
+            : `${successCount} files uploaded successfully!`
+        );
+      } else if (successCount > 0 && errorCount > 0) {
+        Alert.alert(
+          'Partial Success',
+          `${successCount} file(s) uploaded successfully, ${errorCount} file(s) failed.`
+        );
+      } else {
+        Alert.alert('Upload Failed', 'Failed to upload files. Please try again.');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -122,6 +249,41 @@ export const ChecklistDocumentsScreen = ({
   const getFileName = (path: string): string => {
     const parts = path.split('/');
     return parts[parts.length - 1] || path;
+  };
+
+  const getDocumentUrl = (docPath: string): string => {
+    // Document path format: documents/{patient_id}/{item_id}/{filename}
+    // URL encode the path for the API
+    const encodedPath = encodeURIComponent(docPath);
+    return `${apiService.baseUrl}/api/v1/documents/${encodedPath}`;
+  };
+
+  const viewDocument = async (docPath: string) => {
+    try {
+      const url = getDocumentUrl(docPath);
+      const fileName = getFileName(docPath);
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+
+      // For images, try to open in browser
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension || '')) {
+        // Images can be opened directly in WebBrowser
+        await WebBrowser.openBrowserAsync(url);
+      } else if (fileExtension === 'pdf') {
+        // PDFs can also be opened in WebBrowser
+        await WebBrowser.openBrowserAsync(url);
+      } else {
+        // Fallback to Linking for other file types
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+        } else {
+          Alert.alert('Error', 'Unable to open this file type.');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error viewing document:', error);
+      Alert.alert('Error', 'Failed to open document. Please try again.');
+    }
   };
 
   if (!content) {
@@ -203,39 +365,24 @@ export const ChecklistDocumentsScreen = ({
               Upload PDF files or images of your documents for this evaluation
             </Text>
 
-            <View className="space-y-3">
-              <TouchableOpacity
-                className={combineClasses(
-                  buttons.outline.base,
-                  buttons.outline.enabled,
-                  isUploading ? 'opacity-50' : ''
-                )}
-                onPress={pickPDF}
-                disabled={isUploading}
-                activeOpacity={0.8}>
-                {isUploading ? (
-                  <ActivityIndicator size="small" color="#3b82f6" />
-                ) : (
-                  <Text className={buttons.outline.text}>Upload PDF</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className={combineClasses(
-                  buttons.outline.base,
-                  buttons.outline.enabled,
-                  isUploading ? 'opacity-50' : ''
-                )}
-                onPress={pickImage}
-                disabled={isUploading}
-                activeOpacity={0.8}>
-                {isUploading ? (
-                  <ActivityIndicator size="small" color="#3b82f6" />
-                ) : (
-                  <Text className={buttons.outline.text}>Upload Image</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              className={combineClasses(
+                buttons.primary.base,
+                buttons.primary.enabled,
+                isUploading ? 'opacity-50' : ''
+              )}
+              onPress={showUploadOptions}
+              disabled={isUploading}
+              activeOpacity={0.8}>
+              {isUploading ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator size="small" color="#ffffff" className="mr-2" />
+                  <Text className={buttons.primary.text}>Uploading...</Text>
+                </View>
+              ) : (
+                <Text className={buttons.primary.text}>Upload Documents</Text>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Uploaded Documents List */}
@@ -253,18 +400,25 @@ export const ChecklistDocumentsScreen = ({
               </View>
               <View className="space-y-2">
                 {uploadedDocuments.map((docPath, index) => (
-                  <View
+                  <TouchableOpacity
                     key={index}
-                    className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <Text
-                      className={combineClasses(typography.body.small, 'flex-1 text-gray-700')}
-                      numberOfLines={1}>
-                      {getFileName(docPath)}
-                    </Text>
-                    <View className="ml-2 rounded bg-green-100 px-2 py-1">
-                      <Text className="text-xs font-medium text-green-800">Uploaded</Text>
+                    onPress={() => viewDocument(docPath)}
+                    activeOpacity={0.7}
+                    className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 active:bg-gray-100">
+                    <View className="flex-1 flex-row items-center">
+                      <Text
+                        className={combineClasses(typography.body.small, 'flex-1 text-gray-700')}
+                        numberOfLines={1}>
+                        {getFileName(docPath)}
+                      </Text>
                     </View>
-                  </View>
+                    <View className="ml-2 flex-row items-center space-x-2">
+                      <View className="rounded bg-green-100 px-2 py-1">
+                        <Text className="text-xs font-medium text-green-800">Uploaded</Text>
+                      </View>
+                      <Text className="text-xs text-blue-500">View →</Text>
+                    </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
