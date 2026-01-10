@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, LayoutChangeEvent } from 'react-native';
 import { cards, typography, combineClasses, layout } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
 import { apiService, TransplantChecklist, ChecklistItem } from '../../services/api';
@@ -16,6 +16,7 @@ export const ChecklistTimelineScreen = ({
 }: ChecklistTimelineScreenProps) => {
   const [checklist, setChecklist] = useState<TransplantChecklist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cardHeights, setCardHeights] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchChecklist();
@@ -91,23 +92,48 @@ export const ChecklistTimelineScreen = ({
               const isCurrent = item.order === currentStep;
               const isComplete = item.is_complete;
               const isFuture = item.order > currentStep && !isComplete;
+              const currentCardHeight = cardHeights[item.id] || 0;
+              const nextItem = sortedItems[index + 1];
+              const nextCardHeight = nextItem ? cardHeights[nextItem.id] || 0 : 0;
+              // Line starts from center of current card/circle and extends to center of next card/circle
+              // With items-center, circle and card are centered together, so line goes from center to center
+              const spacing = 24; // mb-6 = 24px spacing between items
+              const lineHeight =
+                currentCardHeight > 0 && nextCardHeight > 0
+                  ? currentCardHeight / 2 + spacing + nextCardHeight / 2 // from center of current card to center of next card
+                  : 0;
+
+              const handleCardLayout = (event: LayoutChangeEvent) => {
+                const { height } = event.nativeEvent.layout;
+                setCardHeights((prev) => ({
+                  ...prev,
+                  [item.id]: height,
+                }));
+              };
 
               return (
                 <View key={item.id} className="mb-6">
-                  {/* Timeline Line */}
-                  {index < sortedItems.length - 1 && (
+                  {/* Timeline Line - extends from center of current card/circle to center of next card/circle */}
+                  {index < sortedItems.length - 1 && lineHeight > 0 && (
                     <View
                       className={combineClasses(
-                        'absolute left-6 top-12 w-0.5',
+                        'absolute left-6 w-0.5',
                         isComplete ? 'bg-green-500' : isFuture ? 'bg-gray-200' : 'bg-gray-300'
                       )}
-                      style={{ height: 80 }}
+                      style={{
+                        top: currentCardHeight / 2, // Start from center of current card (where circle is centered)
+                        height: lineHeight,
+                      }}
                     />
                   )}
 
                   {/* Timeline Item */}
-                  <View className={combineClasses('flex-row', isFuture ? 'opacity-50' : '')}>
-                    {/* Timeline Dot */}
+                  <View
+                    className={combineClasses(
+                      'flex-row items-center',
+                      isFuture ? 'opacity-100' : ''
+                    )}>
+                    {/* Timeline Dot - centered vertically with card */}
                     <View className="mr-4">
                       <View
                         className={combineClasses(
@@ -144,6 +170,7 @@ export const ChecklistTimelineScreen = ({
                         onPress={() => !isFuture && onEditItem?.(item.id, item)}
                         disabled={isFuture}
                         activeOpacity={isFuture ? 1 : 0.7}
+                        onLayout={handleCardLayout}
                         className={combineClasses(
                           cards.default.container,
                           isCurrent ? 'border-l-4 border-blue-500' : '',
