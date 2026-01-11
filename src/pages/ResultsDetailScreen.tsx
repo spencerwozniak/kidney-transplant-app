@@ -9,7 +9,7 @@ import {
   layout,
 } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
-import { apiService, PatientStatus } from '../services/api';
+import { apiService, PatientStatus, Patient } from '../services/api';
 
 type ResultsDetailScreenProps = {
   onNavigateToHome?: () => void;
@@ -17,19 +17,24 @@ type ResultsDetailScreenProps = {
 
 export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchPatientStatus();
+    fetchData();
   }, []);
 
-  const fetchPatientStatus = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const status = await apiService.getPatientStatus();
+      const [status, patientData] = await Promise.all([
+        apiService.getPatientStatus(),
+        apiService.getPatient(),
+      ]);
       setPatientStatus(status);
+      setPatient(patientData);
     } catch (error: any) {
-      console.error('Error fetching patient status:', error);
+      console.error('Error fetching data:', error);
       // If status not found, show error message
     } finally {
       setIsLoading(false);
@@ -47,7 +52,7 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
     );
   }
 
-  if (!patientStatus) {
+  if (!patientStatus || !patient) {
     return (
       <SafeAreaView className={layout.container.default}>
         <NavigationBar onBack={onNavigateToHome} />
@@ -69,6 +74,10 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
     absoluteContraindications: patientStatus.absolute_contraindications,
     relativeContraindications: patientStatus.relative_contraindications,
   };
+
+  const hasCKDESRD = patient.has_ckd_esrd === true;
+  const gfr = patient.last_gfr;
+
   return (
     <SafeAreaView className={layout.container.default}>
       <NavigationBar onBack={onNavigateToHome} />
@@ -80,16 +89,60 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
             <View className={progressStyles.indicator} />
           </View>
 
-          {/* Disclaimer */}
-          <View className={combineClasses(cards.colored.amber, 'mb-8')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
-              Important Disclaimer
-            </Text>
-            <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
-              This is an educational tool only. It is not a substitute for professional medical
-              evaluation. Please discuss your results with your healthcare team.
-            </Text>
+          {/* Qualification Status */}
+          <View className="mb-8">
+            {hasCKDESRD ? (
+              <View className={cards.colored.green}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
+                  ✓ Qualifies for Transplant Evaluation
+                </Text>
+                <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
+                  You have been diagnosed with Chronic Kidney Disease (CKD) or End-Stage Renal
+                  Disease (ESRD), which qualifies you for kidney transplant evaluation.
+                </Text>
+              </View>
+            ) : (
+              <View className={cards.colored.blue}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                  Qualification Status
+                </Text>
+                <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                  You have not been diagnosed with CKD or ESRD. Kidney transplant evaluation is
+                  typically for patients with advanced kidney disease. Please discuss with your
+                  healthcare provider if you have concerns about your kidney function.
+                </Text>
+              </View>
+            )}
           </View>
+
+          {/* GFR Information */}
+          {gfr !== undefined && gfr !== null && (
+            <View className={combineClasses(cards.colored.blue, 'mb-8')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                Glomerular Filtration Rate (GFR)
+              </Text>
+              <Text
+                className={combineClasses(
+                  typography.body.large,
+                  'mb-2 font-semibold text-blue-900'
+                )}>
+                {gfr} mL/min/1.73m²
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                {gfr >= 90
+                  ? 'Your GFR indicates normal or high kidney function.'
+                  : gfr >= 60
+                    ? 'Your GFR indicates mildly decreased kidney function (Stage 2 CKD).'
+                    : gfr >= 45
+                      ? 'Your GFR indicates mildly to moderately decreased kidney function (Stage 3a CKD).'
+                      : gfr >= 30
+                        ? 'Your GFR indicates moderately to severely decreased kidney function (Stage 3b CKD).'
+                        : gfr >= 15
+                          ? 'Your GFR indicates severely decreased kidney function (Stage 4 CKD).'
+                          : 'Your GFR indicates kidney failure (Stage 5 CKD/ESRD).'}
+              </Text>
+            </View>
+          )}
 
           {/* Absolute Contraindications */}
           <View className="mb-8">
@@ -212,6 +265,17 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
                 final determination.
               </Text>
             </View>
+          </View>
+
+          {/* Disclaimer - Moved to End */}
+          <View className={combineClasses(cards.colored.amber, 'mb-8')}>
+            <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
+              Important Disclaimer
+            </Text>
+            <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
+              This is an educational tool only. It is not a substitute for professional medical
+              evaluation. Please discuss your results with your healthcare team.
+            </Text>
           </View>
         </View>
       </ScrollView>

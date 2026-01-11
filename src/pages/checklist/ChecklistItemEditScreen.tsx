@@ -116,7 +116,7 @@ export const ChecklistItemEditScreen = ({
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (skipCallback = false) => {
     setIsSaving(true);
     try {
       await apiService.updateChecklistItem(itemId, {
@@ -126,7 +126,9 @@ export const ChecklistItemEditScreen = ({
       });
       // Reset the modified flag after successful save
       notesModifiedRef.current = false;
-      onSave();
+      if (!skipCallback) {
+        onSave();
+      }
     } catch (error: any) {
       console.error('Error saving checklist item:', error);
       // TODO: Show error message to user
@@ -239,7 +241,8 @@ export const ChecklistItemEditScreen = ({
                   className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                   onPress={async () => {
                     // Save changes before navigating to documents screen
-                    await handleSave();
+                    // Skip the onSave callback to preserve editingChecklistItem state
+                    await handleSave(true);
                     onRequestDocuments();
                   }}
                   disabled={!isComplete}

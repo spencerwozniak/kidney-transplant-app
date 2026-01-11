@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { View, Alert } from 'react-native';
+import { View, Alert, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingScreen } from './src/pages/onboarding/OnboardingScreen';
 import { PatientDetailsScreen1 } from './src/pages/onboarding/PatientDetailsScreen1';
 import { PatientDetailsScreen2 } from './src/pages/onboarding/PatientDetailsScreen2';
+import { MedicalQuestionsScreen } from './src/pages/onboarding/MedicalQuestionsScreen';
 import { AssessmentIntroScreen } from './src/pages/transplant-assessment/AssessmentIntroScreen';
 import { HomeScreen } from './src/pages/HomeScreen';
+import { PathwayScreen } from './src/pages/PathwayScreen';
+import { SettingsScreen } from './src/pages/SettingsScreen';
+import { BottomTabBar } from './src/components/BottomTabBar';
 import { TransplantQuestionnaire } from './src/pages/transplant-assessment/TransplantQuestionnaire';
 import { FinancialIntroScreen } from './src/pages/financial-assessment/FinancialIntroScreen';
 import { FinanceQuestionnaire } from './src/pages/financial-assessment/FinanceQuestionnaire';
@@ -14,6 +18,7 @@ import { ChecklistTimelineScreen } from './src/pages/checklist/ChecklistTimeline
 import { ChecklistItemEditScreen } from './src/pages/checklist/ChecklistItemEditScreen';
 import { ChecklistDocumentsScreen } from './src/pages/checklist/ChecklistDocumentsScreen';
 import { StyleExamples } from './src/pages/StyleExamples';
+import { TransplantAccessNavigator } from './src/pages/referral/TransplantAccessNavigator';
 import { StatusBar } from 'expo-status-bar';
 import { apiService, Patient } from './src/services/api';
 
@@ -23,6 +28,7 @@ type Screen =
   | 'onboarding'
   | 'patient-details-1'
   | 'patient-details-2'
+  | 'medical-questions'
   | 'assessment-intro'
   | 'home'
   | 'questionnaire'
@@ -32,7 +38,8 @@ type Screen =
   | 'checklist-timeline'
   | 'checklist-item-edit'
   | 'checklist-documents'
-  | 'examples';
+  | 'examples'
+  | 'transplant-access-navigator';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -43,6 +50,7 @@ export default function App() {
     itemId: string;
     item: any;
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<'pathway' | 'settings'>('pathway');
 
   // Check if patient exists on mount
   useEffect(() => {
@@ -76,6 +84,12 @@ export default function App() {
     weight?: number;
   } | null>(null);
 
+  const [patientDataMedical, setPatientDataMedical] = useState<{
+    has_ckd_esrd?: boolean;
+    last_gfr?: number;
+    has_referral?: boolean;
+  } | null>(null);
+
   const handleGetStarted = () => {
     setCurrentScreen('patient-details-1');
   };
@@ -85,7 +99,7 @@ export default function App() {
     setCurrentScreen('patient-details-2');
   };
 
-  const handlePatientDetails2Next = async (data: {
+  const handlePatientDetails2Next = (data: {
     date_of_birth: string;
     sex?: string;
     height?: number;
@@ -96,13 +110,29 @@ export default function App() {
       return;
     }
 
-    // Cache the data before proceeding
+    // Cache the data before proceeding to medical questions
     setPatientDataPart2(data);
+    setCurrentScreen('medical-questions');
+  };
+
+  const handleMedicalQuestionsNext = async (data: {
+    has_ckd_esrd?: boolean;
+    last_gfr?: number;
+    has_referral?: boolean;
+  }) => {
+    if (!patientDataPart1 || !patientDataPart2) {
+      console.error('Patient data parts are missing');
+      return;
+    }
+
+    // Cache the medical data
+    setPatientDataMedical(data);
 
     setIsLoading(true);
     try {
       const patientData: Patient = {
         ...patientDataPart1,
+        ...patientDataPart2,
         ...data,
       };
 
@@ -126,6 +156,7 @@ export default function App() {
       setPatient(savedPatient);
       setPatientDataPart1(null); // Clear temporary data
       setPatientDataPart2(null); // Clear temporary data
+      setPatientDataMedical(null); // Clear temporary data
       // Checklist is automatically created on backend when patient is created
       setCurrentScreen('assessment-intro');
     } catch (error: any) {
@@ -205,6 +236,7 @@ export default function App() {
               setPatient(null);
               setPatientDataPart1(null);
               setPatientDataPart2(null);
+              setPatientDataMedical(null);
               // Navigate back to onboarding
               setCurrentScreen('onboarding');
             } catch (error: any) {
@@ -242,28 +274,48 @@ export default function App() {
           onBack={() => setCurrentScreen('patient-details-1')}
           initialData={patientDataPart2 || undefined}
         />
+      ) : currentScreen === 'medical-questions' ? (
+        <MedicalQuestionsScreen
+          onNext={handleMedicalQuestionsNext}
+          onBack={() => setCurrentScreen('patient-details-2')}
+          initialData={patientDataMedical || undefined}
+        />
       ) : currentScreen === 'assessment-intro' ? (
         <AssessmentIntroScreen
           onBeginAssessment={handleBeginAssessment}
           onBack={() => {
-            // Navigate back to home if patient exists (already onboarded), otherwise to patient details
+            // Navigate back to home if patient exists (already onboarded), otherwise to medical questions
             if (patient?.id) {
               setCurrentScreen('home');
             } else {
-              setCurrentScreen('patient-details-2');
+              setCurrentScreen('medical-questions');
             }
           }}
         />
       ) : currentScreen === 'home' ? (
-        <HomeScreen
-          patientName={patient?.name || 'Friend'}
-          onViewResults={handleViewResults}
-          onViewChecklist={handleViewChecklist}
-          onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
-          onNavigateToFinancialAssessment={() => setCurrentScreen('financial-intro')}
-          onNavigateToExamples={() => setCurrentScreen('examples')}
-          onDeletePatient={handleDeletePatient}
-        />
+        <View className="flex-1">
+          {activeTab === 'pathway' ? (
+            <PathwayScreen
+              patientName={patient?.name || 'Friend'}
+              onViewResults={handleViewResults}
+              onViewChecklist={handleViewChecklist}
+              onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
+              onNavigateToFinancialAssessment={() => setCurrentScreen('financial-intro')}
+              onDeletePatient={handleDeletePatient}
+              onFindReferral={() => setCurrentScreen('transplant-access-navigator')}
+            />
+          ) : (
+            <SettingsScreen
+              patientName={patient?.name || 'Friend'}
+              onViewResults={handleViewResults}
+              onViewChecklist={handleViewChecklist}
+              onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
+              onNavigateToFinancialAssessment={() => setCurrentScreen('financial-intro')}
+              onDeletePatient={handleDeletePatient}
+            />
+          )}
+          <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        </View>
       ) : currentScreen === 'questionnaire' ? (
         <TransplantQuestionnaire
           patientId={patient?.id || ''}
@@ -317,6 +369,7 @@ export default function App() {
             setCurrentScreen('checklist-timeline');
           }}
           onRequestDocuments={() => {
+            // Preserve editingChecklistItem when navigating to documents screen
             setCurrentScreen('checklist-documents');
           }}
         />
@@ -327,8 +380,14 @@ export default function App() {
             setCurrentScreen('checklist-item-edit');
           }}
         />
-      ) : (
+      ) : currentScreen === 'examples' ? (
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />
+      ) : currentScreen === 'transplant-access-navigator' ? (
+        <TransplantAccessNavigator onNavigateBack={() => setCurrentScreen('home')} />
+      ) : (
+        <View className="flex-1 items-center justify-center bg-white">
+          <Text>Screen not found</Text>
+        </View>
       )}
       <StatusBar style="dark" />
     </SafeAreaProvider>

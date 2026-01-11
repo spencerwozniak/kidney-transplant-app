@@ -18,6 +18,9 @@ export type Patient = {
   weight?: number; // kg
   email?: string;
   phone?: string;
+  has_ckd_esrd?: boolean;
+  last_gfr?: number;
+  has_referral?: boolean;
 };
 
 export type QuestionnaireSubmission = {
@@ -39,6 +42,7 @@ export type PatientStatus = {
   has_relative: boolean;
   absolute_contraindications: Contraindication[];
   relative_contraindications: Contraindication[];
+  pathway_stage?: string; // 'identification' | 'referral' | 'evaluation' | 'selection' | 'transplantation' | 'post-transplant'
   updated_at?: string;
 };
 
@@ -67,6 +71,65 @@ export type FinancialProfile = {
   answers: Record<string, string | null>; // question_id -> answer or null
   submitted_at?: string;
   updated_at?: string;
+};
+
+export type TransplantCenter = {
+  center_id: string;
+  name: string;
+  location: {
+    city: string;
+    state: string;
+    zip?: string;
+    lat?: number;
+    lng?: number;
+  };
+  distance_miles?: number;
+  referral_required: boolean;
+  self_referral_allowed: boolean;
+  who_can_refer: string[];
+  contact: {
+    referral_phone: string;
+    referral_fax?: string;
+    website?: string;
+  };
+  insurance_compatible: boolean;
+};
+
+export type PatientReferralState = {
+  patient_id: string;
+  location: {
+    zip?: string;
+    state?: string;
+    lat?: number;
+    lng?: number;
+  };
+  has_referral: boolean;
+  referral_source?: string | null;
+  last_nephrologist?: {
+    name?: string | null;
+    clinic?: string | null;
+  } | null;
+  dialysis_center?: {
+    name?: string | null;
+    social_worker_contact?: string | null;
+  } | null;
+  preferred_centers: string[];
+  referral_status: 'not_started' | 'in_progress' | 'completed';
+};
+
+export type ReferralPathway = {
+  pathway: 'nephrologist_referral' | 'dialysis_center_referral' | 'no_provider';
+  guidance: {
+    title: string;
+    steps?: string[];
+    script?: string;
+    what_to_send?: string[];
+    paths?: Array<{
+      name: string;
+      description: string;
+      action: string;
+    }>;
+  };
 };
 
 class ApiService {
@@ -224,6 +287,39 @@ class ApiService {
 
   async getFinancialProfile(): Promise<FinancialProfile> {
     return this.request<FinancialProfile>('/api/v1/financial-profile');
+  }
+
+  // Transplant Access Navigator APIs
+  async findNearbyCenters(params: {
+    zip_code?: string;
+    state?: string;
+    lat?: number;
+    lng?: number;
+    insurance_type?: string;
+  }): Promise<TransplantCenter[]> {
+    const queryParams = new URLSearchParams();
+    if (params.zip_code) queryParams.append('zip_code', params.zip_code);
+    if (params.state) queryParams.append('state', params.state);
+    if (params.lat !== undefined) queryParams.append('lat', params.lat.toString());
+    if (params.lng !== undefined) queryParams.append('lng', params.lng.toString());
+    if (params.insurance_type) queryParams.append('insurance_type', params.insurance_type);
+
+    return this.request<TransplantCenter[]>(`/api/v1/centers/nearby?${queryParams.toString()}`);
+  }
+
+  async getReferralState(): Promise<PatientReferralState> {
+    return this.request<PatientReferralState>('/api/v1/referral-state');
+  }
+
+  async updateReferralState(state: Partial<PatientReferralState>): Promise<PatientReferralState> {
+    return this.request<PatientReferralState>('/api/v1/referral-state', {
+      method: 'POST',
+      body: JSON.stringify(state),
+    });
+  }
+
+  async getReferralPathway(): Promise<ReferralPathway> {
+    return this.request<ReferralPathway>('/api/v1/referral-pathway');
   }
 }
 

@@ -108,11 +108,11 @@ const questions: QuestionType[] = [
     options: US_STATES,
   },
   {
-    id: 'distance_to_center',
-    question: 'What is your distance to the transplant center?',
-    description: 'Enter your ZIP code or approximate distance in miles.',
+    id: 'location',
+    question: 'What is your location?',
+    description: 'Enter your ZIP code or address.',
     type: 'text',
-    placeholder: 'ZIP code or distance in miles',
+    placeholder: 'ZIP code or address',
   },
   {
     id: 'caregiver_availability',
