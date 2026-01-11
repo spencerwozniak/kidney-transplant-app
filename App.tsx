@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Alert, Text } from 'react-native';
+import { View, Alert, Text, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingScreen } from './src/pages/onboarding/OnboardingScreen';
 import { PatientDetailsScreen1 } from './src/pages/onboarding/PatientDetailsScreen1';
@@ -218,42 +218,46 @@ export default function App() {
   };
 
   const handleDeletePatient = () => {
-    // Confirm deletion
-    Alert.alert(
-      'Delete Patient Data',
-      'Are you sure you want to delete all patient data? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await apiService.deletePatient();
-              // Clear all state
-              setPatient(null);
-              setPatientDataPart1(null);
-              setPatientDataPart2(null);
-              setPatientDataMedical(null);
-              // Navigate back to onboarding
-              setCurrentScreen('onboarding');
-            } catch (error: any) {
-              console.error('Error deleting patient:', error);
-              Alert.alert(
-                'Error',
-                `Failed to delete patient: ${error?.message || 'Unknown error'}`
-              );
-            } finally {
-              setIsLoading(false);
-            }
+    const doDelete = async () => {
+      setIsLoading(true);
+      try {
+        await apiService.deletePatient();
+        // Clear all state
+        setPatient(null);
+        setPatientDataPart1(null);
+        setPatientDataPart2(null);
+        setPatientDataMedical(null);
+        // Navigate back to onboarding
+        setCurrentScreen('onboarding');
+      } catch (error: any) {
+        console.error('Error deleting patient:', error);
+        Alert.alert('Error', `Failed to delete patient: ${error?.message || 'Unknown error'}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Use window.confirm on web (Alert.alert on native does not provide full confirm dialog in web)
+    if (Platform.OS === 'web') {
+      const ok = window.confirm('Are you sure you want to delete all patient data? This action cannot be undone.');
+      if (ok) doDelete();
+    } else {
+      Alert.alert(
+        'Delete Patient Data',
+        'Are you sure you want to delete all patient data? This action cannot be undone.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
           },
-        },
-      ]
-    );
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: doDelete,
+          },
+        ]
+      );
+    }
   };
 
   return (

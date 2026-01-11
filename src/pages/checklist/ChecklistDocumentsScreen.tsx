@@ -137,12 +137,32 @@ export const ChecklistDocumentsScreen = ({
         multiple: true,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const files = result.assets.map((file) => ({
+      // `DocumentPicker.getDocumentAsync` returns an object with `type: 'success'|'cancel'` and file info.
+      // Some platforms or versions may return a single file or an array; handle both safely.
+      if (!result) return;
+
+      // If result is an array (multiple files), map accordingly
+      if (Array.isArray(result)) {
+        const files = result.map((file: any) => ({
           uri: file.uri,
           fileName: file.name || 'document.pdf',
           fileType: file.mimeType || 'application/pdf',
         }));
+        if (files.length > 0) await uploadFiles(files);
+        return;
+      }
+
+      // Single file response
+      // Support both `{ type: 'success', uri, name, mimeType }` and legacy shapes
+      if ((result as any).type === 'success' || (result as any).uri) {
+        const file = result as any;
+        const files = [
+          {
+            uri: file.uri,
+            fileName: file.name || getFileName(file.uri) || 'document.pdf',
+            fileType: file.mimeType || file.mimeType || 'application/pdf',
+          },
+        ];
         await uploadFiles(files);
       }
     } catch (error: any) {
