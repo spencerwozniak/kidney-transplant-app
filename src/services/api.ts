@@ -187,6 +187,10 @@ class ApiService {
     return this.request<Patient>('/api/v1/patients');
   }
 
+  async getQuestionnaire(): Promise<QuestionnaireSubmission> {
+    return this.request<QuestionnaireSubmission>('/api/v1/questionnaire');
+  }
+
   async submitQuestionnaire(submission: QuestionnaireSubmission): Promise<QuestionnaireSubmission> {
     return this.request<QuestionnaireSubmission>('/api/v1/questionnaire', {
       method: 'POST',

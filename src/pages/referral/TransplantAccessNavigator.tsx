@@ -150,6 +150,18 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
             selectedCenter={selectedCenter}
             referralState={referralState}
             onBack={() => setCurrentScreen('pathway')}
+            onUpdateReferralState={async (updates) => {
+              if (referralState) {
+                const updated = await apiService.updateReferralState({
+                  ...referralState,
+                  ...updates,
+                });
+                setReferralState(updated);
+                // Reload pathway data to reflect changes
+                await loadInitialData();
+              }
+            }}
+            onNavigateBack={onNavigateBack}
           />
         )}
       </ScrollView>
@@ -476,9 +488,39 @@ type NextStepsScreenProps = {
   selectedCenter: TransplantCenter | null;
   referralState: PatientReferralState | null;
   onBack: () => void;
+  onUpdateReferralState: (updates: Partial<PatientReferralState>) => Promise<void>;
+  onNavigateBack: () => void;
 };
 
-const NextStepsScreen = ({ pathway, selectedCenter, referralState, onBack }: NextStepsScreenProps) => {
+const NextStepsScreen = ({
+  pathway,
+  selectedCenter,
+  referralState,
+  onBack,
+  onUpdateReferralState,
+  onNavigateBack,
+}: NextStepsScreenProps) => {
+  const [isMarkingReferral, setIsMarkingReferral] = useState(false);
+  const hasReferral = referralState?.has_referral === true;
+
+  const handleMarkReferralReceived = async () => {
+    setIsMarkingReferral(true);
+    try {
+      await onUpdateReferralState({
+        has_referral: true,
+        referral_status: 'completed',
+      });
+      // Show success message and navigate back after a moment
+      setTimeout(() => {
+        onNavigateBack();
+      }, 1500);
+    } catch (error: any) {
+      console.error('Error updating referral status:', error);
+      alert('Failed to update referral status. Please try again.');
+    } finally {
+      setIsMarkingReferral(false);
+    }
+  };
   return (
     <View className="px-6 py-8">
       <Text className={combineClasses(typography.h2, 'mb-2 text-left')}>What to Do Next</Text>
@@ -552,6 +594,47 @@ const NextStepsScreen = ({ pathway, selectedCenter, referralState, onBack }: Nex
           evaluation.
         </Text>
       </View>
+
+      {/* Mark Referral Received Button */}
+      {!hasReferral && (
+        <View className="mb-6">
+          <View className={combineClasses(cards.colored.green, 'mb-4')}>
+            <Text className={combineClasses(typography.h6, 'mb-2 text-green-900')}>
+              Received Your Referral?
+            </Text>
+            <Text className={combineClasses(typography.body.small, 'mb-4 leading-6 text-green-800')}>
+              Once you've received confirmation that your referral has been sent to the transplant
+              center, mark it here to move to the next stage of your transplant journey.
+            </Text>
+          </View>
+          <TouchableOpacity
+            className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+            onPress={handleMarkReferralReceived}
+            disabled={isMarkingReferral}
+            activeOpacity={0.8}>
+            {isMarkingReferral ? (
+              <View className="flex-row items-center justify-center">
+                <ActivityIndicator size="small" color="white" className="mr-2" />
+                <Text className={buttons.primary.text}>Updating...</Text>
+              </View>
+            ) : (
+              <Text className={buttons.primary.text}>I Have Received My Referral</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {hasReferral && (
+        <View className={combineClasses(cards.colored.green, 'mb-6')}>
+          <Text className={combineClasses(typography.h6, 'mb-2 text-green-900')}>
+            ✓ Referral Received
+          </Text>
+          <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
+            Great! Your referral has been marked as received. You can now proceed to the evaluation
+            stage. Check your pathway to see the next steps.
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

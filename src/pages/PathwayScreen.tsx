@@ -54,8 +54,7 @@ export const PATHWAY_STAGES: PathwayStageData[] = [
   {
     id: 'evaluation',
     title: 'Evaluation',
-    description:
-      'Multidisciplinary assessment including medical, surgical, and psychosocial components. Can take weeks to several months. About 2/3 of referred patients are invited, and about half are ultimately selected.',
+    description: 'Multidisciplinary assessment that typically takes weeks to several months.',
     shortDescription: 'Comprehensive medical and psychosocial assessment',
     icon: '🏥',
     color: '#f59e0b', // amber
@@ -100,6 +99,7 @@ type PathwayScreenProps = {
   onNavigateToFinancialAssessment?: () => void;
   onDeletePatient?: () => void;
   onFindReferral?: () => void;
+  onViewReferral?: () => void;
   showActionButtons?: boolean; // For backward compatibility, but won't be used
 };
 
@@ -116,6 +116,7 @@ export const PathwayScreen = ({
   onNavigateToFinancialAssessment,
   onDeletePatient,
   onFindReferral,
+  onViewReferral,
 }: PathwayScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [checklist, setChecklist] = useState<TransplantChecklist | null>(null);
@@ -307,6 +308,21 @@ export const PathwayScreen = ({
               </View>
             )}
 
+            {/* Action Button for Evaluation Stage - Only show if current or completed */}
+            {stage.id === 'evaluation' && onViewChecklist && (isCurrent || isCompleted) && (
+              <View className="mb-4">
+                <TouchableOpacity
+                  className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onViewChecklist();
+                  }}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.primary.text}>View Checklist</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Action Button for Identification Stage */}
             {stage.id === 'identification' && onViewResults && patientStatus && (
               <View className="mb-4">
@@ -323,17 +339,33 @@ export const PathwayScreen = ({
             )}
 
             {/* Action Button for Referral Stage */}
-            {stage.id === 'referral' && onFindReferral && (
+            {stage.id === 'referral' && (
               <View className="mb-4">
-                <TouchableOpacity
-                  className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    onFindReferral();
-                  }}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.primary.text}>Find a Referral</Text>
-                </TouchableOpacity>
+                {safeCurrentStageIndex > index && onViewReferral ? (
+                  // Past referral stage - show "View Referral" button
+                  <TouchableOpacity
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      onViewReferral();
+                    }}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>View Referral</Text>
+                  </TouchableOpacity>
+                ) : (
+                  // Current or upcoming referral stage - show "Find a Referral" button
+                  onFindReferral && (
+                    <TouchableOpacity
+                      className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        onFindReferral();
+                      }}
+                      activeOpacity={0.8}>
+                      <Text className={buttons.primary.text}>Find a Referral</Text>
+                    </TouchableOpacity>
+                  )
+                )}
               </View>
             )}
 
@@ -363,11 +395,11 @@ export const PathwayScreen = ({
     <SafeAreaView className={layout.container.default}>
       <View className="flex-1">
         {/* Header */}
-        <View className="px-6 pb-2 pt-4">
-          <Text className={combineClasses(typography.h2, 'mb-1 text-left')}>
+        <View className="px-6 pb-2 pt-12 ">
+          <Text className={combineClasses(typography.h2, 'mb-1 text-center')}>
             Your Transplant Pathway
           </Text>
-          <Text className={combineClasses(typography.body.small, 'text-left text-gray-500')}>
+          <Text className={combineClasses(typography.body.small, 'text-center text-gray-500')}>
             Swipe left or right to explore stages
           </Text>
         </View>

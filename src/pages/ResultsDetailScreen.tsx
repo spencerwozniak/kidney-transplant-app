@@ -9,7 +9,7 @@ import {
   layout,
 } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
-import { apiService, PatientStatus, Patient } from '../services/api';
+import { apiService, PatientStatus, Patient, QuestionnaireSubmission } from '../services/api';
 
 type ResultsDetailScreenProps = {
   onNavigateToHome?: () => void;
@@ -18,6 +18,7 @@ type ResultsDetailScreenProps = {
 export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireSubmission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,12 +28,14 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [status, patientData] = await Promise.all([
+      const [status, patientData, questionnaireData] = await Promise.all([
         apiService.getPatientStatus(),
         apiService.getPatient(),
+        apiService.getQuestionnaire().catch(() => null), // Questionnaire might not exist yet
       ]);
       setPatientStatus(status);
       setPatient(patientData);
+      setQuestionnaire(questionnaireData);
     } catch (error: any) {
       console.error('Error fetching data:', error);
       // If status not found, show error message
@@ -237,15 +240,17 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
             )}
           </View>
 
-          {/* Age Information */}
-          <View className={combineClasses(cards.colored.blue, 'mb-8')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>About Age</Text>
-            <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-              There is no absolute age limit for kidney transplantation. Advanced age alone is not a
-              contraindication. Patients over 70 can receive successful transplants. Your care team
-              will evaluate your overall health and fitness, not just your age.
-            </Text>
-          </View>
+          {/* Age Information - Only show if age_concern is "yes" */}
+          {questionnaire?.answers?.age_concern === 'yes' && (
+            <View className={combineClasses(cards.colored.blue, 'mb-8')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>About Age</Text>
+              <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                There is no absolute age limit for kidney transplantation. Advanced age alone is not
+                a contraindication. Patients over 70 can receive successful transplants. Your care
+                team will evaluate your overall health and fitness, not just your age.
+              </Text>
+            </View>
+          )}
 
           {/* Next Steps */}
           <View className={combineClasses(cards.default.container, 'mb-6')}>

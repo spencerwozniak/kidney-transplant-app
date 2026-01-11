@@ -19,6 +19,7 @@ import { ChecklistItemEditScreen } from './src/pages/checklist/ChecklistItemEdit
 import { ChecklistDocumentsScreen } from './src/pages/checklist/ChecklistDocumentsScreen';
 import { StyleExamples } from './src/pages/StyleExamples';
 import { TransplantAccessNavigator } from './src/pages/referral/TransplantAccessNavigator';
+import { ReferralViewScreen } from './src/pages/referral/ReferralViewScreen';
 import { StatusBar } from 'expo-status-bar';
 import { apiService, Patient } from './src/services/api';
 
@@ -39,7 +40,8 @@ type Screen =
   | 'checklist-item-edit'
   | 'checklist-documents'
   | 'examples'
-  | 'transplant-access-navigator';
+  | 'transplant-access-navigator'
+  | 'referral-view';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -303,6 +305,7 @@ export default function App() {
               onNavigateToFinancialAssessment={() => setCurrentScreen('financial-intro')}
               onDeletePatient={handleDeletePatient}
               onFindReferral={() => setCurrentScreen('transplant-access-navigator')}
+              onViewReferral={() => setCurrentScreen('referral-view')}
             />
           ) : (
             <SettingsScreen
@@ -384,6 +387,8 @@ export default function App() {
         <StyleExamples onNavigateToHome={() => setCurrentScreen('home')} />
       ) : currentScreen === 'transplant-access-navigator' ? (
         <TransplantAccessNavigator onNavigateBack={() => setCurrentScreen('home')} />
+      ) : currentScreen === 'referral-view' ? (
+        <ReferralViewScreen onNavigateBack={() => setCurrentScreen('home')} />
       ) : (
         <View className="flex-1 items-center justify-center bg-white">
           <Text>Screen not found</Text>
