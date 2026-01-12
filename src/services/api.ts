@@ -340,6 +340,43 @@ class ApiService {
   async getReferralPathway(): Promise<ReferralPathway> {
     return this.request<ReferralPathway>('/api/v1/referral-pathway');
   }
+
+  // AI Assistant APIs
+  async queryAIAssistant(params: {
+    query: string;
+    provider?: string;
+    model?: string;
+  }): Promise<{ response: string; context_summary: Record<string, any> }> {
+    const body: { query: string; provider?: string; model?: string } = {
+      query: params.query,
+    };
+    if (params.provider) body.provider = params.provider;
+    if (params.model) body.model = params.model;
+
+    return this.request<{ response: string; context_summary: Record<string, any> }>(
+      '/api/v1/ai-assistant/query',
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }
+    );
+  }
+
+  async getAIContext(): Promise<{ patient_id: string; context: Record<string, any> }> {
+    return this.request<{ patient_id: string; context: Record<string, any> }>(
+      '/api/v1/ai-assistant/context'
+    );
+  }
+
+  async getAIStatus(): Promise<{
+    enabled: boolean;
+    provider: string | null;
+    message: string;
+  }> {
+    return this.request<{ enabled: boolean; provider: string | null; message: string }>(
+      '/api/v1/ai-assistant/status'
+    );
+  }
 }
 
 export const apiService = new ApiService();

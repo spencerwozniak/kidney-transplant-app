@@ -14,6 +14,7 @@ import { MedicalQuestionsScreen } from '../pages/onboarding/MedicalQuestionsScre
 import { AssessmentIntroScreen } from '../pages/transplant-assessment/AssessmentIntroScreen';
 import { PathwayScreen } from '../pages/pathway';
 import { SettingsScreen } from '../pages/SettingsScreen';
+import { ChatScreen } from '../pages/ChatScreen';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { TransplantQuestionnaire } from '../pages/transplant-assessment/TransplantQuestionnaire';
 import { FinancialIntroScreen } from '../pages/financial-assessment/FinancialIntroScreen';
@@ -183,6 +184,8 @@ export function ScreenRouter({
             onFindReferral={() => setCurrentScreen('transplant-access-navigator')}
             onViewReferral={() => setCurrentScreen('referral-view')}
           />
+        ) : activeTab === 'chat' ? (
+          <ChatScreen patientName={patient?.name || 'Friend'} />
         ) : (
           <SettingsScreen
             patientName={patient?.name || 'Friend'}

@@ -36,7 +36,7 @@ export type Screen =
   // Development
   | 'examples';
 
-export type Tab = 'pathway' | 'settings';
+export type Tab = 'pathway' | 'chat' | 'settings';
 
 export type ChecklistEditingItem = {
   itemId: string;
