@@ -2,15 +2,7 @@
  * API Service for backend communication
  */
 
-// - iOS Simulator: use 'http://localhost:8000'
-// - Android Emulator: use 'http://10.0.2.2:8000'
-// - Physical Device: use your machine's local IP (e.g., 'http://192.168.1.81:8000')
-//   Find your IP with: ipconfig (Windows) or ifconfig (Mac/Linux)
-
-// Base URL uses environment variable `EXPO_PUBLIC_API_URL` when provided.
-// Falls back to using your machine's local IP at http://192.168.1.81:8000 for development.
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL?.trim() || 'http://192.168.1.81:8000';
+const API_BASE_URL = 'http://3.21.125.231:8000';
 
 export type Patient = {
   id?: string;
