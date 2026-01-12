@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Animated, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, cards, combineClasses, layout, decorative } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 
 type AssessmentIntroScreenProps = {
   onBeginAssessment: () => void;
@@ -49,67 +51,95 @@ export const AssessmentIntroScreen = ({
   };
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
-          className="px-6 py-8">
-          {/* Decorative Elements */}
-          <View
-            className={combineClasses(
-              decorative.circles.small,
-              decorative.circles.green,
-              'top-30 absolute right-10 opacity-30'
-            )}
-          />
-
-          {/* Header */}
-          <View className="mb-6 mt-[80px]">
-            <Text className={combineClasses(typography.h2, 'mb-3')}>
-              Transplant Eligibility Self-Assessment
-            </Text>
-            <View className="h-1 w-16 rounded-full bg-green-500" />
-          </View>
-
-          {/* Description Card */}
-          <View className={combineClasses('mb-6')}>
-            <Text className={combineClasses(typography.body.xlarge, 'mb-4 leading-6')}>
-              This assessment helps you understand whether you might be a candidate for transplant
-              evaluation.
-            </Text>
-
-            <Text className={combineClasses(typography.body.large, 'mb-2 font-semibold')}>
-              What to expect:
-            </Text>
-            <View className="mb-2">
-              <Text className={combineClasses(typography.body.large, 'mb-1')}>
-                • Questions about medical conditions
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }}
+            className="mt-16 px-6 py-8">
+            {/* Header */}
+            <View className="mb-6">
+              <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+                Transplant Eligibility Self-Assessment
               </Text>
-              <Text className={combineClasses(typography.body.large, 'mb-1')}>
-                • Questions about lifestyle factors
-              </Text>
-              <Text className={combineClasses(typography.body.large, 'mb-1')}>
-                • Questions about social situation
-              </Text>
-              <Text className={combineClasses(typography.body.large, 'mb-1')}>
-                • Identification of contraindications
-              </Text>
+              <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
-          </View>
 
-          {/* Begin Assessment Button */}
-          <TouchableOpacity
-            className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-            onPress={handleBegin}
-            activeOpacity={0.8}>
-            <Text className={buttons.primary.text}>Begin Assessment</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+            {/* Description Card */}
+            <View className={combineClasses('mb-6')}>
+              <Text
+                className={combineClasses(
+                  typography.body.xlarge,
+                  'mb-4 font-bold leading-6 text-white shadow'
+                )}>
+                This assessment helps you understand whether you might be a candidate for transplant
+                evaluation.
+              </Text>
+
+              <Text
+                className={combineClasses(
+                  typography.body.large,
+                  'mb-2 font-bold text-white shadow'
+                )}>
+                What to expect:
+              </Text>
+              <View className="mb-2">
+                <Text
+                  className={combineClasses(
+                    typography.body.large,
+                    'mb-1 font-semibold text-white shadow'
+                  )}>
+                  • Questions about medical conditions
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.large,
+                    'mb-1 font-semibold text-white shadow'
+                  )}>
+                  • Questions about lifestyle factors
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.large,
+                    'mb-1 font-semibold text-white shadow'
+                  )}>
+                  • Questions about social situation
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.large,
+                    'mb-1 font-semibold text-white shadow'
+                  )}>
+                  • Identification of contraindications
+                </Text>
+              </View>
+            </View>
+
+            {/* Begin Assessment Button */}
+            <TouchableOpacity
+              className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+              onPress={handleBegin}
+              activeOpacity={0.8}>
+              <Text className={buttons.outline.text}>Begin Assessment</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

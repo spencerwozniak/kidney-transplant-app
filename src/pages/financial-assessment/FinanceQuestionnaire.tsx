@@ -7,8 +7,10 @@ import {
   ActivityIndicator,
   Animated,
   TextInput,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import {
   buttons,
@@ -18,8 +20,10 @@ import {
   combineClasses,
   layout,
   getBadgeClasses,
+  inputs,
 } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService } from '../../services/api';
 
 type QuestionType = {
@@ -348,29 +352,43 @@ export const FinanceQuestionnaire = ({
 
   if (isSubmitting) {
     return (
-      <View className={layout.container.default}>
-        <NavigationBar onBack={onNavigateToHome} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Saving your assessment...
-          </Text>
-        </View>
-      </View>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateToHome} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Saving your assessment...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   if (isLoadingExisting) {
     return (
-      <View className={layout.container.default}>
-        <NavigationBar onBack={onNavigateToFinancialIntro} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Loading your information...
-          </Text>
-        </View>
-      </View>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateToFinancialIntro} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading your information...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -379,41 +397,59 @@ export const FinanceQuestionnaire = ({
   const currentAnswer = answers[currentQuestion.id];
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={handleBack} infoModal={infoModalContent} />
-      {isSaving && (
-        <View className="bg-blue-50 px-4 py-2">
-          <Text className={combineClasses(typography.body.small, 'text-blue-600')}>
-            Saving progress...
-          </Text>
-        </View>
-      )}
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <View className="px-6 pb-2">
-          {/* Progress Bar */}
-          <View className="mb-6">
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className={typography.body.small}>
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </Text>
-              <Text className={typography.body.small}>{Math.round(progress)}%</Text>
-            </View>
-            <View className={progressStyles.container}>
-              <View className={progressStyles.bar.primary} style={{ width: `${progress}%` }} />
-            </View>
-          </View>
-
-          {/* Question */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h4, 'mb-4 leading-7')}>
-              {currentQuestion.question}
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={handleBack} infoModal={infoModalContent} />
+        {isSaving && (
+          <View className="bg-white/20 px-4 py-2">
+            <Text className={combineClasses(typography.body.small, 'text-white shadow')}>
+              Saving progress...
             </Text>
-
-            {currentQuestion.description && (
-              <View className="mb-4">
-                <Text className={typography.body.small}>{currentQuestion.description}</Text>
+          </View>
+        )}
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <View className="px-6 pb-2">
+            {/* Progress Bar */}
+            <View className="mb-6">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text
+                  className={combineClasses(
+                    typography.body.medium,
+                    'font-semibold text-white shadow'
+                  )}>
+                  Question {currentQuestionIndex + 1} of {questions.length}
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.medium,
+                    'font-semibold text-white shadow'
+                  )}>
+                  {Math.round(progress)}%
+                </Text>
               </View>
-            )}
+              <View className={progressStyles.container}>
+                <View className={progressStyles.bar.primary} style={{ width: `${progress}%` }} />
+              </View>
+            </View>
+
+            {/* Question */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h4, 'mb-4 text-white shadow')}>
+                {currentQuestion.question}
+              </Text>
+
+              {currentQuestion.description && (
+                <View className="mb-4">
+                  <Text className={combineClasses(typography.body.large, 'text-white shadow')}>
+                    {currentQuestion.description}
+                  </Text>
+                </View>
+              )}
 
             {/* Answer Options */}
             <View className="mt-6">
@@ -428,20 +464,20 @@ export const FinanceQuestionnaire = ({
                       className="mb-3">
                       <TouchableOpacity
                         className={combineClasses(
-                          buttons.answer.base,
+                          'flex-1 rounded-lg border-2 p-3',
                           currentAnswer === option
-                            ? buttons.answer.selected
-                            : buttons.answer.unselected
+                            ? 'border-green-600 bg-green-100'
+                            : 'border-gray-200 bg-white'
                         )}
                         onPress={() => handleAnswer(currentQuestion.id, option)}
-                        activeOpacity={1}
+                        activeOpacity={0.8}
                         disabled={isSubmitting}>
                         <Text
                           className={combineClasses(
-                            buttons.answer.text,
+                            'text-center text-lg font-semibold',
                             currentAnswer === option
-                              ? buttons.answer.textSelected
-                              : buttons.answer.textUnselected
+                              ? 'font-bold text-green-600'
+                              : 'text-green-700'
                           )}>
                           {option}
                         </Text>
@@ -453,41 +489,36 @@ export const FinanceQuestionnaire = ({
 
               {currentQuestion.type === 'text' && (
                 <View className="mb-3">
-                  <TextInput
-                    ref={textInputRef}
-                    className={combineClasses(
-                      'rounded-lg border-2 border-gray-300 bg-white px-4 py-3 text-base',
-                      currentAnswer ? 'border-green-500' : ''
-                    )}
-                    placeholder={currentQuestion.placeholder || 'Enter your answer'}
-                    value={currentAnswer || ''}
-                    onChangeText={(text) => handleTextAnswer(currentQuestion.id, text)}
-                    onSubmitEditing={() => handleTextSubmit(currentQuestion.id)}
-                    returnKeyType="next"
-                    autoCapitalize="words"
-                  />
+                  <View className={inputs.default.container}>
+                    <TextInput
+                      ref={textInputRef}
+                      className={inputs.default.input}
+                      placeholder={currentQuestion.placeholder || 'Enter your answer'}
+                      placeholderTextColor={inputs.default.placeholder}
+                      value={currentAnswer || ''}
+                      onChangeText={(text) => handleTextAnswer(currentQuestion.id, text)}
+                      onSubmitEditing={() => handleTextSubmit(currentQuestion.id)}
+                      returnKeyType="next"
+                      autoCapitalize="words"
+                    />
+                  </View>
                   <TouchableOpacity
                     className={combineClasses(
-                      buttons.primary.base,
-                      currentAnswer && currentAnswer.trim()
-                        ? buttons.primary.enabled
-                        : buttons.primary.disabled,
+                      buttons.outline.base,
+                      buttons.outline.enabled,
                       'mt-3'
                     )}
                     onPress={() => handleTextSubmit(currentQuestion.id)}
-                    disabled={!currentAnswer || !currentAnswer.trim()}>
-                    <Text className={buttons.primary.text}>Continue</Text>
+                    disabled={!currentAnswer || !currentAnswer.trim()}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>Continue</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               {currentQuestion.type === 'picker' && currentQuestion.options && (
                 <View className="mb-3">
-                  <View
-                    className={combineClasses(
-                      'rounded-lg border-2 bg-white',
-                      currentAnswer ? 'border-green-500' : 'border-gray-300'
-                    )}>
+                  <View className={inputs.default.container}>
                     <Picker
                       selectedValue={currentAnswer || ''}
                       onValueChange={(value: string) => {
@@ -507,8 +538,8 @@ export const FinanceQuestionnaire = ({
                   {currentAnswer && (
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.primary.base,
-                        buttons.primary.enabled,
+                        buttons.outline.base,
+                        buttons.outline.enabled,
                         'mt-3'
                       )}
                       onPress={() => {
@@ -519,7 +550,7 @@ export const FinanceQuestionnaire = ({
                         }
                       }}
                       activeOpacity={0.8}>
-                      <Text className={buttons.primary.text}>Continue</Text>
+                      <Text className={buttons.outline.text}>Continue</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -534,20 +565,20 @@ export const FinanceQuestionnaire = ({
                     className="mb-3">
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.answer.base,
+                        'flex-1 rounded-lg border-2 p-3',
                         currentAnswer === 'yes'
-                          ? buttons.answer.selected
-                          : buttons.answer.unselected
+                          ? 'border-green-600 bg-green-100'
+                          : 'border-gray-200 bg-white'
                       )}
                       onPress={() => handleAnswer(currentQuestion.id, 'yes')}
-                      activeOpacity={1}
+                      activeOpacity={0.8}
                       disabled={isSubmitting}>
                       <Text
                         className={combineClasses(
-                          buttons.answer.text,
+                          'text-center text-lg font-semibold',
                           currentAnswer === 'yes'
-                            ? buttons.answer.textSelected
-                            : buttons.answer.textUnselected
+                            ? 'font-bold text-green-600'
+                            : 'text-green-700'
                         )}>
                         Yes
                       </Text>
@@ -561,18 +592,20 @@ export const FinanceQuestionnaire = ({
                     className="mb-3">
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.answer.base,
-                        currentAnswer === 'no' ? buttons.answer.selected : buttons.answer.unselected
+                        'flex-1 rounded-lg border-2 p-3',
+                        currentAnswer === 'no'
+                          ? 'border-green-600 bg-green-100'
+                          : 'border-gray-200 bg-white'
                       )}
                       onPress={() => handleAnswer(currentQuestion.id, 'no')}
-                      activeOpacity={1}
+                      activeOpacity={0.8}
                       disabled={isSubmitting}>
                       <Text
                         className={combineClasses(
-                          buttons.answer.text,
+                          'text-center text-lg font-semibold',
                           currentAnswer === 'no'
-                            ? buttons.answer.textSelected
-                            : buttons.answer.textUnselected
+                            ? 'font-bold text-green-600'
+                            : 'text-green-700'
                         )}>
                         No
                       </Text>
@@ -586,20 +619,20 @@ export const FinanceQuestionnaire = ({
                     className="mb-3">
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.answer.base,
+                        'flex-1 rounded-lg border-2 p-3',
                         currentAnswer === 'uncertain'
-                          ? buttons.answer.selected
-                          : buttons.answer.unselected
+                          ? 'border-green-600 bg-green-100'
+                          : 'border-gray-200 bg-white'
                       )}
                       onPress={() => handleAnswer(currentQuestion.id, 'uncertain')}
-                      activeOpacity={1}
+                      activeOpacity={0.8}
                       disabled={isSubmitting}>
                       <Text
                         className={combineClasses(
-                          buttons.answer.text,
+                          'text-center text-lg font-semibold',
                           currentAnswer === 'uncertain'
-                            ? buttons.answer.textSelected
-                            : buttons.answer.textUnselected
+                            ? 'font-bold text-green-600'
+                            : 'text-green-700'
                         )}>
                         Uncertain
                       </Text>
@@ -617,20 +650,20 @@ export const FinanceQuestionnaire = ({
                     className="mb-3">
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.answer.base,
+                        'flex-1 rounded-lg border-2 p-3',
                         currentAnswer === 'yes'
-                          ? buttons.answer.selected
-                          : buttons.answer.unselected
+                          ? 'border-green-600 bg-green-100'
+                          : 'border-gray-200 bg-white'
                       )}
                       onPress={() => handleAnswer(currentQuestion.id, 'yes')}
-                      activeOpacity={1}
+                      activeOpacity={0.8}
                       disabled={isSubmitting}>
                       <Text
                         className={combineClasses(
-                          buttons.answer.text,
+                          'text-center text-lg font-semibold',
                           currentAnswer === 'yes'
-                            ? buttons.answer.textSelected
-                            : buttons.answer.textUnselected
+                            ? 'font-bold text-green-600'
+                            : 'text-green-700'
                         )}>
                         Yes
                       </Text>
@@ -644,18 +677,20 @@ export const FinanceQuestionnaire = ({
                     className="mb-3">
                     <TouchableOpacity
                       className={combineClasses(
-                        buttons.answer.base,
-                        currentAnswer === 'no' ? buttons.answer.selected : buttons.answer.unselected
+                        'flex-1 rounded-lg border-2 p-3',
+                        currentAnswer === 'no'
+                          ? 'border-green-600 bg-green-100'
+                          : 'border-gray-200 bg-white'
                       )}
                       onPress={() => handleAnswer(currentQuestion.id, 'no')}
-                      activeOpacity={1}
+                      activeOpacity={0.8}
                       disabled={isSubmitting}>
                       <Text
                         className={combineClasses(
-                          buttons.answer.text,
+                          'text-center text-lg font-semibold',
                           currentAnswer === 'no'
-                            ? buttons.answer.textSelected
-                            : buttons.answer.textUnselected
+                            ? 'font-bold text-green-600'
+                            : 'text-green-700'
                         )}>
                         No
                       </Text>
@@ -672,18 +707,20 @@ export const FinanceQuestionnaire = ({
                 className="mt-4">
                 <TouchableOpacity
                   className={combineClasses(
-                    buttons.answer.base,
-                    currentAnswer === null ? buttons.answer.selected : buttons.answer.unselected
+                    'flex-1 rounded-lg border-2 p-3',
+                    currentAnswer === null
+                      ? 'border-green-600 bg-green-100'
+                      : 'border-gray-200 bg-white'
                   )}
                   onPress={handleSkip}
-                  activeOpacity={1}
+                  activeOpacity={0.8}
                   disabled={isSubmitting}>
                   <Text
                     className={combineClasses(
-                      buttons.answer.text,
+                      'text-center text-lg font-semibold',
                       currentAnswer === null
-                        ? buttons.answer.textSelected
-                        : buttons.answer.textUnselected
+                        ? 'font-bold text-green-600'
+                        : 'text-green-700'
                     )}>
                     I don't know
                   </Text>
@@ -693,6 +730,13 @@ export const FinanceQuestionnaire = ({
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

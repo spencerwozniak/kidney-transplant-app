@@ -6,8 +6,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   buttons,
   typography,
@@ -18,6 +20,7 @@ import {
   getBadgeClasses,
 } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import questionsData from '../../data/questions.json';
 import { apiService } from '../../services/api';
 
@@ -128,15 +131,22 @@ export const TransplantQuestionnaire = ({
 
   if (isSubmitting) {
     return (
-      <View className={layout.container.default}>
-        <NavigationBar onBack={onNavigateToHome} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Saving your assessment...
-          </Text>
-        </View>
-      </View>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateToHome} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Saving your assessment...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -144,93 +154,118 @@ export const TransplantQuestionnaire = ({
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={handleBack} infoModal={infoModalContent} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <View className="px-6 pb-2">
-          {/* Progress Bar */}
-          <View className="mb-6">
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className={typography.body.small}>
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </Text>
-              <Text className={typography.body.small}>{Math.round(progress)}%</Text>
-            </View>
-            <View className={progressStyles.container}>
-              <View className={progressStyles.bar.primary} style={{ width: `${progress}%` }} />
-            </View>
-          </View>
-
-          {/* Question */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h4, 'mb-4 leading-7')}>
-              {currentQuestion.question}
-            </Text>
-
-            {currentQuestion.description && (
-              <View className="mb-4">
-                <Text className={typography.body.small}>{currentQuestion.description}</Text>
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={handleBack} infoModal={infoModalContent} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <View className="px-6 pb-2">
+            {/* Progress Bar */}
+            <View className="mb-6">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text
+                  className={combineClasses(
+                    typography.body.medium,
+                    'font-semibold text-white shadow'
+                  )}>
+                  Question {currentQuestionIndex + 1} of {questions.length}
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.medium,
+                    'font-semibold text-white shadow'
+                  )}>
+                  {Math.round(progress)}%
+                </Text>
               </View>
-            )}
+              <View className={progressStyles.container}>
+                <View className={progressStyles.bar.primary} style={{ width: `${progress}%` }} />
+              </View>
+            </View>
 
-            {/* Answer Buttons */}
-            <View className="mt-6">
-              <Animated.View
-                style={{
-                  transform: [{ scale: yesButtonScale }],
-                }}
-                className="mb-3">
-                <TouchableOpacity
-                  className={combineClasses(
-                    buttons.answer.base,
-                    answers[currentQuestion.id] === 'yes'
-                      ? buttons.answer.selected
-                      : buttons.answer.unselected
-                  )}
-                  onPress={() => handleAnswer(currentQuestion.id, 'yes')}
-                  activeOpacity={1}
-                  disabled={isSubmitting}>
-                  <Text
+            {/* Question */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h4, 'mb-4 text-white shadow')}>
+                {currentQuestion.question}
+              </Text>
+
+              {currentQuestion.description && (
+                <View className="mb-4">
+                  <Text className={combineClasses(typography.body.large, 'text-white shadow')}>
+                    {currentQuestion.description}
+                  </Text>
+                </View>
+              )}
+
+              {/* Answer Buttons */}
+              <View className="mt-6">
+                <Animated.View
+                  style={{
+                    transform: [{ scale: yesButtonScale }],
+                  }}
+                  className="mb-3">
+                  <TouchableOpacity
                     className={combineClasses(
-                      buttons.answer.text,
+                      'flex-1 rounded-lg border-2 p-3',
                       answers[currentQuestion.id] === 'yes'
-                        ? buttons.answer.textSelected
-                        : buttons.answer.textUnselected
-                    )}>
-                    Yes
-                  </Text>
-                </TouchableOpacity>
-              </Animated.View>
+                        ? 'border-green-600 bg-green-100'
+                        : 'border-gray-200 bg-white'
+                    )}
+                    onPress={() => handleAnswer(currentQuestion.id, 'yes')}
+                    activeOpacity={0.8}
+                    disabled={isSubmitting}>
+                    <Text
+                      className={combineClasses(
+                        'text-center text-lg font-semibold',
+                        answers[currentQuestion.id] === 'yes'
+                          ? 'font-bold text-green-600'
+                          : 'text-green-700'
+                      )}>
+                      Yes
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
 
-              <Animated.View
-                style={{
-                  transform: [{ scale: noButtonScale }],
-                }}>
-                <TouchableOpacity
-                  className={combineClasses(
-                    buttons.answer.base,
-                    answers[currentQuestion.id] === 'no'
-                      ? buttons.answer.selected
-                      : buttons.answer.unselected
-                  )}
-                  onPress={() => handleAnswer(currentQuestion.id, 'no')}
-                  activeOpacity={1}
-                  disabled={isSubmitting}>
-                  <Text
+                <Animated.View
+                  style={{
+                    transform: [{ scale: noButtonScale }],
+                  }}>
+                  <TouchableOpacity
                     className={combineClasses(
-                      buttons.answer.text,
+                      'flex-1 rounded-lg border-2 p-3',
                       answers[currentQuestion.id] === 'no'
-                        ? buttons.answer.textSelected
-                        : buttons.answer.textUnselected
-                    )}>
-                    No
-                  </Text>
-                </TouchableOpacity>
-              </Animated.View>
+                        ? 'border-green-600 bg-green-100'
+                        : 'border-gray-200 bg-white'
+                    )}
+                    onPress={() => handleAnswer(currentQuestion.id, 'no')}
+                    activeOpacity={0.8}
+                    disabled={isSubmitting}>
+                    <Text
+                      className={combineClasses(
+                        'text-center text-lg font-semibold',
+                        answers[currentQuestion.id] === 'no'
+                          ? 'font-bold text-green-600'
+                          : 'text-green-700'
+                      )}>
+                      No
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
