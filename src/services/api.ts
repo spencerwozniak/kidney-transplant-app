@@ -2,7 +2,10 @@
  * API Service for backend communication
  */
 
-const API_BASE_URL = 'http://3.21.125.231:8000';
+// Local (e.g., 'http://192.168.1.81:8000')
+// Connect to AWS EC2 server: (e.g., 'http://3.21.125.231:8000')
+
+const API_BASE_URL = 'http://192.168.1.81:8000';
 
 export type Patient = {
   id?: string;
@@ -360,6 +363,158 @@ class ApiService {
         body: JSON.stringify(body),
       }
     );
+  }
+
+  async queryAIAssistantStream(
+    params: {
+      query: string;
+      provider?: string;
+      model?: string;
+    },
+    onChunk: (chunk: string) => void,
+    onError?: (error: string) => void,
+    onComplete?: () => void
+  ): Promise<void> {
+    const body: { query: string; provider?: string; model?: string } = {
+      query: params.query,
+    };
+    if (params.provider) body.provider = params.provider;
+    if (params.model) body.model = params.model;
+
+    const url = `${this.baseUrl}/api/v1/ai-assistant/query/stream`;
+
+    // Use XMLHttpRequest for React Native streaming support
+    // React Native's fetch doesn't support streaming (response.body is null)
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+
+      let buffer = '';
+      let lastProcessedIndex = 0;
+      let isDone = false;
+
+      xhr.onprogress = () => {
+        // Process new data as it arrives incrementally
+        const currentLength = xhr.responseText.length;
+        if (currentLength > lastProcessedIndex) {
+          const newData = xhr.responseText.substring(lastProcessedIndex);
+          lastProcessedIndex = currentLength;
+
+          buffer += newData;
+          const lines = buffer.split('\n');
+
+          // Keep the last incomplete line in the buffer
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() && line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.error) {
+                  if (onError) {
+                    onError(data.error);
+                  }
+                  xhr.abort();
+                  reject(new Error(data.error));
+                  return;
+                }
+                if (data.done) {
+                  isDone = true;
+                  if (onComplete) {
+                    onComplete();
+                  }
+                  resolve();
+                  return;
+                }
+                if (data.chunk !== undefined) {
+                  onChunk(data.chunk);
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                console.warn('Failed to parse SSE data:', line, e);
+              }
+            }
+          }
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // Process any remaining buffer
+          if (buffer.trim()) {
+            const lines = buffer.trim().split('\n');
+            for (const line of lines) {
+              if (line.trim() && line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.error && onError) {
+                    onError(data.error);
+                  } else if (data.done && !isDone) {
+                    if (onComplete) {
+                      onComplete();
+                    }
+                  } else if (data.chunk !== undefined) {
+                    onChunk(data.chunk);
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse final SSE data:', line, e);
+                }
+              }
+            }
+          }
+
+          // Ensure complete is called if not already done
+          if (!isDone && onComplete) {
+            onComplete();
+          }
+          if (!isDone) {
+            resolve();
+          }
+        } else {
+          let errorMessage = `HTTP error! status: ${xhr.status}`;
+          try {
+            const error = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+            errorMessage =
+              (error && (error.detail || error.message || error.error)) || errorMessage;
+          } catch {
+            errorMessage = xhr.statusText || errorMessage;
+          }
+          if (onError) {
+            onError(errorMessage);
+          }
+          reject(new Error(errorMessage));
+        }
+      };
+
+      xhr.onerror = () => {
+        const errorMsg = `Unable to connect to server. Please ensure the backend is running at ${this.baseUrl}`;
+        if (onError) {
+          onError(errorMsg);
+        }
+        reject(new Error(errorMsg));
+      };
+
+      xhr.ontimeout = () => {
+        const errorMsg = 'Request timeout';
+        if (onError) {
+          onError(errorMsg);
+        }
+        reject(new Error(errorMsg));
+      };
+
+      // Set timeout to 5 minutes for long responses
+      xhr.timeout = 300000;
+
+      try {
+        xhr.send(JSON.stringify(body));
+      } catch (error: any) {
+        if (onError) {
+          onError(error.message || 'Unknown error occurred');
+        }
+        reject(error);
+      }
+    });
   }
 
   async getAIContext(): Promise<{ patient_id: string; context: Record<string, any> }> {

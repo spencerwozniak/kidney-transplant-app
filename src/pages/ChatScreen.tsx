@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import Markdown from 'react-native-markdown-display';
 import { apiService } from '@/services/api';
 
 type ChatMessage = {
@@ -28,6 +29,12 @@ type ChatMessage = {
   isLoading?: boolean;
 };
 
+type Conversation = {
+  userMessage: ChatMessage;
+  botResponse: string;
+  isStreaming: boolean;
+};
+
 type ChatScreenProps = {
   patientName?: string;
 };
@@ -35,7 +42,7 @@ type ChatScreenProps = {
 const SendIcon = ({ size = 20, color = '#FFFFFF' }: { size?: number; color?: string }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
-      d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+      d="M12 4L12 20M12 4L6 10M12 4L18 10"
       stroke={color}
       strokeWidth="2"
       strokeLinecap="round"
@@ -44,13 +51,73 @@ const SendIcon = ({ size = 20, color = '#FFFFFF' }: { size?: number; color?: str
   </Svg>
 );
 
+const markdownStyles = {
+  body: {
+    fontSize: 16,
+    color: '#111827',
+    lineHeight: 24,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  heading1: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  heading2: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  heading3: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  code_inline: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontFamily: 'monospace',
+  },
+  code_block: {
+    backgroundColor: '#F3F4F6',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontFamily: 'monospace',
+  },
+  list_item: {
+    marginBottom: 4,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  link: {
+    color: '#059669',
+  },
+};
+
 export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [typingMessage, setTypingMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize chat with welcome message and check AI status
   useEffect(() => {
@@ -73,13 +140,11 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
   };
 
   const initializeChat = () => {
-    const welcomeMessage: ChatMessage = {
-      id: '1',
-      text: `Hello ${patientName}! I'm here to help answer your questions about your kidney transplant journey. What would you like to know?`,
-      isUser: false,
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
+    // Set welcome message in a chat bubble
+    setWelcomeMessage(
+      `Hello ${patientName}! I'm here to help answer your questions about your kidney transplant journey. What would you like to know?`
+    );
+    setConversations([]);
   };
 
   const scrollToBottom = () => {
@@ -88,8 +153,42 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
     }, 100);
   };
 
+  const handleStop = () => {
+    // Cancel the streaming request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    // Finalize the current conversation with whatever we have
+    if (typingMessage) {
+      setConversations((prev) => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0) {
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            botResponse: typingMessage,
+            isStreaming: false,
+          };
+        }
+        return updated;
+      });
+    }
+
+    setIsTyping(false);
+    setTypingMessage('');
+    setIsLoading(false);
+  };
+
   const handleSend = async () => {
     if (inputText.trim() === '' || isLoading || !aiEnabled) return;
+
+    // If already typing, stop instead
+    if (isTyping) {
+      handleStop();
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -98,67 +197,106 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
       timestamp: new Date(),
     };
 
-    // Add user message immediately
-    setMessages((prev) => [...prev, userMessage]);
+    // Add new conversation with user message
+    const newConversation: Conversation = {
+      userMessage,
+      botResponse: '',
+      isStreaming: true,
+    };
+
+    setConversations((prev) => [...prev, newConversation]);
     setInputText('');
     setIsLoading(true);
+    setIsTyping(true);
+    setTypingMessage('');
     setError(null);
     scrollToBottom();
 
-    // Add loading message
-    const loadingMessageId = (Date.now() + 1).toString();
-    const loadingMessage: ChatMessage = {
-      id: loadingMessageId,
-      text: '',
-      isUser: false,
-      timestamp: new Date(),
-      isLoading: true,
-    };
-    setMessages((prev) => [...prev, loadingMessage]);
-    scrollToBottom();
+    // Create AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
-      // Call AI API
-      const response = await apiService.queryAIAssistant({
-        query: userMessage.text,
-        // provider and model will use backend defaults if not specified
-      });
+      let accumulatedResponse = '';
 
-      // Remove loading message and add AI response
-      setMessages((prev) => {
-        const filtered = prev.filter((msg) => msg.id !== loadingMessageId);
-        return [
-          ...filtered,
-          {
-            id: (Date.now() + 2).toString(),
-            text: response.response,
-            isUser: false,
-            timestamp: new Date(),
-          },
-        ];
-      });
-      scrollToBottom();
+      // Call streaming AI API
+      await apiService.queryAIAssistantStream(
+        {
+          query: userMessage.text,
+        },
+        (chunk: string) => {
+          // Update typing message as chunks arrive
+          accumulatedResponse += chunk;
+          setTypingMessage(accumulatedResponse);
+          scrollToBottom();
+        },
+        (errorMsg: string) => {
+          console.error('Error getting AI response:', errorMsg);
+          setError(errorMsg);
+          setConversations((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0) {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                botResponse:
+                  'I apologize, but I encountered an error processing your question. Please try again or contact support if the issue persists.',
+                isStreaming: false,
+              };
+            }
+            return updated;
+          });
+          setIsTyping(false);
+          setTypingMessage('');
+          setIsLoading(false);
+        },
+        () => {
+          // On complete, finalize the conversation
+          setConversations((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0) {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                botResponse: accumulatedResponse,
+                isStreaming: false,
+              };
+            }
+            return updated;
+          });
+          setIsTyping(false);
+          setTypingMessage('');
+          setIsLoading(false);
+          scrollToBottom();
+        }
+      );
     } catch (err: any) {
+      // Ignore abort errors
+      if (err.name === 'AbortError') {
+        return;
+      }
+
       console.error('Error getting AI response:', err);
-
-      // Remove loading message and add error message
-      setMessages((prev) => {
-        const filtered = prev.filter((msg) => msg.id !== loadingMessageId);
-        return [
-          ...filtered,
-          {
-            id: (Date.now() + 2).toString(),
-            text: 'I apologize, but I encountered an error processing your question. Please try again or contact support if the issue persists.',
-            isUser: false,
-            timestamp: new Date(),
-          },
-        ];
-      });
-
       setError(err.message || 'Failed to get AI response');
+      setConversations((prev) => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0) {
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            botResponse:
+              'I apologize, but I encountered an error processing your question. Please try again or contact support if the issue persists.',
+            isStreaming: false,
+          };
+        }
+        return updated;
+      });
+      setIsTyping(false);
+      setTypingMessage('');
+      setIsLoading(false);
       scrollToBottom();
     } finally {
-      setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -195,23 +333,38 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
           ref={scrollViewRef}
           className="flex-1 px-4 py-4"
           onContentSizeChange={scrollToBottom}>
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              className={`mb-4 ${message.isUser ? 'items-end' : 'items-start'}`}>
-              <View
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.isUser ? 'rounded-tr-sm bg-green-600' : 'rounded-tl-sm bg-gray-100'
-                }`}>
-                {message.isLoading ? (
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <ActivityIndicator size="small" color="#6B7280" />
-                    <Text className="text-sm text-gray-500">Thinking...</Text>
-                  </View>
+          {/* Welcome Message in Chat Bubble */}
+          {welcomeMessage && (
+            <View className="mb-4 items-start">
+              <View className="max-w-[80%] rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3">
+                <Text className="text-sm text-gray-900">{welcomeMessage}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Conversations */}
+          {conversations.map((conversation, index) => (
+            <View key={conversation.userMessage.id} className="mb-6">
+              {/* User Message */}
+              <View className="mb-3 items-end">
+                <View className="max-w-[80%] rounded-2xl rounded-tr-sm bg-green-600 px-4 py-3">
+                  <Text className="text-sm text-white">{conversation.userMessage.text}</Text>
+                </View>
+              </View>
+
+              {/* Bot Response - Full Width Text (Not in Bubble) */}
+              <View className="px-2">
+                {conversation.isStreaming && index === conversations.length - 1 ? (
+                  typingMessage ? (
+                    <Markdown style={markdownStyles}>{typingMessage}</Markdown>
+                  ) : (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <ActivityIndicator size="small" color="#6B7280" />
+                      <Text className="text-sm text-gray-500">Thinking...</Text>
+                    </View>
+                  )
                 ) : (
-                  <Text className={`text-sm ${message.isUser ? 'text-white' : 'text-gray-900'}`}>
-                    {message.text}
-                  </Text>
+                  <Markdown style={markdownStyles}>{conversation.botResponse}</Markdown>
                 )}
               </View>
             </View>
@@ -234,13 +387,15 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
             />
             <TouchableOpacity
               onPress={handleSend}
-              disabled={inputText.trim() === '' || isLoading || !aiEnabled}
+              disabled={inputText.trim() === '' || (!isTyping && !aiEnabled)}
               className={`rounded-full p-3 ${
-                inputText.trim() === '' || isLoading || !aiEnabled ? 'bg-gray-300' : 'bg-green-600'
+                inputText.trim() === '' || (!isTyping && !aiEnabled)
+                  ? 'bg-gray-300'
+                  : 'bg-green-600'
               }`}
               activeOpacity={0.7}>
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+              {isTyping ? (
+                <Text className="text-xs font-semibold text-white">Stop</Text>
               ) : (
                 <SendIcon
                   size={20}
