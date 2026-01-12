@@ -9,12 +9,15 @@ import {
   Modal,
   Platform,
   InputAccessoryView,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { buttons, typography, inputs, combineClasses, layout } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { Patient } from '../../services/api';
 
 type PatientDetailsScreen2Props = {
@@ -175,243 +178,276 @@ export const PatientDetailsScreen2 = ({
   };
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
-          className="px-6 py-8">
-          <Text className={combineClasses(typography.h2, 'mb-2')}>Personal Details</Text>
-          <Text className={combineClasses(typography.body.medium, 'mb-6 text-gray-600')}>
-            Please provide your personal information
-          </Text>
-
-          {/* Date of Birth - Required */}
-          <View className="mb-6">
-            <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
-              Date of Birth <Text className="text-red-500">*</Text>
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }}
+            className="px-6 py-8">
+            <Text className={combineClasses(typography.h2, 'text-white shadow')}>
+              Personal Details
             </Text>
-            <TouchableOpacity
-              className={combineClasses(inputs.default.container, 'justify-center')}
-              onPress={() => setShowDatePicker(true)}>
+            <Text className={combineClasses(typography.body.large, 'mb-6 text-white shadow')}>
+              Please provide your personal information
+            </Text>
+
+            {/* Date of Birth - Required */}
+            <View className="mb-6">
               <Text
                 className={combineClasses(
-                  inputs.default.input,
-                  !formData.dateOfBirth ? 'text-gray-400' : 'text-gray-900'
+                  typography.body.large,
+                  'mb-2 font-semibold text-white shadow'
                 )}>
-                {formData.dateOfBirth ? formatDate(formData.dateOfBirth) : 'Select date of birth'}
+                Date of Birth <Text className="text-red-200">*</Text>
               </Text>
-            </TouchableOpacity>
-            {errors.date_of_birth && (
-              <Text className="mt-1 text-xs text-red-500">{errors.date_of_birth}</Text>
-            )}
-          </View>
-
-          {/* Sex - Optional */}
-          <View className="mb-6">
-            <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
-              Sex Assigned at Birth
-            </Text>
-            <View className="flex-row gap-2">
-              {['male', 'female'].map((option) => (
-                <TouchableOpacity
-                  key={option}
+              <TouchableOpacity
+                className={combineClasses(inputs.default.container, 'justify-center')}
+                onPress={() => setShowDatePicker(true)}>
+                <Text
                   className={combineClasses(
-                    'flex-1 rounded-lg border-2 p-3',
-                    formData.sex === option
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white'
-                  )}
-                  onPress={() => updateField('sex', option)}>
-                  <Text
-                    className={combineClasses(
-                      'text-center capitalize',
-                      formData.sex === option ? 'font-semibold text-green-700' : 'text-gray-700'
-                    )}>
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    inputs.default.input,
+                    !formData.dateOfBirth ? 'text-gray-400' : 'text-gray-900'
+                  )}>
+                  {formData.dateOfBirth ? formatDate(formData.dateOfBirth) : 'Select date of birth'}
+                </Text>
+              </TouchableOpacity>
+              {errors.date_of_birth && (
+                <Text className="mt-1 text-xs text-red-200">{errors.date_of_birth}</Text>
+              )}
             </View>
-          </View>
 
-          {/* Height - Optional */}
-          <View className="mb-6">
-            <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
-              Height
-            </Text>
-            <TouchableOpacity
-              className={combineClasses(inputs.default.container, 'justify-center')}
-              onPress={() => setShowHeightPicker(true)}>
+            {/* Sex - Optional */}
+            <View className="mb-6">
               <Text
                 className={combineClasses(
-                  inputs.default.input,
-                  !formData.heightFeet && !formData.heightInches ? 'text-gray-400' : 'text-gray-900'
+                  typography.body.large,
+                  'mb-2 font-semibold text-white shadow'
                 )}>
-                {formatHeight()}
+                Sex Assigned at Birth
               </Text>
-            </TouchableOpacity>
-            {(formData.heightFeet || formData.heightInches) && (
-              <Text className="mt-2 text-xs text-gray-500">
-                {Math.round(
-                  ((parseFloat(formData.heightFeet) || 0) * 30.48 +
-                    (parseFloat(formData.heightInches) || 0) * 2.54) *
-                    10
-                ) / 10}{' '}
-                cm
-              </Text>
-            )}
-          </View>
-
-          {/* Weight - Optional */}
-          <View className="mb-6">
-            <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
-              Weight
-            </Text>
-            <View className={inputs.default.container}>
-              <TextInput
-                ref={weightInputRef}
-                className={inputs.default.input}
-                placeholder="Enter weight in pounds (lbs)"
-                placeholderTextColor={inputs.default.placeholder}
-                value={formData.weightLbs as string}
-                onChangeText={(value) => updateField('weightLbs', value)}
-                keyboardType="numeric"
-                inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
-              />
-            </View>
-            {formData.weightLbs && (
-              <Text className="mt-2 text-xs text-gray-500">
-                {Math.round((parseFloat(formData.weightLbs) / 2.20462) * 10) / 10} kg
-              </Text>
-            )}
-          </View>
-
-          {/* Next Button */}
-          <TouchableOpacity
-            className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-            onPress={handleNext}
-            activeOpacity={0.8}>
-            <Text className={buttons.primary.text}>Next</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </ScrollView>
-
-      {/* Date Picker Modal */}
-      {Platform.OS === 'ios' && (
-        <Modal
-          visible={showDatePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowDatePicker(false)}>
-          <View className="flex-1 justify-end bg-black/50">
-            <View className="overflow-hidden rounded-t-3xl bg-white">
-              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text className="text-xl text-blue-500">Cancel</Text>
-                </TouchableOpacity>
-                <Text className="text-xl font-semibold">Date of Birth</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDatePicker(false);
-                  }}>
-                  <Text className="text-xl font-semibold text-blue-500">Done</Text>
-                </TouchableOpacity>
+              <View className="flex-row gap-2">
+                {['male', 'female'].map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    className={combineClasses(
+                      'flex-1 rounded-lg border-2 p-3',
+                      formData.sex === option
+                        ? 'border-green-600 bg-green-100'
+                        : 'border-gray-200 bg-white'
+                    )}
+                    onPress={() => updateField('sex', option)}>
+                    <Text
+                      className={combineClasses(
+                        'text-center capitalize',
+                        formData.sex === option ? 'font-bold text-green-600' : 'text-green-700'
+                      )}>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View className="items-center">
-                <DateTimePicker
-                  value={formData.dateOfBirth}
-                  mode="date"
-                  display="spinner"
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
-                  textColor="#000000"
-                  style={{ width: '100%', height: 280, transform: [{ scale: 1.05 }] }}
+            </View>
+
+            {/* Height - Optional */}
+            <View className="mb-6">
+              <Text
+                className={combineClasses(
+                  typography.body.large,
+                  'mb-2 font-semibold text-white shadow'
+                )}>
+                Height
+              </Text>
+              <TouchableOpacity
+                className={combineClasses(inputs.default.container, 'justify-center')}
+                onPress={() => setShowHeightPicker(true)}>
+                <Text
+                  className={combineClasses(
+                    inputs.default.input,
+                    !formData.heightFeet && !formData.heightInches
+                      ? 'text-gray-400'
+                      : 'text-gray-900'
+                  )}>
+                  {formatHeight()}
+                </Text>
+              </TouchableOpacity>
+              {(formData.heightFeet || formData.heightInches) && (
+                <Text className="mt-2 text-xs text-white/80">
+                  {Math.round(
+                    ((parseFloat(formData.heightFeet) || 0) * 30.48 +
+                      (parseFloat(formData.heightInches) || 0) * 2.54) *
+                      10
+                  ) / 10}{' '}
+                  cm
+                </Text>
+              )}
+            </View>
+
+            {/* Weight - Optional */}
+            <View className="mb-6">
+              <Text
+                className={combineClasses(
+                  typography.body.large,
+                  'mb-2 font-semibold text-white shadow'
+                )}>
+                Weight
+              </Text>
+              <View className={inputs.default.container}>
+                <TextInput
+                  ref={weightInputRef}
+                  className={inputs.default.input}
+                  placeholder="Enter weight in pounds (lbs)"
+                  placeholderTextColor={inputs.default.placeholder}
+                  value={formData.weightLbs as string}
+                  onChangeText={(value) => updateField('weightLbs', value)}
+                  keyboardType="numeric"
+                  inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
                 />
               </View>
+              {formData.weightLbs && (
+                <Text className="mt-2 text-xs text-white/80">
+                  {Math.round((parseFloat(formData.weightLbs) / 2.20462) * 10) / 10} kg
+                </Text>
+              )}
             </View>
-          </View>
-        </Modal>
-      )}
 
-      {/* Height Picker Modal */}
-      {Platform.OS === 'ios' && (
-        <Modal
-          visible={showHeightPicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowHeightPicker(false)}>
-          <View className="flex-1 justify-end bg-black/50">
-            <View className="rounded-t-3xl bg-white">
-              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
-                <TouchableOpacity onPress={() => setShowHeightPicker(false)}>
-                  <Text className="text-xl text-blue-500">Cancel</Text>
-                </TouchableOpacity>
-                <Text className="text-xl font-semibold">Height</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowHeightPicker(false);
-                  }}>
-                  <Text className="text-xl font-semibold text-blue-500">Done</Text>
-                </TouchableOpacity>
-              </View>
-              <View className="flex-row">
-                <View className="flex-1">
-                  <Text className="py-2 text-center text-gray-600">Feet</Text>
-                  <Picker
-                    selectedValue={formData.heightFeet || '1'}
-                    onValueChange={(value: string | number) =>
-                      updateField('heightFeet', value.toString())
-                    }
-                    style={{ height: 200 }}>
-                    {feetOptions.map((feet, index) => (
-                      <Picker.Item
-                        key={`feet-${index}`}
-                        label={feet.toString()}
-                        value={feet.toString()}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-                <View className="flex-1">
-                  <Text className="py-2 text-center text-gray-600">Inches</Text>
-                  <Picker
-                    selectedValue={formData.heightInches || '0'}
-                    onValueChange={(value: string | number) =>
-                      updateField('heightInches', value.toString())
-                    }
-                    style={{ height: 200 }}>
-                    {inchesOptions.map((inches, index) => (
-                      <Picker.Item
-                        key={`inches-${index}`}
-                        label={inches.toString()}
-                        value={inches.toString()}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-
-      {/* Input Accessory View for Weight Keyboard */}
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={inputAccessoryViewID}>
-          <View className="flex-row items-center justify-end border-t border-gray-200 bg-gray-100 px-4 py-2">
+            {/* Next Button */}
             <TouchableOpacity
-              onPress={() => {
-                weightInputRef.current?.blur();
-              }}>
-              <Text className="text-xl font-semibold text-blue-500">Done</Text>
+              className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+              onPress={handleNext}
+              activeOpacity={0.8}>
+              <Text className={buttons.outline.text}>Next</Text>
             </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
-      )}
-    </SafeAreaView>
+          </Animated.View>
+        </ScrollView>
+
+        {/* Date Picker Modal */}
+        {Platform.OS === 'ios' && (
+          <Modal
+            visible={showDatePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowDatePicker(false)}>
+            <View className="flex-1 justify-end bg-black/50">
+              <View className="overflow-hidden rounded-t-3xl bg-white">
+                <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text className="text-xl text-blue-500">Cancel</Text>
+                  </TouchableOpacity>
+                  <Text className="text-xl font-semibold">Date of Birth</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowDatePicker(false);
+                    }}>
+                    <Text className="text-xl font-semibold text-blue-500">Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <View className="items-center">
+                  <DateTimePicker
+                    value={formData.dateOfBirth}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    textColor="#000000"
+                    style={{ width: '100%', height: 280, transform: [{ scale: 1.05 }] }}
+                  />
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        {/* Height Picker Modal */}
+        {Platform.OS === 'ios' && (
+          <Modal
+            visible={showHeightPicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowHeightPicker(false)}>
+            <View className="flex-1 justify-end bg-black/50">
+              <View className="rounded-t-3xl bg-white">
+                <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
+                  <TouchableOpacity onPress={() => setShowHeightPicker(false)}>
+                    <Text className="text-xl text-blue-500">Cancel</Text>
+                  </TouchableOpacity>
+                  <Text className="text-xl font-semibold">Height</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowHeightPicker(false);
+                    }}>
+                    <Text className="text-xl font-semibold text-blue-500">Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <View className="flex-row">
+                  <View className="flex-1">
+                    <Text className="py-2 text-center text-gray-600">Feet</Text>
+                    <Picker
+                      selectedValue={formData.heightFeet || '1'}
+                      onValueChange={(value: string | number) =>
+                        updateField('heightFeet', value.toString())
+                      }
+                      style={{ height: 200 }}>
+                      {feetOptions.map((feet, index) => (
+                        <Picker.Item
+                          key={`feet-${index}`}
+                          label={feet.toString()}
+                          value={feet.toString()}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="py-2 text-center text-gray-600">Inches</Text>
+                    <Picker
+                      selectedValue={formData.heightInches || '0'}
+                      onValueChange={(value: string | number) =>
+                        updateField('heightInches', value.toString())
+                      }
+                      style={{ height: 200 }}>
+                      {inchesOptions.map((inches, index) => (
+                        <Picker.Item
+                          key={`inches-${index}`}
+                          label={inches.toString()}
+                          value={inches.toString()}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        {/* Input Accessory View for Weight Keyboard */}
+        {Platform.OS === 'ios' && (
+          <InputAccessoryView nativeID={inputAccessoryViewID}>
+            <View className="flex-row items-center justify-end border-t border-gray-200 bg-gray-100 px-4 py-2">
+              <TouchableOpacity
+                onPress={() => {
+                  weightInputRef.current?.blur();
+                }}>
+                <Text className="text-xl font-semibold text-blue-500">Done</Text>
+              </TouchableOpacity>
+            </View>
+          </InputAccessoryView>
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

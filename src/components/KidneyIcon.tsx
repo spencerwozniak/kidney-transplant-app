@@ -4,11 +4,12 @@ import Svg, { Path } from 'react-native-svg';
 type KidneyIconProps = {
   size?: number;
   color?: string;
+  className?: string;
 };
 
-export const KidneyIcon = ({ size = 96, color = '#ffffff' }: KidneyIconProps) => {
+export const KidneyIcon = ({ size = 96, color = '#ffffff', className }: KidneyIconProps) => {
   return (
-    <Svg width={size} height={size} viewBox="0 -2 48 48" fill="none">
+    <Svg width={size} height={size} viewBox="0 -2 48 48" fill="none" className={className}>
       {/* Right Kidney - main outline */}
       <Path
         d="M38.74,32.59a6.75,6.75,0,0,1-1.33-.13c-3.66-.74-6-4.37-6.42-7.57a7.17,7.17,0,0,1,.72-4.21,3.59,3.59,0,0,0,.45-2.11,5.16,5.16,0,0,0-1.28-2.74A7.49,7.49,0,0,1,29,10.77c0-.62.24-3.79,2.66-5.49S36.95,4.57,38,4.94c5,1.74,9,7.26,9.78,13.44h0C48,20.2,48.63,25,45.48,28.89,44.51,30.08,42.06,32.59,38.74,32.59ZM34.86,8.31a1.55,1.55,0,0,0-.9.24,3.41,3.41,0,0,0-1,2.34,3.7,3.7,0,0,0,1.09,2.55,8.89,8.89,0,0,1,2,4.74,7.52,7.52,0,0,1-.77,4.12A3.25,3.25,0,0,0,35,24.36c0.23,1.74,1.54,3.83,3.25,4.18,1.92,0.4,3.69-1.57,4.19-2.18,2.06-2.53,1.63-6,1.45-7.49h0C43.26,14.22,40.27,10,36.71,8.72A6,6,0,0,0,34.86,8.31Z"

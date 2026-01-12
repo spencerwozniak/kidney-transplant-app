@@ -5,6 +5,7 @@ import Svg, { Path, G } from 'react-native-svg';
 type PathwayBackgroundProps = {
   opacity?: number;
   onAnimationComplete?: () => void;
+  animate?: boolean;
 };
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -12,10 +13,13 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const PathwayBackground = ({
   opacity = 0.15,
   onAnimationComplete,
+  animate = true,
 }: PathwayBackgroundProps) => {
   // Create animated values for each path
   const pathAnimations = useRef(Array.from({ length: 44 }, () => new Animated.Value(0))).current;
-  const [pathOpacities, setPathOpacities] = useState<number[]>(Array(44).fill(0));
+  const [pathOpacities, setPathOpacities] = useState<number[]>(
+    animate ? Array(44).fill(0) : Array(44).fill(1)
+  );
 
   // Exact SVG paths from path-longer.svg
   // Original viewBox: 0 0 588.000000 921.000000
@@ -167,6 +171,12 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
 
   // Animate paths sequentially in the order they appear in the paths array
   useEffect(() => {
+    // If animation is disabled, show all paths immediately and call callback
+    if (!animate) {
+      onAnimationComplete?.();
+      return;
+    }
+
     // Update opacities as animations progress
     pathAnimations.forEach((anim, index) => {
       anim.addListener(({ value }) => {
@@ -202,7 +212,7 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
         anim.removeAllListeners();
       });
     };
-  }, []);
+  }, [animate, onAnimationComplete]);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">

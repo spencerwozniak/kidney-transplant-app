@@ -16,12 +16,12 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
 
   return (
     <>
-      <View className="bg-white">
+      <View className="bg-transparent">
         <View className="flex-row items-center justify-between px-4 py-3">
           {/* Back Button */}
           {onBack ? (
             <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="-ml-2 p-2">
-              <Text className="text-2xl text-gray-700">←</Text>
+              <Text className="text-4xl text-white shadow">←</Text>
             </TouchableOpacity>
           ) : (
             <View className="w-10" />
@@ -33,7 +33,7 @@ export const NavigationBar = ({ onBack, infoModal }: NavigationBarProps) => {
               onPress={() => setShowInfoModal(true)}
               activeOpacity={0.7}
               className="-mr-2 p-2">
-              <InfoIcon size={24} color="#525252" />
+              <InfoIcon size={32} color="#ffffff" />
             </TouchableOpacity>
           ) : (
             <View className="w-10" />

@@ -77,9 +77,9 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
               }}
               className="flex-row items-center px-6 pt-4">
               <View className="mr-3">
-                <KidneyIcon size={48} color="#ffffff" />
+                <KidneyIcon className="shadow-md" size={48} color="#ffffff" />
               </View>
-              <Text className="text-2xl font-normal text-white">Transplant Compass</Text>
+              <Text className="text-2xl font-normal text-white shadow-md">Transplant Compass</Text>
             </Animated.View>
           )}
 
@@ -96,7 +96,7 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
                 <Text
                   className={combineClasses(
                     typography.h2,
-                    'mb-12 text-center font-semibold leading-tight text-white'
+                    'mb-12 text-center font-semibold leading-tight text-white shadow-md'
                   )}>
                   Your personalized guide to navigating the transplant pathway
                 </Text>

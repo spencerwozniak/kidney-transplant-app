@@ -252,7 +252,7 @@ export const badges = {
 
 export const inputs = {
   default: {
-    container: 'overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg',
+    container: 'overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl',
     input: 'px-5 py-4 text-lg text-gray-900',
     placeholder: '#9CA3AF',
   },
