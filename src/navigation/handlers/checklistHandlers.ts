@@ -2,9 +2,8 @@
  * Checklist Flow Handlers
  * 
  * Handles navigation for the checklist management flow:
- * 1. HomeScreen -> ChecklistTimelineScreen
- * 2. ChecklistTimelineScreen -> ChecklistItemEditScreen
- * 3. ChecklistItemEditScreen -> ChecklistDocumentsScreen
+ * 1. ChecklistTimelineScreen -> ChecklistItemEditScreen
+ * 2. ChecklistItemEditScreen -> ChecklistDocumentsScreen
  */
 
 import type { UseAppStateReturn } from '../useAppState';

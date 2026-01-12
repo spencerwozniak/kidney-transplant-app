@@ -150,7 +150,6 @@ my-expo-app/
 ├── src/
 |   ├── App.tsx
 │   ├── pages/           # Full page/screen components
-│   │   ├── HomeScreen.tsx
 │   │   ├── TransplantQuestionnaire.tsx
 │   │   └── StyleExamples.tsx
 │   ├── components/      # Reusable UI/UX components

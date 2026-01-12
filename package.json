@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "8.4.4",
-    "@react-native-picker/picker": "^2.11.4",
+    "@react-native-picker/picker": "2.11.1",
     "expo": "^54.0.0",
     "expo-document-picker": "~14.0.8",
     "expo-image-picker": "~17.0.10",
@@ -24,7 +24,7 @@
     "expo-web-browser": "~15.0.10",
     "nativewind": "latest",
     "react": "19.1.0",
-    "react-dom": "^19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",

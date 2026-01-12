@@ -12,7 +12,7 @@ import { PatientDetailsScreen1 } from '../pages/onboarding/PatientDetailsScreen1
 import { PatientDetailsScreen2 } from '../pages/onboarding/PatientDetailsScreen2';
 import { MedicalQuestionsScreen } from '../pages/onboarding/MedicalQuestionsScreen';
 import { AssessmentIntroScreen } from '../pages/transplant-assessment/AssessmentIntroScreen';
-import { PathwayScreen } from '../pages/PathwayScreen';
+import { PathwayScreen } from '../pages/pathway';
 import { SettingsScreen } from '../pages/SettingsScreen';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { TransplantQuestionnaire } from '../pages/transplant-assessment/TransplantQuestionnaire';

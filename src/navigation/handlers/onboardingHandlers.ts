@@ -89,7 +89,9 @@ export function createOnboardingHandlers(state: UseAppStateReturn): OnboardingHa
       setPatient(savedPatient);
       clearPatientData(); // Clear temporary data
       // Checklist is automatically created on backend when patient is created
-      setCurrentScreen('assessment-intro');
+      // Initial status will be created when PathwayScreen fetches it
+      // Navigate to home instead of assessment-intro
+      setCurrentScreen('home');
     } catch (error: any) {
       console.error('Error saving patient:', error);
       console.error('Error details:', {

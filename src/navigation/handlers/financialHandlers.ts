@@ -3,7 +3,7 @@
  * 
  * Handles navigation for the financial assessment flow:
  * 1. FinancialIntroScreen -> FinanceQuestionnaire
- * 2. FinanceQuestionnaire -> HomeScreen (after completion)
+ * 2. FinanceQuestionnaire -> home (after completion)
  * 
  * Supports both first-time flow (from assessment) and edit flow (from home)
  */
