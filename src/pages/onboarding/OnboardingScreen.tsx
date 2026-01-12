@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { buttons, typography, decorative, combineClasses, layout } from '../../styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { buttons, typography, combineClasses } from '../../styles/theme';
 import { KidneyIcon } from '../../components/KidneyIcon';
+import { PathwayBackground } from '../../components/PathwayBackground';
 
 type OnboardingScreenProps = {
   onGetStarted: () => void;
@@ -11,14 +13,19 @@ type OnboardingScreenProps = {
 export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
+  const [buttonFadeAnim] = useState(new Animated.Value(0));
   const [showButton, setShowButton] = useState(false);
+  const [pathwayComplete, setPathwayComplete] = useState(false);
 
-  useEffect(() => {
-    // Initial fade in animation
+  const handlePathwayComplete = () => {
+    setPathwayComplete(true);
+    // Show button immediately so it can animate with text
+    setShowButton(true);
+    // Animate text and button in simultaneously
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -27,11 +34,13 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
         friction: 7,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      // Show button after animation completes
-      setTimeout(() => setShowButton(true), 300);
-    });
-  }, []);
+      Animated.timing(buttonFadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const handleGetStarted = () => {
     Animated.parallel([
@@ -51,69 +60,81 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
   };
 
   return (
-    <SafeAreaView className={combineClasses(layout.container.default, 'bg-white')}>
-      <View className="flex-1 items-center justify-center px-6">
-        {/* Decorative Elements */}
-        <View
-          className={combineClasses(
-            decorative.circles.large,
-            decorative.circles.green,
-            'absolute right-0 top-20 opacity-20'
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      {/* Pathway Background Design */}
+      <PathwayBackground opacity={0.15} onAnimationComplete={handlePathwayComplete} />
+      <SafeAreaView className="flex-1">
+        <View className="flex-1">
+          {/* Header with Logo and Title */}
+          {pathwayComplete && (
+            <Animated.View
+              style={{
+                opacity: fadeAnim,
+              }}
+              className="flex-row items-center px-6 pt-4">
+              <View className="mr-3">
+                <KidneyIcon size={48} color="#ffffff" />
+              </View>
+              <Text className="text-2xl font-normal text-white">Transplant Compass</Text>
+            </Animated.View>
           )}
-        />
-        <View
-          className={combineClasses(
-            decorative.circles.medium,
-            decorative.circles.orange,
-            'absolute bottom-40 left-0 opacity-20'
-          )}
-        />
 
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          }}
-          className="-mt-10 items-center">
-          {/* Logo/Icon Placeholder */}
-          <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-green-100">
-            <KidneyIcon size={48} color="#22c55e" />
+          {/* Main Content */}
+          <View className="mb-10 flex-1 items-center justify-center px-10">
+            {pathwayComplete && (
+              <Animated.View
+                style={{
+                  opacity: fadeAnim,
+                  transform: [{ scale: scaleAnim }],
+                }}
+                className="items-center">
+                {/* Main Text */}
+                <Text
+                  className={combineClasses(
+                    typography.h2,
+                    'mb-12 text-center font-semibold leading-tight text-white'
+                  )}>
+                  Your personalized guide to navigating the transplant pathway
+                </Text>
+              </Animated.View>
+            )}
+
+            {/* Get Started Button */}
+            {showButton && (
+              <Animated.View
+                style={{
+                  opacity: buttonFadeAnim,
+                  transform: [
+                    {
+                      translateY: buttonFadeAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20, 0],
+                      }),
+                    },
+                  ],
+                }}
+                className="w-full max-w-sm">
+                <TouchableOpacity
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                  onPress={handleGetStarted}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.outline.text}>Get Started</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
           </View>
-
-          {/* Welcome Text */}
-          <Text className={combineClasses(typography.h2, 'mb-4 text-center')}>
-            Welcome to Kidney Transplant Navigator
-          </Text>
-
-          <Text className={combineClasses(typography.body.large, 'mb-8 text-center text-gray-600')}>
-            Your personalized guide to understanding and navigating the transplant pathway
-          </Text>
-        </Animated.View>
-
-        {/* Get Started Button */}
-        {showButton && (
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
-            }}
-            className="absolute bottom-12 w-full max-w-sm">
-            <TouchableOpacity
-              className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-              onPress={handleGetStarted}
-              activeOpacity={0.8}>
-              <Text className={buttons.primary.text}>Get Started</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      </View>
-    </SafeAreaView>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

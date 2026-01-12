@@ -10,16 +10,16 @@
 export const colors = {
   // Primary Colors
   primary: {
-    50: '#f0fdf4', // lightest green
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e', // main green
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
+    50: '#f0faf6', // lightest green
+    100: '#d4f0e3',
+    200: '#b8e6d0',
+    300: '#9cdcbd',
+    400: '#90dcb5', // main lighter green
+    500: '#73c19a', // between the two provided colors
+    600: '#57a67f', // main darker green
+    700: '#468566',
+    800: '#35644d',
+    900: '#244333',
   },
   // Secondary Colors (Orange)
   secondary: {
@@ -36,11 +36,11 @@ export const colors = {
   },
   // Status Colors
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
+    50: '#f0faf6',
+    100: '#d4f0e3',
+    500: '#90dcb5',
+    600: '#57a67f',
+    700: '#468566',
   },
   warning: {
     50: '#fffbeb',
@@ -80,7 +80,7 @@ export const colors = {
   background: {
     white: '#ffffff',
     light: '#f9fafb',
-    card: '#f0fdf4', // light green
+    card: '#f0faf6', // light green
   },
 } as const;
 
@@ -127,41 +127,41 @@ export const typography = {
 export const buttons = {
   // Primary Button (Green)
   primary: {
-    base: 'rounded-2xl px-6 py-4 shadow-lg active:opacity-90',
-    enabled: 'bg-green-600',
+    base: 'rounded-full px-6 py-4 shadow-lg active:opacity-90',
+    enabled: 'bg-green-600', // Uses #57a67f from tailwind config
     disabled: 'bg-gray-300',
-    text: 'text-center text-lg font-semibold text-white',
-    textDisabled: 'text-center text-lg font-semibold text-gray-500',
+    text: 'text-center text-xl font-semibold text-white',
+    textDisabled: 'text-center text-xl font-semibold text-gray-500',
   },
 
   // Secondary Button (Orange)
   secondary: {
-    base: 'rounded-2xl px-6 py-4 shadow-lg active:opacity-90',
+    base: 'rounded-full px-6 py-4 shadow-lg active:opacity-90',
     enabled: 'bg-orange-500',
     disabled: 'bg-gray-300',
-    text: 'text-center text-lg font-semibold text-white',
-    textDisabled: 'text-center text-lg font-semibold text-gray-500',
+    text: 'text-center text-xl font-semibold text-white',
+    textDisabled: 'text-center text-xl font-semibold text-gray-500',
   },
 
   // Outline Button
   outline: {
-    base: 'rounded-2xl border-2 px-6 py-4 shadow-sm active:opacity-90',
+    base: 'rounded-full border-2 px-6 py-4 shadow-sm active:opacity-90',
     enabled: 'border-gray-200 bg-white',
     disabled: 'border-gray-200 bg-gray-50',
-    text: 'text-center text-lg font-semibold text-gray-700',
-    textDisabled: 'text-center text-lg font-semibold text-gray-400',
+    text: 'text-center text-xl font-semibold text-green-600',
+    textDisabled: 'text-center text-xl font-semibold text-gray-400',
   },
 
   // Ghost Button (No background)
   ghost: {
-    base: 'px-4 py-2 active:opacity-70',
-    text: 'text-base font-medium text-green-600',
+    base: 'rounded-full px-4 py-2 active:opacity-70',
+    text: 'text-base font-medium text-green-600', // Uses #57a67f from tailwind config
   },
 
   // Small Button
   small: {
-    base: 'rounded-xl px-4 py-2 shadow-sm active:opacity-90',
-    primary: 'bg-green-500',
+    base: 'rounded-full px-4 py-2 shadow-sm active:opacity-90',
+    primary: 'bg-green-500', // Uses #73c19a from tailwind config
     secondary: 'bg-orange-500',
     outline: 'border-2 border-gray-200 bg-white',
     text: 'text-center text-sm font-semibold',
@@ -172,17 +172,17 @@ export const buttons = {
 
   // Answer Button (for questionnaires)
   answer: {
-    base: 'rounded-xl border-2 px-6 py-4',
-    selected: 'border-green-500 bg-green-50',
+    base: 'rounded-full border-2 px-6 py-4',
+    selected: 'border-green-500 bg-green-50', // Uses #73c19a and #f0faf6 from tailwind config
     unselected: 'border-gray-200 bg-white',
     text: 'text-center text-lg font-semibold',
-    textSelected: 'text-green-700',
+    textSelected: 'text-green-700', // Uses #468566 from tailwind config
     textUnselected: 'text-gray-700',
   },
 
   // Danger/Red Button
   danger: {
-    base: 'rounded-2xl border-2 px-6 py-4 shadow-sm active:opacity-90',
+    base: 'rounded-full border-2 px-6 py-4 shadow-sm active:opacity-90',
     enabled: 'border-red-500 bg-red-50',
     disabled: 'border-gray-200 bg-gray-50',
     text: 'text-center text-lg font-semibold text-red-600',
