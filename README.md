@@ -29,14 +29,8 @@ Before you begin, make sure you have the following installed:
 Navigate to the project directory and install all required packages:
 
 ```bash
-cd nodesian/kidney-transplant-app
+cd kidney-transplant-app
 npm install
-```
-
-or if you're using yarn:
-
-```bash
-yarn install
 ```
 
 ### 2. Start the Development Server
@@ -45,12 +39,6 @@ Run the Expo development server:
 
 ```bash
 npm start
-```
-
-or:
-
-```bash
-expo start
 ```
 
 This will:
@@ -62,8 +50,6 @@ This will:
 ---
 
 ## Running on Your Phone
-
-### Method 1: Using Expo Go (Recommended for Development)
 
 **For iOS:**
 
@@ -79,29 +65,6 @@ This will:
 4. The app will load automatically
 
 **Note:** Your phone and computer must be on the same Wi-Fi network for this to work.
-
-### Method 2: Using Development Build
-
-If you need native modules or want to test a production-like build:
-
-```bash
-# For Android
-npm run android
-
-# For iOS (requires macOS and Xcode)
-npm run ios
-```
-
-### Method 3: Using Tunnel (Different Networks)
-
-If your phone and computer are on different networks, use tunnel mode:
-
-```bash
-expo start --tunnel
-```
-
-This uses Expo's tunnel service to connect your devices over the internet.
-
 ---
 
 ## Development Workflow
