@@ -7,7 +7,9 @@ import { Platform } from 'react-native';
 // - Android Emulator: use 'http://10.0.2.2:8000'
 // - Physical Device: use your machine's local IP (e.g., 'http://192.168.1.81:8000')
 //   Find your IP with: ipconfig (Windows) or ifconfig (Mac/Linux)
-const API_BASE_URL = __DEV__ ? 'http://192.168.1.81:8000' : 'https://your-production-api.com'; // Production
+// Base URL uses environment variable `EXPO_PUBLIC_API_URL` when provided.
+// Falls back to the local backend at http://127.0.0.1:8000 for development.
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL?.trim() || 'http://127.0.0.1:8000';
 
 export type Patient = {
   id?: string;
@@ -152,19 +154,39 @@ class ApiService {
         },
       });
 
+      // Log status for debugging/demo
+      console.log(`[API] Response status for ${url}: ${response.status} ${response.statusText}`);
+
+      // Read response body as text for logging and parsing
+      const respText = await response.text();
+      if (respText) {
+        try {
+          const parsed = JSON.parse(respText);
+          console.log(`[API] Response body for ${url}:`, parsed);
+        } catch {
+          console.log(`[API] Response body (non-JSON) for ${url}:`, respText);
+        }
+      }
+
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
-          const error = await response.json();
-          errorMessage = error.detail || error.message || errorMessage;
+          const error = respText ? JSON.parse(respText) : null;
+          errorMessage = (error && (error.detail || error.message)) || errorMessage;
         } catch {
-          // If JSON parsing fails, use status text
           errorMessage = response.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      return response.json();
+      // Try to return parsed JSON if present, otherwise an empty object
+      if (!respText) return {} as T;
+      try {
+        return JSON.parse(respText) as T;
+      } catch (err) {
+        // If parsing fails, return text as unknown
+        return (respText as unknown) as T;
+      }
     } catch (error: any) {
       // Handle network errors
       if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
