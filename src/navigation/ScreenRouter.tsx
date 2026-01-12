@@ -23,7 +23,7 @@ import { ChecklistTimelineScreen } from '../pages/checklist/ChecklistTimelineScr
 import { ChecklistItemEditScreen } from '../pages/checklist/ChecklistItemEditScreen';
 import { ChecklistDocumentsScreen } from '../pages/checklist/ChecklistDocumentsScreen';
 import { StyleExamples } from '../pages/StyleExamples';
-import { TransplantAccessNavigator } from '../pages/referral/TransplantAccessNavigator';
+import { TransplantAccessNavigator } from '../pages/referral/navigator';
 import { ReferralViewScreen } from '../pages/referral/ReferralViewScreen';
 import type { UseAppStateReturn } from './useAppState';
 import {
