@@ -43,13 +43,13 @@ export const StageActions = ({
     return (
       <View className="mb-4">
         <TouchableOpacity
-          className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+          className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
           onPress={(e) => {
             e.stopPropagation();
             onViewChecklist();
           }}
           activeOpacity={0.8}>
-          <Text className={buttons.primary.text}>View Checklist</Text>
+          <Text className={buttons.outline.text}>View Checklist</Text>
         </TouchableOpacity>
       </View>
     );
@@ -73,13 +73,13 @@ export const StageActions = ({
         ) : onNavigateToQuestionnaire ? (
           // No status yet (questionnaire not completed) - show "Begin Assessment"
           <TouchableOpacity
-            className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+            className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
             onPress={(e) => {
               e.stopPropagation();
               onNavigateToQuestionnaire();
             }}
             activeOpacity={0.8}>
-            <Text className={buttons.primary.text}>Begin Assessment</Text>
+            <Text className={buttons.outline.text}>Begin Assessment</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -104,13 +104,13 @@ export const StageActions = ({
         ) : index === currentStageIndex && onFindReferral ? (
           // Current referral stage only - show "Find a Referral" button
           <TouchableOpacity
-            className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+            className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
             onPress={(e) => {
               e.stopPropagation();
               onFindReferral();
             }}
             activeOpacity={0.8}>
-            <Text className={buttons.primary.text}>Find a Referral</Text>
+            <Text className={buttons.outline.text}>Find a Referral</Text>
           </TouchableOpacity>
         ) : null}
       </View>

@@ -6,9 +6,11 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { typography, layout } from '../../styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { typography, layout, combineClasses } from '../../styles/theme';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService, PatientStatus, TransplantChecklist } from '../../services/api';
 import type { PathwayStage, PathwayStageData, PathwayScreenProps, StageStatus } from './types';
 import { PATHWAY_STAGES } from './pathwayStages';
@@ -131,54 +133,77 @@ export const PathwayScreen = ({
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <View className="flex-1 items-center justify-center">
-          <Text className={typography.body.medium}>Loading pathway...</Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading pathway...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <View className="flex-1">
-        <PathwayHeader />
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <View className="flex-1">
+          <PathwayHeader />
 
-        <StageIndicatorDots currentIndex={currentIndex} currentStageIndex={safeCurrentStageIndex} />
+          <StageIndicatorDots currentIndex={currentIndex} currentStageIndex={safeCurrentStageIndex} />
 
-        {/* Swipeable Stage Cards */}
-        <FlatList
-          ref={flatListRef}
-          data={PATHWAY_STAGES}
-          renderItem={renderStageCard}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled={false}
-          snapToInterval={SNAP_INTERVAL}
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: CARD_SPACING,
-            paddingVertical: 20,
-          }}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          getItemLayout={(_, index) => ({
-            length: SNAP_INTERVAL,
-            offset: SNAP_INTERVAL * index,
-            index,
-          })}
-          onScrollToIndexFailed={(info) => {
-            // Fallback if scroll to index fails
-            setTimeout(() => {
-              flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
-            }, 100);
-          }}
-        />
-      </View>
+          {/* Swipeable Stage Cards */}
+          <FlatList
+            ref={flatListRef}
+            data={PATHWAY_STAGES}
+            renderItem={renderStageCard}
+            keyExtractor={(item) => item.id}
+            horizontal
+            pagingEnabled={false}
+            snapToInterval={SNAP_INTERVAL}
+            decelerationRate="fast"
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: CARD_SPACING,
+              paddingVertical: 20,
+            }}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            getItemLayout={(_, index) => ({
+              length: SNAP_INTERVAL,
+              offset: SNAP_INTERVAL * index,
+              index,
+            })}
+            onScrollToIndexFailed={(info) => {
+              // Fallback if scroll to index fails
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+              }, 100);
+            }}
+          />
+        </View>
 
-      <StageDetailModal stage={selectedStage} onClose={() => setSelectedStage(null)} />
-    </SafeAreaView>
+        <StageDetailModal stage={selectedStage} onClose={() => setSelectedStage(null)} />
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
 

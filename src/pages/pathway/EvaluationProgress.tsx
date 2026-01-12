@@ -21,15 +21,15 @@ export const EvaluationProgress = ({ checklist, stageColor }: EvaluationProgress
   return (
     <View className="mb-4">
       <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-gray-700">Evaluation Progress</Text>
-        <Text className="text-sm font-semibold text-gray-700">{percentage}%</Text>
+        <Text className="text-sm font-semibold text-gray-800">Evaluation Progress</Text>
+        <Text className="text-sm font-semibold text-gray-800">{percentage}%</Text>
       </View>
       <View className="h-3 w-full rounded-full bg-gray-200">
         <View
           className="h-full rounded-full"
           style={{
             width: `${percentage}%`,
-            backgroundColor: stageColor,
+            backgroundColor: stageColor || '#57a67f',
           }}
         />
       </View>

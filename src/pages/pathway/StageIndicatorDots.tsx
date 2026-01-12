@@ -24,8 +24,13 @@ export const StageIndicatorDots = ({ currentIndex, currentStageIndex }: StageInd
             width: currentIndex === index ? 24 : 8,
             backgroundColor:
               currentIndex === index
-                ? PATHWAY_STAGES[currentStageIndex]?.color || '#3b82f6'
-                : '#d1d5db',
+                ? '#ffffff'
+                : 'rgba(255, 255, 255, 0.5)',
+            shadowColor: currentIndex === index ? '#000' : undefined,
+            shadowOffset: currentIndex === index ? { width: 0, height: 2 } : undefined,
+            shadowOpacity: currentIndex === index ? 0.3 : undefined,
+            shadowRadius: currentIndex === index ? 3 : undefined,
+            elevation: currentIndex === index ? 3 : undefined,
           }}
         />
       ))}
