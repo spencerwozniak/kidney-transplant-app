@@ -19,6 +19,12 @@ module.exports = {
           900: '#244333',
         },
       },
+      fontFamily: {
+        sans: ['Nunito_400Regular', 'system-ui', 'sans-serif'],
+        'nunito': ['Nunito_400Regular', 'system-ui', 'sans-serif'],
+        'nunito-semibold': ['Nunito_600SemiBold', 'system-ui', 'sans-serif'],
+        'nunito-bold': ['Nunito_700Bold', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],

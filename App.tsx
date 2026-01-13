@@ -1,7 +1,9 @@
 import { View, Platform } from 'react-native';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from '@expo-google-fonts/nunito';
 import { useAppState } from './src/navigation/useAppState';
 import { ScreenRouter } from './src/navigation/ScreenRouter';
 import {
@@ -33,6 +35,13 @@ import './src/styles/global.css';
  * - Main: Home screen with pathway and settings tabs
  */
 export default function App() {
+  // Load Nunito font
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  });
+
   // Enable mouse drag scrolling for all scrollable elements on web
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -43,6 +52,11 @@ export default function App() {
 
   // Manage all app state (navigation, patient data, UI state)
   const appState = useAppState();
+
+  // Show loading screen while fonts are loading
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   // Create navigation handlers organized by flow
   const onboardingHandlers = createOnboardingHandlers(appState);

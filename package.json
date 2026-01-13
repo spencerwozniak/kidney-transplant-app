@@ -17,12 +17,15 @@
     "clean:all": "rm -rf node_modules .expo .expo-shared && npm install && expo start --clear"
   },
   "dependencies": {
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-picker/picker": "2.11.1",
     "expo": "^54.0.0",
     "expo-document-picker": "~14.0.8",
+    "expo-font": "^14.0.10",
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
+    "expo-splash-screen": "^31.0.13",
     "expo-status-bar": "~3.0.8",
     "expo-web-browser": "~15.0.10",
     "nativewind": "latest",

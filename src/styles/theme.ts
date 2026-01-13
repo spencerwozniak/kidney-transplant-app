@@ -90,26 +90,26 @@ export const colors = {
 
 export const typography = {
   // Headings
-  h1: 'text-5xl font-bold text-gray-900',
-  h2: 'text-4xl font-bold text-gray-900',
-  h3: 'text-3xl font-bold text-gray-900',
-  h4: 'text-2xl font-bold text-gray-900',
-  h5: 'text-xl font-semibold text-gray-900',
-  h6: 'text-lg font-semibold text-gray-900',
+  h1: 'text-5xl font-nunito-bold text-gray-900',
+  h2: 'text-4xl font-nunito-bold text-gray-900',
+  h3: 'text-3xl font-nunito-bold text-gray-900',
+  h4: 'text-2xl font-nunito-bold text-gray-900',
+  h5: 'text-xl font-nunito-semibold text-gray-900',
+  h6: 'text-lg font-nunito-semibold text-gray-900',
 
   // Body Text
   body: {
-    xlarge: 'text-xl text-gray-800',
-    large: 'text-lg text-gray-700',
-    medium: 'text-base text-gray-700',
-    small: 'text-sm text-gray-600',
-    xsmall: 'text-xs text-gray-600',
+    xlarge: 'text-xl font-nunito text-gray-800',
+    large: 'text-lg font-nunito text-gray-700',
+    medium: 'text-base font-nunito text-gray-700',
+    small: 'text-sm font-nunito text-gray-600',
+    xsmall: 'text-xs font-nunito text-gray-600',
   },
 
   // Special Text
-  label: 'text-sm font-semibold text-gray-700',
-  caption: 'text-xs text-gray-500',
-  link: 'text-base font-medium text-green-600',
+  label: 'text-sm font-nunito-semibold text-gray-700',
+  caption: 'text-xs font-nunito text-gray-500',
+  link: 'text-base font-nunito font-medium text-green-600',
 
   // Colors
   primary: 'text-green-600',
@@ -130,8 +130,8 @@ export const buttons = {
     base: 'rounded-full px-6 py-4 shadow-lg active:opacity-90',
     enabled: 'bg-green-600', // Uses #57a67f from tailwind config
     disabled: 'bg-gray-300',
-    text: 'text-center text-xl font-semibold text-white',
-    textDisabled: 'text-center text-xl font-semibold text-gray-500',
+    text: 'text-center text-xl font-nunito-semibold text-white',
+    textDisabled: 'text-center text-xl font-nunito-semibold text-gray-500',
   },
 
   // Secondary Button (Orange)
@@ -139,8 +139,8 @@ export const buttons = {
     base: 'rounded-full px-6 py-4 shadow-lg active:opacity-90',
     enabled: 'bg-orange-500',
     disabled: 'bg-gray-300',
-    text: 'text-center text-xl font-semibold text-white',
-    textDisabled: 'text-center text-xl font-semibold text-gray-500',
+    text: 'text-center text-xl font-nunito-semibold text-white',
+    textDisabled: 'text-center text-xl font-nunito-semibold text-gray-500',
   },
 
   // Outline Button
@@ -148,14 +148,14 @@ export const buttons = {
     base: 'rounded-full border-2 px-6 py-4 shadow-sm active:opacity-90',
     enabled: 'border-gray-200 bg-white',
     disabled: 'border-gray-200 bg-gray-50',
-    text: 'text-center text-xl font-semibold text-green-600',
-    textDisabled: 'text-center text-xl font-semibold text-gray-400',
+    text: 'text-center text-xl font-nunito-semibold text-green-600',
+    textDisabled: 'text-center text-xl font-nunito-semibold text-gray-400',
   },
 
   // Ghost Button (No background)
   ghost: {
     base: 'rounded-full px-4 py-2 active:opacity-70',
-    text: 'text-base font-medium text-green-600', // Uses #57a67f from tailwind config
+    text: 'text-base font-nunito font-medium text-green-600', // Uses #57a67f from tailwind config
   },
 
   // Small Button
@@ -164,7 +164,7 @@ export const buttons = {
     primary: 'bg-green-500', // Uses #73c19a from tailwind config
     secondary: 'bg-orange-500',
     outline: 'border-2 border-gray-200 bg-white',
-    text: 'text-center text-sm font-semibold',
+    text: 'text-center text-sm font-nunito-semibold',
     textPrimary: 'text-white',
     textSecondary: 'text-white',
     textOutline: 'text-gray-700',
@@ -175,7 +175,7 @@ export const buttons = {
     base: 'rounded-full border-2 px-6 py-4',
     selected: 'border-green-500 bg-green-50', // Uses #73c19a and #f0faf6 from tailwind config
     unselected: 'border-gray-200 bg-white',
-    text: 'text-center text-lg font-semibold',
+    text: 'text-center text-lg font-nunito-semibold',
     textSelected: 'text-green-700', // Uses #468566 from tailwind config
     textUnselected: 'text-gray-700',
   },
@@ -185,8 +185,8 @@ export const buttons = {
     base: 'rounded-full border-2 px-6 py-4 shadow-sm active:opacity-90',
     enabled: 'border-red-500 bg-red-50',
     disabled: 'border-gray-200 bg-gray-50',
-    text: 'text-center text-lg font-semibold text-red-600',
-    textDisabled: 'text-center text-lg font-semibold text-gray-400',
+    text: 'text-center text-lg font-nunito-semibold text-red-600',
+    textDisabled: 'text-center text-lg font-nunito-semibold text-gray-400',
   },
 } as const;
 

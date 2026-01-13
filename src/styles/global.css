@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set Nunito as default font family for web */
+@layer base {
+  * {
+    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* For React Native, apply Nunito font to all Text components via NativeWind */
+/* Use font-nunito, font-nunito-semibold, or font-nunito-bold classes on Text components */
+/* Or add font-nunito class to your Text components to use Nunito */
+
 /* Web-specific styles for mobile viewport constraint */
 @media (min-width: 429px) {
   /* On larger screens, ensure the app is centered and constrained */
