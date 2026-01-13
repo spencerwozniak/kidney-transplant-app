@@ -19,6 +19,9 @@ import { buttons, typography, inputs, combineClasses, layout } from '../../style
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
 import { Patient } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
+import { WheelPicker } from '../../components/WheelPicker';
+import { WheelDatePicker } from '../../components/WheelDatePicker';
 
 type PatientDetailsScreen2Props = {
   onNext: (data: { date_of_birth: string; sex?: string; height?: number; weight?: number }) => void;
@@ -84,6 +87,16 @@ export const PatientDetailsScreen2 = ({
   // Generate arrays for height pickers
   const feetOptions = Array.from({ length: 8 }, (_, i) => i + 1);
   const inchesOptions = Array.from({ length: 12 }, (_, i) => i);
+
+  // Convert to wheel picker format
+  const feetPickerItems = feetOptions.map((feet) => ({
+    label: feet.toString(),
+    value: feet.toString(),
+  }));
+  const inchesPickerItems = inchesOptions.map((inches) => ({
+    label: inches.toString(),
+    value: inches.toString(),
+  }));
 
   const validate = (): boolean => {
     const newErrors: { date_of_birth?: string } = {};
@@ -169,7 +182,14 @@ export const PatientDetailsScreen2 = ({
       if (selectedDate) {
         updateField('dateOfBirth', selectedDate);
       }
+    } else if (Platform.OS === 'web') {
+      // On web, update the date but don't close the modal
+      // User must click Cancel or Done to close
+      if (selectedDate) {
+        updateField('dateOfBirth', selectedDate);
+      }
     } else {
+      // On Android, close the picker after selection
       setShowDatePicker(false);
       if (selectedDate) {
         updateField('dateOfBirth', selectedDate);
@@ -188,10 +208,14 @@ export const PatientDetailsScreen2 = ({
         <NavigationBar onBack={onBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              styles.contentContainer,
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
             className="px-6 py-8">
             <Text className={combineClasses(typography.h2, 'text-white shadow')}>
               Personal Details
@@ -330,27 +354,27 @@ export const PatientDetailsScreen2 = ({
         </ScrollView>
 
         {/* Date Picker Modal */}
-        {Platform.OS === 'ios' && (
-          <Modal
-            visible={showDatePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowDatePicker(false)}>
-            <View className="flex-1 justify-end bg-black/50">
-              <View className="overflow-hidden rounded-t-3xl bg-white">
-                <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text className="text-xl text-blue-500">Cancel</Text>
-                  </TouchableOpacity>
-                  <Text className="text-xl font-semibold">Date of Birth</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowDatePicker(false);
-                    }}>
-                    <Text className="text-xl font-semibold text-blue-500">Done</Text>
-                  </TouchableOpacity>
-                </View>
-                <View className="items-center">
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}>
+          <View className="flex-1 justify-end bg-black/50">
+            <View className="overflow-hidden rounded-t-3xl bg-white">
+              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text className="text-xl text-blue-500">Cancel</Text>
+                </TouchableOpacity>
+                <Text className="text-xl font-semibold">Date of Birth</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowDatePicker(false);
+                  }}>
+                  <Text className="text-xl font-semibold text-blue-500">Done</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="items-center" style={styles.datePickerContainer}>
+                {Platform.OS === 'ios' ? (
                   <DateTimePicker
                     value={formData.dateOfBirth}
                     mode="date"
@@ -360,42 +384,69 @@ export const PatientDetailsScreen2 = ({
                     textColor="#000000"
                     style={{ width: '100%', height: 280, transform: [{ scale: 1.05 }] }}
                   />
-                </View>
+                ) : Platform.OS === 'web' ? (
+                  <View style={styles.webDatePicker}>
+                    <WheelDatePicker
+                      value={formData.dateOfBirth}
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                      style={{ width: '100%', height: 280 }}
+                    />
+                  </View>
+                ) : (
+                  <View style={{ width: '100%', padding: 20 }}>
+                    <DateTimePicker
+                      value={formData.dateOfBirth}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                      style={{ width: '100%' }}
+                    />
+                  </View>
+                )}
               </View>
             </View>
-          </Modal>
-        )}
+          </View>
+        </Modal>
 
         {/* Height Picker Modal */}
-        {Platform.OS === 'ios' && (
-          <Modal
-            visible={showHeightPicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowHeightPicker(false)}>
-            <View className="flex-1 justify-end bg-black/50">
-              <View className="rounded-t-3xl bg-white">
-                <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
-                  <TouchableOpacity onPress={() => setShowHeightPicker(false)}>
-                    <Text className="text-xl text-blue-500">Cancel</Text>
-                  </TouchableOpacity>
-                  <Text className="text-xl font-semibold">Height</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowHeightPicker(false);
-                    }}>
-                    <Text className="text-xl font-semibold text-blue-500">Done</Text>
-                  </TouchableOpacity>
-                </View>
-                <View className="flex-row">
-                  <View className="flex-1">
-                    <Text className="py-2 text-center text-gray-600">Feet</Text>
+        <Modal
+          visible={showHeightPicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowHeightPicker(false)}>
+          <View className="flex-1 justify-end bg-black/50" style={styles.modalOverlay}>
+            <View className="rounded-t-3xl bg-white" style={styles.pickerModal}>
+              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
+                <TouchableOpacity onPress={() => setShowHeightPicker(false)}>
+                  <Text className="text-xl text-blue-500">Cancel</Text>
+                </TouchableOpacity>
+                <Text className="text-xl font-semibold">Height</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowHeightPicker(false);
+                  }}>
+                  <Text className="text-xl font-semibold text-blue-500">Done</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-row" style={styles.pickerContainer}>
+                <View className="flex-1" style={styles.pickerColumn}>
+                  <Text className="py-2 text-center text-gray-600">Feet</Text>
+                  {Platform.OS === 'web' ? (
+                    <WheelPicker
+                      items={feetPickerItems}
+                      selectedValue={formData.heightFeet || '1'}
+                      onValueChange={(value) => updateField('heightFeet', value.toString())}
+                      style={styles.wheelPicker}
+                    />
+                  ) : (
                     <Picker
                       selectedValue={formData.heightFeet || '1'}
                       onValueChange={(value: string | number) =>
                         updateField('heightFeet', value.toString())
                       }
-                      style={{ height: 200 }}>
+                      style={styles.picker}>
                       {feetOptions.map((feet, index) => (
                         <Picker.Item
                           key={`feet-${index}`}
@@ -404,15 +455,24 @@ export const PatientDetailsScreen2 = ({
                         />
                       ))}
                     </Picker>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="py-2 text-center text-gray-600">Inches</Text>
+                  )}
+                </View>
+                <View className="flex-1" style={styles.pickerColumn}>
+                  <Text className="py-2 text-center text-gray-600">Inches</Text>
+                  {Platform.OS === 'web' ? (
+                    <WheelPicker
+                      items={inchesPickerItems}
+                      selectedValue={formData.heightInches || '0'}
+                      onValueChange={(value) => updateField('heightInches', value.toString())}
+                      style={styles.wheelPicker}
+                    />
+                  ) : (
                     <Picker
                       selectedValue={formData.heightInches || '0'}
                       onValueChange={(value: string | number) =>
                         updateField('heightInches', value.toString())
                       }
-                      style={{ height: 200 }}>
+                      style={styles.picker}>
                       {inchesOptions.map((inches, index) => (
                         <Picker.Item
                           key={`inches-${index}`}
@@ -421,12 +481,12 @@ export const PatientDetailsScreen2 = ({
                         />
                       ))}
                     </Picker>
-                  </View>
+                  )}
                 </View>
               </View>
             </View>
-          </Modal>
-        )}
+          </View>
+        </Modal>
 
         {/* Input Accessory View for Weight Keyboard */}
         {Platform.OS === 'ios' && (
@@ -449,5 +509,78 @@ export const PatientDetailsScreen2 = ({
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 24, // px-6 = 1.5rem = 24px
+    paddingVertical: 32, // py-8 = 2rem = 32px
+  },
+  modalOverlay: {
+    ...(Platform.OS === 'web' && {
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+    }),
+  },
+  pickerModal: {
+    ...(Platform.OS === 'web' && {
+      width: '100%',
+      maxWidth: 428, // Match the constrained width
+      alignSelf: 'center',
+      maxHeight: Platform.OS === 'web' ? 600 : undefined,
+      minHeight: 400,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      overflow: 'hidden',
+      marginBottom: 0,
+    }),
+  },
+  pickerContainer: {
+    ...(Platform.OS === 'web' && {
+      minHeight: 320,
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'row',
+    }),
+  },
+  pickerColumn: {
+    ...(Platform.OS === 'web' && {
+      width: '50%',
+      maxWidth: '50%',
+      overflow: 'hidden',
+      alignItems: 'center',
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+    }),
+  },
+  picker: {
+    height: 200,
+    ...(Platform.OS === 'web' && {
+      height: 320,
+      minHeight: 320,
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+    }),
+  },
+  wheelPicker: {
+    width: '100%',
+    ...(Platform.OS === 'web' && {
+      height: 250,
+    }),
+  },
+  datePickerContainer: {
+    width: '100%',
+    ...(Platform.OS === 'web' && {
+      minHeight: 280,
+    }),
+  },
+  webDatePicker: {
+    width: '100%',
+    height: 280,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

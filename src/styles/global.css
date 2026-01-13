@@ -2,3 +2,361 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Web-specific styles for mobile viewport constraint */
+@media (min-width: 429px) {
+  /* On larger screens, ensure the app is centered and constrained */
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+
+  /* Prevent body scrolling when app is constrained */
+  body {
+    overflow-y: auto;
+  }
+}
+
+/* Ensure SafeAreaView works properly on web */
+/* React Native Web SafeAreaView needs explicit padding on web */
+@media (min-width: 1px) {
+  /* SafeAreaView on web should provide safe area insets */
+  /* This ensures proper padding like on native iOS */
+  [data-insets] {
+    /* React Native Safe Area Context will set padding via style */
+  }
+  
+  /* Ensure React Native Web components don't lose their padding */
+  div[style*="padding"] {
+    /* Preserve padding from React Native styles */
+  }
+  
+  /* Preserve React Native Web's inline padding styles */
+  /* This ensures SafeAreaView and other components maintain their intended padding */
+  div[data-react-native-web-inline-group="true"] {
+    padding-top: var(--sab-top, 0px) !important;
+    padding-bottom: var(--sab-bottom, 0px) !important;
+    padding-left: var(--sab-left, 0px) !important;
+    padding-right: var(--sab-right, 0px) !important;
+  }
+  
+  /* Ensure ScrollView content containers respect padding on web */
+  /* Target the content container inside ScrollView */
+  div[data-scrollable="true"] > div[style*="flex"] {
+    /* Preserve padding from parent */
+    padding-left: inherit;
+    padding-right: inherit;
+  }
+  
+  /* Ensure TextInput containers maintain padding on web */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    /* Ensure inputs respect container padding */
+    box-sizing: border-box;
+  }
+  
+  /* Force Tailwind padding classes to work on web for React Native Web components */
+  /* This ensures px-6, px-4, etc. work correctly even when inline styles might override */
+  /* Use attribute selectors to target elements with padding classes */
+  [class*="px-6"] {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+  
+  [class*="px-4"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  [class*="px-5"] {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+  
+  [class*="px-8"] {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+  
+  /* Also handle py-* classes */
+  [class*="py-4"] {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  [class*="py-8"] {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  
+  /* Ensure padding is applied to React Native Web View components */
+  /* Target divs that are React Native Web Views */
+  div[class*="px-"] {
+    box-sizing: border-box;
+  }
+  
+  /* Ensure cards and containers don't extend to edges on web */
+  /* Target common card/container patterns */
+  [class*="rounded"]:not([class*="px-"]):not([style*="padding"]) {
+    /* Only apply if no padding is already set */
+  }
+  
+  /* Ensure form containers have proper spacing */
+  /* Target View components that are direct children of ScrollView content */
+  div[data-scrollable="true"] > div > div[class*="px-"] {
+    /* Ensure padding is applied */
+    min-width: 0;
+  }
+  
+  /* Ensure SafeAreaView provides minimum padding on web */
+  /* React Native Safe Area Context might not provide insets on web */
+  div[data-insets] {
+    /* If SafeAreaView doesn't provide padding, ensure minimum padding */
+    padding-left: max(var(--sab-left, 0px), 0px) !important;
+    padding-right: max(var(--sab-right, 0px), 0px) !important;
+  }
+  
+  /* Ensure ScrollView content maintains proper padding on web */
+  /* Target the content container that React Native Web creates */
+  div[data-scrollable="true"] > div[style*="flex-direction"] {
+    /* Ensure padding from child elements is preserved */
+    min-width: 0;
+  }
+  
+  /* Ensure all elements with px-* classes actually get padding on web */
+  /* This is a fallback for when Tailwind classes don't apply correctly */
+  div[class*="px-"] {
+    /* Force padding to be calculated from class name if not already set */
+    box-sizing: border-box;
+  }
+  
+  /* Ensure Picker components are visible and functional on web */
+  /* React Native Web Picker needs explicit styling */
+  select {
+    display: block !important;
+    width: 100% !important;
+    min-height: 200px !important;
+    padding: 8px !important;
+    font-size: 16px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Style Picker container on web */
+  div[role="listbox"],
+  select[multiple] {
+    min-height: 200px !important;
+    overflow-y: auto !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Ensure Picker items are visible */
+  option {
+    padding: 8px !important;
+    font-size: 16px !important;
+    color: #111827 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Target React Native Web Picker specifically */
+  /* The Picker component from @react-native-picker/picker renders as a select on web */
+  div[style*="height"] select,
+  div[style*="height: 200"] select,
+  div[style*="height: 250"] select {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 200px !important;
+  }
+  
+  /* Ensure Picker components inside modals are visible on web */
+  /* Target select elements that are children of modal containers */
+  div[class*="rounded-t-3xl"] select,
+  div[class*="bg-white"] select {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 200px !important;
+    max-height: 300px !important;
+    padding: 12px !important;
+    font-size: 18px !important;
+    line-height: 1.5 !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Ensure picker columns stay within their containers */
+  div[style*="flex: 1"]:has(> select),
+  div[class*="flex-1"]:has(> select) {
+    width: 50% !important;
+    max-width: 50% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    flex: 1 1 50% !important;
+  }
+  
+  /* Ensure modal picker container is constrained */
+  div[class*="rounded-t-3xl"][class*="bg-white"] {
+    max-width: 428px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Ensure picker container row stays within bounds */
+  div[class*="flex-row"]:has(> div > select) {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  
+  /* Constrain select elements within their parent columns */
+  div[class*="flex-1"] > select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Style for multiple select (which Picker might use) */
+  select[multiple] {
+    display: block !important;
+    visibility: visible !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Ensure Picker container divs are visible */
+  div[style*="flex: 1"]:has(> select) {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Wheel Picker styles for web */
+  /* Ensure ScrollView in wheel picker is scrollable */
+  div[data-scrollable="true"] {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-behavior: smooth !important;
+  }
+  
+  /* Ensure date picker is visible on web */
+  input[type="date"],
+  input[type="datetime-local"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 280px !important;
+    font-size: 18px !important;
+  }
+}
+
+/* Ensure touch targets are appropriate on web */
+@media (hover: hover) {
+  /* Desktop hover styles can go here if needed */
+}
+
+/* Prevent text selection on mobile-like elements */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Fix text shadows on web - React Native Web applies box-shadow to Text components */
+/* We need to convert box-shadow to text-shadow for text elements */
+/* This targets Text elements specifically (those without container-like classes) */
+@media (min-width: 1px) {
+  /* Target elements with shadow that are likely text (no padding, no background, no border-radius) */
+  /* This is more conservative to avoid breaking card shadows */
+  [class*="shadow"]:not([class*="p-"]):not([class*="px-"]):not([class*="py-"]):not([class*="bg-"]):not([class*="rounded"]):not([style*="padding"]):not([style*="backgroundColor"]) {
+    box-shadow: none !important;
+    /* Apply text-shadow instead for better text readability */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* For shadow-md on text - slightly stronger */
+  [class*="shadow-md"]:not([class*="p-"]):not([class*="px-"]):not([class*="py-"]):not([class*="bg-"]):not([class*="rounded"]):not([style*="padding"]):not([style*="backgroundColor"]) {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* For shadow-lg on text - even stronger */
+  [class*="shadow-lg"]:not([class*="p-"]):not([class*="px-"]):not([class*="py-"]):not([class*="bg-"]):not([class*="rounded"]):not([style*="padding"]):not([style*="backgroundColor"]) {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Enable mouse drag scrolling for horizontal FlatList on web */
+@media (min-width: 1px) {
+  /* Target React Native Web's ScrollView/FlatList containers */
+  div[data-scrollable="true"],
+  div[style*="overflow"],
+  [class*="ScrollView"] {
+    cursor: grab;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  div[data-scrollable="true"]:active,
+  div[style*="overflow"]:active,
+  [class*="ScrollView"]:active {
+    cursor: grabbing;
+  }
+  
+  /* Enable native mouse drag scrolling */
+  div[data-scrollable="true"],
+  div[style*="overflow-x: auto"],
+  div[style*="overflow-x: scroll"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Additional targeting for React Native Web FlatList scroll containers */
+  /* These selectors target the actual scrollable divs created by React Native Web */
+  div[style*="flex-direction: row"],
+  div[style*="flexDirection: row"] {
+    cursor: grab;
+  }
+  
+  div[style*="flex-direction: row"]:active,
+  div[style*="flexDirection: row"]:active {
+    cursor: grabbing;
+  }
+}
+
+/* Ensure SVG elements are visible on web */
+@media (min-width: 1px) {
+  svg {
+    display: block;
+    overflow: visible;
+  }
+  
+  svg path {
+    display: block;
+  }
+  
+  /* Ensure SVG background renders properly */
+  svg[viewBox] {
+    position: relative;
+    z-index: 0;
+  }
+}

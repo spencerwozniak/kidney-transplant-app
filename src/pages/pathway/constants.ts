@@ -4,11 +4,21 @@
  * Layout and sizing constants for the pathway screen
  */
 
-import { Dimensions } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Get the actual viewport width (constrained on web, full screen on native)
+const getViewportWidth = () => {
+  if (Platform.OS === 'web') {
+    // On web, we constrain to 428px max-width, so use that for calculations
+    return 428;
+  }
+  const { width } = Dimensions.get('window');
+  return width;
+};
 
-export const CARD_WIDTH = SCREEN_WIDTH * 0.9; // 90% of screen width
+const VIEWPORT_WIDTH = getViewportWidth();
+
+export const CARD_WIDTH = VIEWPORT_WIDTH * 0.9; // 90% of viewport width
 export const CARD_SPACING = 16;
 export const SNAP_INTERVAL = CARD_WIDTH + CARD_SPACING;
 

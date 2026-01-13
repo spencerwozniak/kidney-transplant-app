@@ -194,6 +194,7 @@ export function ScreenRouter({
             onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
             onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
             onDeletePatient={patientHandlers.handleDeletePatient}
+            onDeletePatientConfirmed={patientHandlers.handleDeletePatientConfirmed}
           />
         )}
         <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />

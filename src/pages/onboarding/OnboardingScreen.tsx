@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, combineClasses } from '../../styles/theme';
@@ -16,8 +16,15 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
   const [buttonFadeAnim] = useState(new Animated.Value(0));
   const [showButton, setShowButton] = useState(false);
   const [pathwayComplete, setPathwayComplete] = useState(false);
+  const animationStartedRef = React.useRef(false);
 
-  const handlePathwayComplete = () => {
+  const handlePathwayComplete = React.useCallback(() => {
+    // Prevent multiple calls
+    if (animationStartedRef.current) {
+      return;
+    }
+    animationStartedRef.current = true;
+
     setPathwayComplete(true);
     // Show button immediately so it can animate with text
     setShowButton(true);
@@ -40,7 +47,7 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
         useNativeDriver: true,
       }),
     ]).start();
-  };
+  }, [fadeAnim, scaleAnim, buttonFadeAnim]);
 
   const handleGetStarted = () => {
     Animated.parallel([
@@ -67,65 +74,67 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
       style={styles.gradient}>
       {/* Pathway Background Design */}
       <PathwayBackground opacity={0.15} onAnimationComplete={handlePathwayComplete} />
-      <SafeAreaView className="flex-1">
-        <View className="flex-1">
+      <SafeAreaView className="flex-1" style={styles.safeArea}>
+        <View className="flex-1" style={styles.contentContainer}>
           {/* Header with Logo and Title */}
-          {pathwayComplete && (
-            <Animated.View
+          <Animated.View
+            style={{
+              opacity: pathwayComplete ? fadeAnim : 0,
+            }}>
+            <View
+              className="flex-row items-center px-6 pt-4"
               style={{
-                opacity: fadeAnim,
-              }}
-              className="flex-row items-center px-6 pt-4">
-              <View className="mr-3">
-                <KidneyIcon className="shadow-md" size={48} color="#ffffff" />
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
+              <View style={{ marginRight: 12, flexShrink: 0 }}>
+                <KidneyIcon className="shadow" size={48} color="#ffffff" />
               </View>
               <Text className="text-2xl font-normal text-white shadow-md">Transplant Compass</Text>
-            </Animated.View>
-          )}
+            </View>
+          </Animated.View>
 
           {/* Main Content */}
           <View className="mb-10 flex-1 items-center justify-center px-10">
-            {pathwayComplete && (
-              <Animated.View
-                style={{
-                  opacity: fadeAnim,
-                  transform: [{ scale: scaleAnim }],
-                }}
-                className="items-center">
-                {/* Main Text */}
-                <Text
-                  className={combineClasses(
-                    typography.h2,
-                    'mb-12 text-center font-semibold leading-tight text-white shadow-md'
-                  )}>
-                  Your personalized guide to navigating the transplant pathway
-                </Text>
-              </Animated.View>
-            )}
+            <Animated.View
+              style={{
+                opacity: pathwayComplete ? fadeAnim : 0,
+                transform: [{ scale: pathwayComplete ? scaleAnim : 0.8 }],
+              }}
+              className="items-center">
+              {/* Main Text */}
+              <Text
+                className={combineClasses(
+                  typography.h2,
+                  'mb-12 text-center font-semibold leading-tight text-white shadow-md'
+                )}>
+                Your personalized guide to navigating the transplant pathway
+              </Text>
+            </Animated.View>
 
             {/* Get Started Button */}
-            {showButton && (
-              <Animated.View
-                style={{
-                  opacity: buttonFadeAnim,
-                  transform: [
-                    {
-                      translateY: buttonFadeAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0],
-                      }),
-                    },
-                  ],
-                }}
-                className="w-full max-w-sm">
-                <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={handleGetStarted}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>Get Started</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            )}
+            <Animated.View
+              style={{
+                opacity: showButton ? buttonFadeAnim : 0,
+                transform: [
+                  {
+                    translateY: showButton
+                      ? buttonFadeAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [20, 0],
+                        })
+                      : 20,
+                  },
+                ],
+              }}
+              className="w-full max-w-sm">
+              <TouchableOpacity
+                className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                onPress={handleGetStarted}
+                activeOpacity={0.8}>
+                <Text className={buttons.outline.text}>Get Started</Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </View>
       </SafeAreaView>
@@ -136,5 +145,22 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    ...(Platform.OS === 'web' && {
+      minHeight: '100vh',
+    }),
+  },
+  safeArea: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    ...(Platform.OS === 'web' && {
+      minHeight: '100vh',
+    }),
+  },
+  contentContainer: {
+    flex: 1,
+    width: '100%',
   },
 });

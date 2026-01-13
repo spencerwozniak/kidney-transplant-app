@@ -13,6 +13,7 @@ import type { PatientStatus, TransplantChecklist } from '../../services/api';
 import { PATHWAY_STAGES } from './pathwayStages';
 import { EvaluationProgress } from './EvaluationProgress';
 import { StageActions } from './StageActions';
+import { getWebShadow } from '../../utils/webStyles';
 
 type StageCardProps = {
   stage: PathwayStageData;
@@ -64,11 +65,7 @@ export const StageCard = ({
           borderColor: isCurrent ? '#ffffff' : isCompleted ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
           backgroundColor: isCurrent ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.9)',
           minHeight: 500,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
+          ...getWebShadow('#000', { width: 0, height: 4 }, 0.3, 8),
         }}>
         {/* Info Button - Top Right */}
         <View className="absolute right-4 top-4 z-10">

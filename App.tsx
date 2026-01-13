@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
+import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useAppState } from './src/navigation/useAppState';
@@ -10,6 +11,8 @@ import {
   createChecklistHandlers,
   createPatientHandlers,
 } from './src/navigation/handlers';
+import { WebWrapper } from './src/components/WebWrapper';
+import { enableWebMouseDrag } from './src/utils/enableWebMouseDrag';
 
 import './src/styles/global.css';
 
@@ -30,6 +33,14 @@ import './src/styles/global.css';
  * - Main: Home screen with pathway and settings tabs
  */
 export default function App() {
+  // Enable mouse drag scrolling for all scrollable elements on web
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const cleanup = enableWebMouseDrag();
+      return cleanup;
+    }
+  }, []);
+
   // Manage all app state (navigation, patient data, UI state)
   const appState = useAppState();
 
@@ -40,7 +51,7 @@ export default function App() {
   const checklistHandlers = createChecklistHandlers(appState);
   const patientHandlers = createPatientHandlers(appState);
 
-  return (
+  const content = (
     <SafeAreaProvider>
       {appState.isLoading ? (
         <View className="flex-1 items-center justify-center bg-white">
@@ -59,4 +70,6 @@ export default function App() {
       <StatusBar style="dark" />
     </SafeAreaProvider>
   );
+
+  return <WebWrapper>{content}</WebWrapper>;
 }

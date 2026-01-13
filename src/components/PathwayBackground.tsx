@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, Dimensions, Animated, Platform } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
 
 type PathwayBackgroundProps = {
@@ -16,9 +16,11 @@ export const PathwayBackground = ({
   animate = true,
 }: PathwayBackgroundProps) => {
   // Create animated values for each path
-  const pathAnimations = useRef(Array.from({ length: 44 }, () => new Animated.Value(0))).current;
+  // Start with 0.01 instead of 0 on web to ensure paths are in DOM
+  const initialOpacity = Platform.OS === 'web' && animate ? 0.01 : (animate ? 0 : 1);
+  const pathAnimations = useRef(Array.from({ length: 44 }, () => new Animated.Value(initialOpacity))).current;
   const [pathOpacities, setPathOpacities] = useState<number[]>(
-    animate ? Array(44).fill(0) : Array(44).fill(1)
+    animate ? Array(44).fill(initialOpacity) : Array(44).fill(1)
   );
 
   // Exact SVG paths from path-longer.svg
@@ -169,23 +171,38 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
 0 -18 -23 -25 -85 -25 -55 0 -71 10 -61 35 6 16 97 21 130 9z`,
   ];
 
+  // Store callback in ref to prevent re-running effect when it changes
+  const onAnimationCompleteRef = useRef(onAnimationComplete);
+  useEffect(() => {
+    onAnimationCompleteRef.current = onAnimationComplete;
+  }, [onAnimationComplete]);
+
   // Animate paths sequentially in the order they appear in the paths array
   useEffect(() => {
     // If animation is disabled, show all paths immediately and call callback
     if (!animate) {
-      onAnimationComplete?.();
+      setPathOpacities(Array(44).fill(1));
+      onAnimationCompleteRef.current?.();
       return;
     }
 
     // Update opacities as animations progress
+    // Store listener IDs and their corresponding animations for cleanup
+    const listenerData: Array<{ anim: Animated.Value; listenerId: string }> = [];
+    
     pathAnimations.forEach((anim, index) => {
-      anim.addListener(({ value }) => {
+      const listenerId = anim.addListener(({ value }) => {
         setPathOpacities((prev) => {
+          // Only update if value actually changed (prevents unnecessary re-renders)
+          if (Math.abs(prev[index] - value) < 0.001) {
+            return prev;
+          }
           const newOpacities = [...prev];
           newOpacities[index] = value;
           return newOpacities;
         });
       });
+      listenerData.push({ anim, listenerId });
     });
 
     // Create animations for each path in array order (index 0, 1, 2, ...)
@@ -196,6 +213,11 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
         useNativeDriver: false, // SVG opacity doesn't support native driver
       });
     });
+    
+    // On web, ensure initial state is set
+    if (Platform.OS === 'web') {
+      setPathOpacities(Array(44).fill(initialOpacity));
+    }
 
     // Start all animations with stagger - each path appears 100ms after the previous
     // Paths animate in the order they appear in the paths array above
@@ -203,19 +225,29 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
     // = (44 * 100) + 400 = 4800ms
     Animated.stagger(100, animations).start(() => {
       // Callback when all path animations complete
-      onAnimationComplete?.();
+      onAnimationCompleteRef.current?.();
     });
 
     // Cleanup listeners on unmount
     return () => {
-      pathAnimations.forEach((anim) => {
-        anim.removeAllListeners();
+      listenerData.forEach(({ anim, listenerId }) => {
+        anim.removeListener(listenerId);
       });
     };
-  }, [animate, onAnimationComplete]);
+  }, [animate, initialOpacity]);
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View 
+      style={[
+        StyleSheet.absoluteFill, 
+        Platform.OS === 'web' && {
+          width: '100%',
+          height: '100%',
+          zIndex: 0,
+          position: 'absolute',
+        }
+      ]} 
+      pointerEvents="none">
       <Svg
         width={SCREEN_WIDTH}
         height={SCREEN_HEIGHT}
@@ -223,15 +255,18 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
         style={styles.svg}
         preserveAspectRatio="xMidYMid meet">
         <G opacity={opacity} transform={`translate(0,921) scale(0.1,-0.1)`}>
-          {paths.map((pathData: string, index: number) => (
-            <Path
-              key={index}
-              d={pathData}
-              fill="#ffffff"
-              stroke="none"
-              opacity={pathOpacities[index]}
-            />
-          ))}
+          {paths.map((pathData: string, index: number) => {
+            const pathOpacity = pathOpacities[index];
+            return (
+              <Path
+                key={`path-${index}`}
+                d={pathData}
+                fill="#ffffff"
+                stroke="none"
+                opacity={pathOpacity}
+              />
+            );
+          })}
         </G>
       </Svg>
     </View>
@@ -243,5 +278,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    ...(Platform.OS === 'web' && {
+      width: '100%',
+      height: '100%',
+      zIndex: 0,
+    }),
   },
 });

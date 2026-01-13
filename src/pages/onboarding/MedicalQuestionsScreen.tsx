@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, inputs, combineClasses, layout } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
+import { getWebPadding } from '../../utils/webStyles';
 
 type MedicalQuestionsScreenProps = {
   onNext: (data: { has_ckd_esrd?: boolean; last_gfr?: number; has_referral?: boolean }) => void;
@@ -125,10 +126,14 @@ export const MedicalQuestionsScreen = ({
         <NavigationBar onBack={onBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              styles.contentContainer,
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
             className="px-6 py-8">
             <Text className={combineClasses(typography.h2, 'text-white shadow')}>
               Medical Information
@@ -271,5 +276,9 @@ export const MedicalQuestionsScreen = ({
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 24, // px-6 = 1.5rem = 24px
+    paddingVertical: 32, // py-8 = 2rem = 32px
   },
 });

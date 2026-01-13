@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { buttons, typography, combineClasses, layout } from '../styles/theme';
+import { buttons, typography, combineClasses, layout, cards } from '../styles/theme';
 import { apiService, PatientStatus } from '../services/api';
+import { getWebPadding } from '../utils/webStyles';
 
 type SettingsScreenProps = {
   patientName: string;
@@ -11,6 +12,7 @@ type SettingsScreenProps = {
   onNavigateToQuestionnaire?: () => void;
   onNavigateToFinancialAssessment?: () => void;
   onDeletePatient?: () => void;
+  onDeletePatientConfirmed?: () => Promise<void>; // For web modal
 };
 
 export const SettingsScreen = ({
@@ -20,9 +22,11 @@ export const SettingsScreen = ({
   onNavigateToQuestionnaire,
   onNavigateToFinancialAssessment,
   onDeletePatient,
+  onDeletePatientConfirmed,
 }: SettingsScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     fetchPatientStatus();
@@ -44,13 +48,43 @@ export const SettingsScreen = ({
   };
 
   const currentStage = (patientStatus?.pathway_stage as string) || 'identification';
+
+  const handleDeletePress = () => {
+    if (Platform.OS === 'web') {
+      // Show web modal
+      setShowDeleteModal(true);
+    } else {
+      // Use native Alert on iOS/Android
+      if (onDeletePatient) {
+        onDeletePatient();
+      }
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
+    // On web, use the confirmed handler directly (bypasses Alert)
+    if (Platform.OS === 'web' && onDeletePatientConfirmed) {
+      await onDeletePatientConfirmed();
+    } else if (onDeletePatient) {
+      // On native, this will trigger the Alert
+      onDeletePatient();
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
   return (
     <SafeAreaView className={layout.container.default}>
       <ScrollView
         className={layout.scrollView}
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}>
-        <View className="flex-1 px-6 py-8">
+        <View 
+          style={getWebPadding(24, 32)} // px-6 py-8
+          className="flex-1 px-6 py-8">
           {/* Header */}
           <View className="mb-8">
             <Text className={combineClasses(typography.h2, 'mb-2 text-left')}>Settings</Text>
@@ -129,7 +163,7 @@ export const SettingsScreen = ({
               </Text>
               <TouchableOpacity
                 className={combineClasses(buttons.danger.base, buttons.danger.enabled)}
-                onPress={onDeletePatient}
+                onPress={handleDeletePress}
                 activeOpacity={0.8}>
                 <Text className={buttons.danger.text}>Delete Patient Data</Text>
               </TouchableOpacity>
@@ -137,6 +171,47 @@ export const SettingsScreen = ({
           )}
         </View>
       </ScrollView>
+
+      {/* Web Delete Confirmation Modal */}
+      {Platform.OS === 'web' && (
+        <Modal
+          visible={showDeleteModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={handleCancelDelete}>
+          <View className="flex-1 items-center justify-center bg-black/50 px-4 py-8">
+            <View
+              className={combineClasses(cards.default.elevated, 'w-full max-w-md p-6')}
+              style={{ maxHeight: '80%' }}>
+              {/* Modal Header */}
+              <View className="mb-4">
+                <Text className={combineClasses(typography.h4, 'mb-2 text-red-600')}>
+                  Delete Patient Data
+                </Text>
+                <Text className={combineClasses(typography.body.medium, 'leading-6 text-gray-700')}>
+                  Are you sure you want to delete all patient data? This action cannot be undone.
+                </Text>
+              </View>
+
+              {/* Modal Actions */}
+              <View className="mt-6 flex-row gap-3">
+                <TouchableOpacity
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled, 'flex-1')}
+                  onPress={handleCancelDelete}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.outline.text}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className={combineClasses(buttons.danger.base, buttons.danger.enabled, 'flex-1')}
+                  onPress={handleConfirmDelete}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.danger.text}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };

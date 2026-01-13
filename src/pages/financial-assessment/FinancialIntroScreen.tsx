@@ -6,6 +6,7 @@ import { buttons, typography, cards, combineClasses, layout, decorative } from '
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
 
 type FinancialIntroScreenProps = {
   onBeginAssessment: () => void;
@@ -88,10 +89,14 @@ export const FinancialIntroScreen = ({
         <NavigationBar onBack={handleBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              styles.contentContainer,
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
             className="mt-16 px-6 py-8">
             {/* Header */}
             <View className="mb-6">
@@ -168,5 +173,9 @@ export const FinancialIntroScreen = ({
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 24, // px-6 = 1.5rem = 24px
+    paddingVertical: 32, // py-8 = 2rem = 32px
   },
 });

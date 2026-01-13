@@ -61,10 +61,14 @@ export const AssessmentIntroScreen = ({
         <NavigationBar onBack={onBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              styles.contentContainer,
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
             className="mt-16 px-6 py-8">
             {/* Header */}
             <View className="mb-6">
@@ -141,5 +145,9 @@ export const AssessmentIntroScreen = ({
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 24, // px-6 = 1.5rem = 24px
+    paddingVertical: 32, // py-8 = 2rem = 32px
   },
 });

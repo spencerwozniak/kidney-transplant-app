@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { typography, layout, combineClasses } from '../../styles/theme';
@@ -19,6 +19,7 @@ import { PathwayHeader } from './PathwayHeader';
 import { StageIndicatorDots } from './StageIndicatorDots';
 import { StageCard } from './StageCard';
 import { StageDetailModal } from './StageDetailModal';
+import { WebScrollableFlatList } from '../../components/WebScrollableFlatList';
 
 export const PathwayScreen = ({
   patientName,
@@ -165,7 +166,7 @@ export const PathwayScreen = ({
           <StageIndicatorDots currentIndex={currentIndex} currentStageIndex={safeCurrentStageIndex} />
 
           {/* Swipeable Stage Cards */}
-          <FlatList
+          <WebScrollableFlatList
             ref={flatListRef}
             data={PATHWAY_STAGES}
             renderItem={renderStageCard}

@@ -16,6 +16,7 @@ import { buttons, typography, inputs, combineClasses, layout } from '../../style
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
 import { Patient } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
 
 type PatientDetailsScreen1Props = {
   onNext: (data: { name: string; email?: string; phone?: string }) => void;
@@ -164,11 +165,15 @@ export const PatientDetailsScreen1 = ({
         <NavigationBar onBack={onBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
-            className="mt-16 px-6 py-8">
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              styles.contentContainer,
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
+            className="mt-16">
             <Text className={combineClasses(typography.h2, 'text-white shadow-md')}>
               Contact Information
             </Text>
@@ -300,5 +305,9 @@ export const PatientDetailsScreen1 = ({
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 24, // px-6 = 1.5rem = 24px
+    paddingVertical: 32, // py-8 = 2rem = 32px
   },
 });

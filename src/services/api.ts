@@ -5,7 +5,7 @@
 // Local (e.g., 'http://192.168.1.81:8000')
 // Connect to AWS EC2 server: (e.g., 'http://3.21.125.231:8000')
 
-const API_BASE_URL = 'http://192.168.1.81:8000';
+const API_BASE_URL = 'http://3.21.125.231:8000';
 
 export type Patient = {
   id?: string;
