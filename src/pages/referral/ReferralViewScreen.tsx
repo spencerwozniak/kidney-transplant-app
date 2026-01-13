@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Animated, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   buttons,
   typography,
@@ -9,7 +10,9 @@ import {
   layout,
 } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService, PatientReferralState } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
 
 type ReferralViewScreenProps = {
   onNavigateBack: () => void;
@@ -18,6 +21,23 @@ type ReferralViewScreenProps = {
 export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) => {
   const [referralState, setReferralState] = useState<PatientReferralState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(30));
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   useEffect(() => {
     fetchReferralState();
@@ -37,135 +57,195 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
 
   if (isLoading) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateBack} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Loading referral information...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateBack} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading referral information...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   if (!referralState) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateBack} />
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className={combineClasses(typography.h5, 'mb-2 text-center')}>
-            No Referral Information
-          </Text>
-          <Text className={combineClasses(typography.body.small, 'text-center text-gray-600')}>
-            No referral information found.
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateBack} />
+          <View className="flex-1 items-center justify-center px-6">
+            <Text className={combineClasses(typography.h5, 'mb-2 text-center text-white shadow')}>
+              No Referral Information
+            </Text>
+            <Text className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
+              No referral information found.
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <View className="px-6 pb-2">
-          {/* Header */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h3, 'mb-2')}>Referral Information</Text>
-          </View>
-
-          {/* Referral Status */}
-          <View className={combineClasses(cards.colored.green, 'mb-6')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
-              Referral Status
-            </Text>
-            <Text className={combineClasses(typography.body.medium, 'mb-2 font-semibold text-green-800')}>
-              {referralState.has_referral ? '✓ Referral Received' : 'No Referral Yet'}
-            </Text>
-            {referralState.referral_status && (
-              <Text className={combineClasses(typography.body.small, 'text-green-700')}>
-                Status: {referralState.referral_status.replace('_', ' ').toUpperCase()}
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onNavigateBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              getWebPadding(24, 32), // px-6 py-8
+            ]}
+            className="px-6 py-8">
+            {/* Header */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+                Referral Information
               </Text>
-            )}
-          </View>
-
-          {/* Referral Source */}
-          {referralState.referral_source && (
-            <View className={combineClasses(cards.default.container, 'mb-6')}>
-              <Text className={combineClasses(typography.h5, 'mb-4')}>Referral Source</Text>
-              <Text className={combineClasses(typography.body.medium, 'capitalize')}>
-                {referralState.referral_source.replace('_', ' ')}
-              </Text>
+              <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
-          )}
 
-          {/* Location */}
-          {referralState.location && (referralState.location.zip || referralState.location.state) && (
-            <View className={combineClasses(cards.default.container, 'mb-6')}>
-              <Text className={combineClasses(typography.h5, 'mb-4')}>Location</Text>
-              <View className="space-y-2">
-                {referralState.location.zip && (
-                  <Text className={combineClasses(typography.body.medium)}>
-                    ZIP Code: {referralState.location.zip}
+            {/* Referral Status */}
+            <View className="mb-8">
+              {referralState.has_referral ? (
+                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
+                    ✓ Referral Received
                   </Text>
-                )}
-                {referralState.location.state && (
-                  <Text className={combineClasses(typography.body.medium)}>
-                    State: {referralState.location.state}
+                  {referralState.referral_status && (
+                    <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
+                      Status: {referralState.referral_status.replace('_', ' ').toUpperCase()}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    No Referral Yet
                   </Text>
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* Nephrologist Information */}
-          {referralState.last_nephrologist &&
-            (referralState.last_nephrologist.name || referralState.last_nephrologist.clinic) && (
-              <View className={combineClasses(cards.default.container, 'mb-6')}>
-                <Text className={combineClasses(typography.h5, 'mb-4')}>Nephrologist</Text>
-                {referralState.last_nephrologist.name && (
-                  <Text className={combineClasses(typography.body.medium, 'mb-2')}>
-                    {referralState.last_nephrologist.name}
+                  <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                    No referral has been received at this time.
                   </Text>
-                )}
-                {referralState.last_nephrologist.clinic && (
-                  <Text className={combineClasses(typography.body.small, 'text-gray-600')}>
-                    {referralState.last_nephrologist.clinic}
-                  </Text>
-                )}
-              </View>
-            )}
-
-          {/* Dialysis Center Information */}
-          {referralState.dialysis_center && referralState.dialysis_center.name && (
-            <View className={combineClasses(cards.default.container, 'mb-6')}>
-              <Text className={combineClasses(typography.h5, 'mb-4')}>Dialysis Center</Text>
-              <Text className={combineClasses(typography.body.medium, 'mb-2')}>
-                {referralState.dialysis_center.name}
-              </Text>
-              {referralState.dialysis_center.social_worker_contact && (
-                <Text className={combineClasses(typography.body.small, 'text-gray-600')}>
-                  Social Worker: {referralState.dialysis_center.social_worker_contact}
-                </Text>
+                </View>
               )}
             </View>
-          )}
 
-          {/* Preferred Centers */}
-          {referralState.preferred_centers && referralState.preferred_centers.length > 0 && (
-            <View className={combineClasses(cards.default.container, 'mb-6')}>
-              <Text className={combineClasses(typography.h5, 'mb-4')}>Preferred Centers</Text>
-              {referralState.preferred_centers.map((centerId, index) => (
-                <Text key={index} className={combineClasses(typography.body.medium, 'mb-2')}>
-                  • {centerId}
+            {/* Referral Source */}
+            {referralState.referral_source && (
+              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                  Referral Source
                 </Text>
-              ))}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+                <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800 capitalize')}>
+                  {referralState.referral_source.replace('_', ' ')}
+                </Text>
+              </View>
+            )}
+
+            {/* Location */}
+            {referralState.location && (referralState.location.zip || referralState.location.state) && (
+              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>Location</Text>
+                <View className="space-y-2">
+                  {referralState.location.zip && (
+                    <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                      ZIP Code: {referralState.location.zip}
+                    </Text>
+                  )}
+                  {referralState.location.state && (
+                    <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                      State: {referralState.location.state}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* Nephrologist Information */}
+            {referralState.last_nephrologist &&
+              (referralState.last_nephrologist.name || referralState.last_nephrologist.clinic) && (
+                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    Nephrologist
+                  </Text>
+                  {referralState.last_nephrologist.name && (
+                    <Text className={combineClasses(typography.body.small, 'mb-2 leading-6 text-blue-800')}>
+                      {referralState.last_nephrologist.name}
+                    </Text>
+                  )}
+                  {referralState.last_nephrologist.clinic && (
+                    <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                      {referralState.last_nephrologist.clinic}
+                    </Text>
+                  )}
+                </View>
+              )}
+
+            {/* Dialysis Center Information */}
+            {referralState.dialysis_center && referralState.dialysis_center.name && (
+              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                  Dialysis Center
+                </Text>
+                <Text className={combineClasses(typography.body.small, 'mb-2 leading-6 text-blue-800')}>
+                  {referralState.dialysis_center.name}
+                </Text>
+                {referralState.dialysis_center.social_worker_contact && (
+                  <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                    Social Worker: {referralState.dialysis_center.social_worker_contact}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Preferred Centers */}
+            {referralState.preferred_centers && referralState.preferred_centers.length > 0 && (
+              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                  Preferred Centers
+                </Text>
+                <View className="space-y-2">
+                  {referralState.preferred_centers.map((centerId, index) => (
+                    <Text
+                      key={index}
+                      className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                      • {centerId}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
 

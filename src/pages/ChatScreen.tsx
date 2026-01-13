@@ -301,8 +301,8 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
   };
 
   return (
-    <SafeAreaView 
-      className="flex-1 bg-white" 
+    <SafeAreaView
+      className="flex-1 bg-white"
       edges={['top']}
       style={{ height: '100%', maxHeight: '100%' }}>
       <KeyboardAvoidingView
@@ -318,7 +318,7 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
                 {aiEnabled === null
                   ? 'Checking status...'
                   : aiEnabled
-                    ? 'Ask me anything about your transplant journey'
+                    ? 'Ask me about your transplant journey'
                     : 'AI assistant unavailable'}
               </Text>
             </View>

@@ -315,7 +315,7 @@ class ApiService {
 
   async uploadChecklistItemDocument(
     itemId: string,
-    fileUri: string,
+    fileUriOrFile: string | File,
     fileName: string,
     fileType: string
   ): Promise<TransplantChecklist> {
@@ -327,11 +327,19 @@ class ApiService {
 
     // Create FormData for file upload
     const formData = new FormData();
-    formData.append('file', {
-      uri: fileUri,
-      name: fileName,
-      type: fileType,
-    } as any);
+    
+    // Check if it's a web File object or a mobile URI
+    if (fileUriOrFile instanceof File) {
+      // Web: Use File object directly
+      formData.append('file', fileUriOrFile, fileName);
+    } else {
+      // Mobile: Use React Native format
+      formData.append('file', {
+        uri: fileUriOrFile,
+        name: fileName,
+        type: fileType,
+      } as any);
+    }
 
     try {
       const response = await fetch(url, {

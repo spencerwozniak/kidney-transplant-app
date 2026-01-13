@@ -152,6 +152,36 @@ export const ChecklistDocumentsScreen = ({
   };
 
   const chooseDocuments = async () => {
+    if (Platform.OS === 'web') {
+      // Web: Use HTML file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf,image/*';
+      input.multiple = true;
+      input.style.display = 'none';
+
+      input.onchange = async (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files && target.files.length > 0) {
+          const files = Array.from(target.files).map((file) => ({
+            file: file, // Store the File object for web
+            fileName: file.name,
+            fileType: file.type || 'application/pdf',
+          }));
+          await uploadFilesWeb(files);
+        }
+        // Clean up the input element
+        if (input.parentNode) {
+          input.parentNode.removeChild(input);
+        }
+      };
+
+      document.body.appendChild(input);
+      input.click();
+      return;
+    }
+
+    // Mobile: Use DocumentPicker
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'image/*'],
@@ -194,7 +224,10 @@ export const ChecklistDocumentsScreen = ({
   };
 
   const showUploadOptions = () => {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'web') {
+      // Web: Directly open file picker for documents
+      chooseDocuments();
+    } else if (Platform.OS === 'ios') {
       // Use native iOS ActionSheet
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -288,6 +321,54 @@ export const ChecklistDocumentsScreen = ({
     }
   };
 
+  // Web-specific upload function that handles File objects
+  const uploadFilesWeb = async (
+    files: Array<{ file: File; fileName: string; fileType: string }>
+  ) => {
+    setIsUploading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const fileData of files) {
+        try {
+          await apiService.uploadChecklistItemDocument(
+            checklistItem.id,
+            fileData.file,
+            fileData.fileName,
+            fileData.fileType
+          );
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error('Error uploading file:', fileData.fileName, error);
+        }
+      }
+
+      // Refresh the documents list after all uploads
+      await refreshDocuments();
+
+      // Show appropriate message
+      if (successCount > 0 && errorCount === 0) {
+        Alert.alert(
+          'Success',
+          successCount === 1
+            ? 'File uploaded successfully!'
+            : `${successCount} files uploaded successfully!`
+        );
+      } else if (successCount > 0 && errorCount > 0) {
+        Alert.alert(
+          'Partial Success',
+          `${successCount} file(s) uploaded successfully, ${errorCount} file(s) failed.`
+        );
+      } else {
+        Alert.alert('Upload Failed', 'Failed to upload files. Please try again.');
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const getFileName = (path: string): string => {
     const parts = path.split('/');
     return parts[parts.length - 1] || path;
@@ -342,7 +423,8 @@ export const ChecklistDocumentsScreen = ({
             <Text className={combineClasses(typography.h5, 'mb-2 text-center text-white shadow')}>
               Document Information Not Available
             </Text>
-            <Text className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
+            <Text
+              className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
               Document request information for this checklist item is not available.
             </Text>
           </View>
@@ -382,7 +464,11 @@ export const ChecklistDocumentsScreen = ({
             </View>
 
             {/* Patient Should Request */}
-            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-blue-500')}>
+            <View
+              className={combineClasses(
+                cards.default.container,
+                'mb-6 border-l-4 border-blue-500 bg-white/95'
+              )}>
               <Text className={combineClasses(typography.h5, 'mb-3 text-blue-900')}>
                 Ask your provider for:
               </Text>
@@ -404,7 +490,11 @@ export const ChecklistDocumentsScreen = ({
 
             {/* Special Note (if exists) */}
             {content.specialNote && (
-              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-amber-500')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-amber-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
                   Special Note
                 </Text>
@@ -415,7 +505,11 @@ export const ChecklistDocumentsScreen = ({
             )}
 
             {/* Why This Matters */}
-            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-green-500')}>
+            <View
+              className={combineClasses(
+                cards.default.container,
+                'mb-6 border-l-4 border-green-500 bg-white/95'
+              )}>
               <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
                 Why this matters:
               </Text>
@@ -433,25 +527,25 @@ export const ChecklistDocumentsScreen = ({
                 Upload PDF files or images of your documents for this evaluation
               </Text>
 
-            <TouchableOpacity
-              className={combineClasses(
-                buttons.primary.base,
-                buttons.primary.enabled,
-                isUploading ? 'opacity-50' : ''
-              )}
-              onPress={showUploadOptions}
-              disabled={isUploading}
-              activeOpacity={0.8}>
-              {isUploading ? (
-                <View className="flex-row items-center justify-center">
-                  <ActivityIndicator size="small" color="#ffffff" className="mr-2" />
-                  <Text className={buttons.primary.text}>Uploading...</Text>
-                </View>
-              ) : (
-                <Text className={buttons.primary.text}>Upload Documents</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                className={combineClasses(
+                  buttons.primary.base,
+                  buttons.primary.enabled,
+                  isUploading ? 'opacity-50' : ''
+                )}
+                onPress={showUploadOptions}
+                disabled={isUploading}
+                activeOpacity={0.8}>
+                {isUploading ? (
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator size="small" color="#ffffff" className="mr-2" />
+                    <Text className={buttons.primary.text}>Uploading...</Text>
+                  </View>
+                ) : (
+                  <Text className={buttons.primary.text}>Upload Documents</Text>
+                )}
+              </TouchableOpacity>
+            </View>
 
             {/* Uploaded Documents List */}
             {uploadedDocuments.length > 0 && (
@@ -464,7 +558,7 @@ export const ChecklistDocumentsScreen = ({
                     {isRefreshing ? (
                       <ActivityIndicator size="small" color="#3b82f6" />
                     ) : (
-                      <Text className="text-blue-600 font-semibold">Refresh</Text>
+                      <Text className="font-semibold text-blue-600">Refresh</Text>
                     )}
                   </TouchableOpacity>
                 </View>

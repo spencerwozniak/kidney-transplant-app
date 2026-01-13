@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-type Tab = 'pathway' | 'chat' | 'settings';
+type Tab = 'pathway' | 'chat' | 'account';
 
 type BottomTabBarProps = {
   activeTab: Tab;
@@ -50,17 +50,10 @@ const ChatIcon = ({ size = 24, color = '#FFFFFF' }: IconProps) => (
   </Svg>
 );
 
-const SettingsIcon = ({ size = 24, color = '#6B7280' }: IconProps) => (
+const AccountIcon = ({ size = 24, color = '#6B7280' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
-      d="M12 15a3 3 0 100-6 3 3 0 000 6z"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"
+      d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
       stroke={color}
       strokeWidth="2"
       strokeLinecap="round"
@@ -71,7 +64,7 @@ const SettingsIcon = ({ size = 24, color = '#6B7280' }: IconProps) => (
 
 export const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
   const pathwayColor = activeTab === 'pathway' ? '#16A34A' : '#6B7280';
-  const settingsColor = activeTab === 'settings' ? '#16A34A' : '#6B7280';
+  const accountColor = activeTab === 'account' ? '#16A34A' : '#6B7280';
 
   return (
     <View className="relative border-t border-gray-200 bg-white" style={{ flexShrink: 0 }}>
@@ -112,23 +105,21 @@ export const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* Settings Tab */}
+        {/* Account Tab */}
         <TouchableOpacity
-          onPress={() => onTabChange('settings')}
+          onPress={() => onTabChange('account')}
           activeOpacity={0.7}
           className="flex-1 items-center py-3">
           <View className="mb-1">
-            <SettingsIcon size={24} color={settingsColor} />
+            <AccountIcon size={24} color={accountColor} />
           </View>
           <Text
             className={`text-xs font-semibold ${
-              activeTab === 'settings' ? 'text-green-600' : 'text-gray-500'
+              activeTab === 'account' ? 'text-green-600' : 'text-gray-500'
             }`}>
-            Settings
+            Account
           </Text>
-          {activeTab === 'settings' && (
-            <View className="mt-1 h-0.5 w-8 rounded-full bg-green-600" />
-          )}
+          {activeTab === 'account' && <View className="mt-1 h-0.5 w-8 rounded-full bg-green-600" />}
         </TouchableOpacity>
       </View>
     </View>
