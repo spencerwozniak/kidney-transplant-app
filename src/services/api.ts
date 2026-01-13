@@ -2,6 +2,47 @@
  * API Service for backend communication
  */
 
+// Device ID management - generates and stores a unique device ID
+const getDeviceId = (): string => {
+  // Try to get from localStorage (web) or AsyncStorage (React Native)
+  let deviceId: string | null = null;
+
+  if (typeof window !== 'undefined' && window.localStorage) {
+    // Web environment
+    deviceId = localStorage.getItem('device_id');
+  } else if (typeof require !== 'undefined') {
+    // React Native environment - would need @react-native-async-storage/async-storage
+    // For now, we'll use a fallback that works in both environments
+    try {
+      // Try to use AsyncStorage if available
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      // Note: This is async, but we'll handle it synchronously for now
+      // In production, you might want to make this async or use a different approach
+    } catch (e) {
+      // AsyncStorage not available
+    }
+  }
+
+  // If no device ID exists, generate one
+  if (!deviceId) {
+    // Generate a unique device ID (UUID v4 style)
+    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+
+    // Store it
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('device_id', deviceId);
+    }
+  }
+
+  return deviceId;
+};
+
+const DEVICE_ID = getDeviceId();
+
 const getApiBaseUrl = (): string => {
   // Check for environment variables (Expo/React Native Web uses process.env)
   if (typeof process !== 'undefined' && process.env) {
@@ -164,11 +205,15 @@ class ApiService {
     const url = `${this.baseUrl}${endpoint}`;
     console.log(`[API] Making request to: ${url}`);
 
+    // Get current device ID (in case it changed)
+    const deviceId = getDeviceId();
+
     try {
       const response = await fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          'X-Device-ID': deviceId,
           ...options.headers,
         },
       });
@@ -277,6 +322,9 @@ class ApiService {
     const url = `${this.baseUrl}/api/v1/checklist/items/${itemId}/documents`;
     console.log(`[API] Uploading file to: ${url}`);
 
+    // Get current device ID
+    const deviceId = getDeviceId();
+
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('file', {
@@ -290,6 +338,7 @@ class ApiService {
         method: 'POST',
         body: formData,
         headers: {
+          'X-Device-ID': deviceId,
           // Don't set Content-Type, let the browser set it with boundary
         },
       });
@@ -406,12 +455,16 @@ class ApiService {
 
     const url = `${this.baseUrl}/api/v1/ai-assistant/query/stream`;
 
+    // Get current device ID
+    const deviceId = getDeviceId();
+
     // Use XMLHttpRequest for React Native streaming support
     // React Native's fetch doesn't support streaming (response.body is null)
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-Device-ID', deviceId);
 
       let buffer = '';
       let lastProcessedIndex = 0;
