@@ -86,16 +86,35 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
-              <Image
-                source={require('../../../assets/borders-3-stroke.png')}
+              <View
                 style={{
-                  width: 60,
-                  height: 60,
                   marginRight: 12,
                   flexShrink: 0,
-                }}
-                resizeMode="contain"
-              />
+                }}>
+                <Image
+                  source={require('../../../assets/borders-3-stroke.png')}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    // For web: use drop-shadow filter to follow image alpha channel (matches shadow-md)
+                    ...(Platform.OS === 'web' && {
+                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))',
+                    }),
+                    // For native: shadow properties (iOS) - Android will need elevation on wrapper
+                    ...(Platform.OS !== 'web' && {
+                      shadowColor: '#000000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 3,
+                    }),
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text
+                className={combineClasses(typography.h3, 'font-nunito-bold text-white shadow-md')}>
+                Kare
+              </Text>
             </View>
           </Animated.View>
 
