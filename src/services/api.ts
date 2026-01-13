@@ -2,10 +2,33 @@
  * API Service for backend communication
  */
 
-// Local (e.g., 'http://192.168.1.81:8000')
-// Connect to AWS EC2 server: (e.g., 'http://3.21.125.231:8000')
+const getApiBaseUrl = (): string => {
+  // Check for environment variables (Expo/React Native Web uses process.env)
+  if (typeof process !== 'undefined' && process.env) {
+    // Try Expo public env var first (works for Expo/React Native)
+    if (process.env.EXPO_PUBLIC_API_URL) {
+      return process.env.EXPO_PUBLIC_API_URL;
+    }
+    // Try Next.js style env var (works for web builds)
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+    // Try generic API_URL
+    if (process.env.API_URL) {
+      return process.env.API_URL;
+    }
+  }
 
-const API_BASE_URL = 'http://3.21.125.231:8000';
+  // Fallback to localhost
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Log the API URL being used (helpful for debugging)
+if (typeof window !== 'undefined') {
+  console.log('[API] Using API base URL:', API_BASE_URL);
+}
 
 export type Patient = {
   id?: string;
