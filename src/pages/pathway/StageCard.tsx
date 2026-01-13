@@ -74,7 +74,7 @@ export const StageCard = ({
             activeOpacity={0.7}
             className="-mr-2 p-2"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <InfoIcon size={24} color="#ffffff" />
+            <InfoIcon size={24} color="#333" />
           </TouchableOpacity>
         </View>
 

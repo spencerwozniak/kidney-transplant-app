@@ -3,7 +3,7 @@ import { FlatList, Platform, FlatListProps, View, StyleSheet } from 'react-nativ
 
 /**
  * WebScrollableFlatList - Enhanced FlatList with mouse drag support for web
- * 
+ *
  * On web, this component adds mouse drag scrolling support to FlatList.
  * On native, it behaves exactly like a regular FlatList.
  */
@@ -32,29 +32,32 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
     if (!containerRef.current) return null;
 
     // Get the DOM node - try multiple ways React Native Web might store it
-    const containerNode = (containerRef.current as any)._node || 
-                         (containerRef.current as any)._nativeNode ||
-                         (containerRef.current as any);
-    
+    const containerNode =
+      (containerRef.current as any)._node ||
+      (containerRef.current as any)._nativeNode ||
+      (containerRef.current as any);
+
     if (!containerNode) return null;
 
     // Recursive function to find scrollable element
     const finder = (el: any, depth = 0): HTMLElement | null => {
       if (!el || depth > 10) return null; // Prevent infinite recursion
-      
+
       // Check if this element is scrollable
       if (el.tagName === 'DIV' && el.style) {
         const style = window.getComputedStyle(el);
         const overflowX = style.overflowX;
         const overflowY = style.overflowY;
-        
+
         // Check if it has horizontal scrolling capability
-        if ((overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') &&
-            el.scrollWidth > el.clientWidth) {
+        if (
+          (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') &&
+          el.scrollWidth > el.clientWidth
+        ) {
           return el;
         }
       }
-      
+
       // Check children first (more likely to be the scroll container)
       if (el.children && el.children.length > 0) {
         for (let i = 0; i < el.children.length; i++) {
@@ -62,18 +65,19 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
           if (found) return found;
         }
       }
-      
+
       // Check childNodes as fallback
       if (el.childNodes && el.childNodes.length > 0) {
         for (let i = 0; i < el.childNodes.length; i++) {
           const child = el.childNodes[i];
-          if (child && child.nodeType === 1) { // Element node
+          if (child && child.nodeType === 1) {
+            // Element node
             const found = finder(child, depth + 1);
             if (found) return found;
           }
         }
       }
-      
+
       return null;
     };
 
@@ -86,7 +90,7 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
 
     const setupMouseDrag = () => {
       const scrollElement = findScrollElement();
-      
+
       if (!scrollElement) {
         // Retry after a short delay
         setTimeout(setupMouseDrag, 200);
@@ -98,7 +102,7 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
       const handleMouseDown = (e: MouseEvent) => {
         // Only handle left mouse button
         if (e.button !== 0) return;
-        
+
         isDraggingRef.current = true;
         const rect = scrollElement.getBoundingClientRect();
         startXRef.current = e.clientX - rect.left;
@@ -156,7 +160,7 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
 
     // Wait a bit for the component to render
     const timeoutId = setTimeout(setupMouseDrag, 300);
-    
+
     return () => {
       clearTimeout(timeoutId);
     };
@@ -179,4 +183,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

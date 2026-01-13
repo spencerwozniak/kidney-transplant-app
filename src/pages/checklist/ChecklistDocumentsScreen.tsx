@@ -10,14 +10,19 @@ import {
   Platform,
   ActionSheetIOS,
   Linking,
+  Animated,
+  StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import { cards, typography, combineClasses, layout, buttons } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { ChecklistItem, apiService } from '../../services/api';
 import DOCUMENTS_CONTENT_JSON from '../../data/documents-content.json';
+import { getWebPadding } from '../../utils/webStyles';
 
 type DocumentContent = {
   title: string;
@@ -46,6 +51,23 @@ export const ChecklistDocumentsScreen = ({
   );
   const [isUploading, setIsUploading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(30));
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   // Refresh documents list when component mounts or checklistItem changes
   useEffect(() => {
@@ -308,82 +330,108 @@ export const ChecklistDocumentsScreen = ({
 
   if (!content) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateBack} />
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className={combineClasses(typography.h5, 'mb-2 text-center')}>
-            Document Information Not Available
-          </Text>
-          <Text className={combineClasses(typography.body.small, 'text-center text-gray-600')}>
-            Document request information for this checklist item is not available.
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateBack} />
+          <View className="flex-1 items-center justify-center px-6">
+            <Text className={combineClasses(typography.h5, 'mb-2 text-center text-white shadow')}>
+              Document Information Not Available
+            </Text>
+            <Text className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
+              Document request information for this checklist item is not available.
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <View className="px-6 pb-2">
-          {/* Header */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h3, 'mb-2')}>{content.title}</Text>
-            <Text className={combineClasses(typography.body.small, 'text-gray-600')}>
-              {content.description}
-            </Text>
-          </View>
-
-          {/* Patient Should Request */}
-          <View className={combineClasses(cards.colored.blue, 'mb-6')}>
-            <Text className={combineClasses(typography.h5, 'mb-3 text-blue-900')}>
-              Ask your provider for:
-            </Text>
-            <View className="space-y-2">
-              {content.requests.map((request: string, index: number) => (
-                <View key={index} className="flex-row">
-                  <Text className="mr-2 text-blue-800">•</Text>
-                  <Text
-                    className={combineClasses(
-                      typography.body.small,
-                      'flex-1 leading-6 text-blue-800'
-                    )}>
-                    {request}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Special Note (if exists) */}
-          {content.specialNote && (
-            <View className={combineClasses(cards.colored.amber, 'mb-6')}>
-              <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
-                Special Note
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onNavigateBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              getWebPadding(24, 32),
+            ]}
+            className="px-6 py-8">
+            {/* Header */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+                {content.title}
               </Text>
-              <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
-                {content.specialNote}
+              <View className="h-1 w-16 rounded-full bg-white shadow" />
+              <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+                {content.description}
               </Text>
             </View>
-          )}
 
-          {/* Why This Matters */}
-          <View className={combineClasses(cards.colored.green, 'mb-6')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
-              Why this matters:
-            </Text>
-            <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
-              {content.why}
-            </Text>
-          </View>
+            {/* Patient Should Request */}
+            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-blue-500')}>
+              <Text className={combineClasses(typography.h5, 'mb-3 text-blue-900')}>
+                Ask your provider for:
+              </Text>
+              <View className="space-y-2">
+                {content.requests.map((request: string, index: number) => (
+                  <View key={index} className="flex-row">
+                    <Text className="mr-2 text-blue-800">•</Text>
+                    <Text
+                      className={combineClasses(
+                        typography.body.small,
+                        'flex-1 leading-6 text-blue-800'
+                      )}>
+                      {request}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
 
-          {/* Upload Documents Section */}
-          <View className={combineClasses(cards.default.container, 'mb-6')}>
-            <Text className={combineClasses(typography.h5, 'mb-2')}>Upload Documents</Text>
-            <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
-              Upload PDF files or images of your documents for this evaluation
-            </Text>
+            {/* Special Note (if exists) */}
+            {content.specialNote && (
+              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-amber-500')}>
+                <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
+                  Special Note
+                </Text>
+                <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
+                  {content.specialNote}
+                </Text>
+              </View>
+            )}
+
+            {/* Why This Matters */}
+            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 border-l-4 border-green-500')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
+                Why this matters:
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
+                {content.why}
+              </Text>
+            </View>
+
+            {/* Upload Documents Section */}
+            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-gray-900')}>
+                Upload Documents
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
+                Upload PDF files or images of your documents for this evaluation
+              </Text>
 
             <TouchableOpacity
               className={combineClasses(
@@ -405,46 +453,55 @@ export const ChecklistDocumentsScreen = ({
             </TouchableOpacity>
           </View>
 
-          {/* Uploaded Documents List */}
-          {uploadedDocuments.length > 0 && (
-            <View className={combineClasses(cards.default.container, 'mb-6')}>
-              <View className="mb-4 flex-row items-center justify-between">
-                <Text className={combineClasses(typography.h5, '')}>Uploaded Documents</Text>
-                <TouchableOpacity onPress={refreshDocuments} disabled={isRefreshing}>
-                  {isRefreshing ? (
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  ) : (
-                    <Text className="text-blue-500">Refresh</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              <View className="space-y-2">
-                {uploadedDocuments.map((docPath, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => viewDocument(docPath)}
-                    activeOpacity={0.7}
-                    className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 active:bg-gray-100">
-                    <View className="flex-1 flex-row items-center">
-                      <Text
-                        className={combineClasses(typography.body.small, 'flex-1 text-gray-700')}
-                        numberOfLines={1}>
-                        {getFileName(docPath)}
-                      </Text>
-                    </View>
-                    <View className="ml-2 flex-row items-center space-x-2">
-                      <View className="rounded bg-green-100 px-2 py-1">
-                        <Text className="text-xs font-medium text-green-800">Uploaded</Text>
-                      </View>
-                      <Text className="text-xs text-blue-500">View →</Text>
-                    </View>
+            {/* Uploaded Documents List */}
+            {uploadedDocuments.length > 0 && (
+              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+                <View className="mb-4 flex-row items-center justify-between">
+                  <Text className={combineClasses(typography.h5, 'text-gray-900')}>
+                    Uploaded Documents
+                  </Text>
+                  <TouchableOpacity onPress={refreshDocuments} disabled={isRefreshing}>
+                    {isRefreshing ? (
+                      <ActivityIndicator size="small" color="#3b82f6" />
+                    ) : (
+                      <Text className="text-blue-600 font-semibold">Refresh</Text>
+                    )}
                   </TouchableOpacity>
-                ))}
+                </View>
+                <View className="space-y-2">
+                  {uploadedDocuments.map((docPath, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => viewDocument(docPath)}
+                      activeOpacity={0.7}
+                      className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 active:bg-gray-100">
+                      <View className="flex-1 flex-row items-center">
+                        <Text
+                          className={combineClasses(typography.body.small, 'flex-1 text-gray-700')}
+                          numberOfLines={1}>
+                          {getFileName(docPath)}
+                        </Text>
+                      </View>
+                      <View className="ml-2 flex-row items-center space-x-2">
+                        <View className="rounded-full bg-green-100 px-3 py-1">
+                          <Text className="text-xs font-semibold text-green-800">Uploaded</Text>
+                        </View>
+                        <Text className="text-xs font-semibold text-blue-600">View →</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

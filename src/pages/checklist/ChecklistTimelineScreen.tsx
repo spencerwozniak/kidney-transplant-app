@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity, LayoutChangeEvent } from 'react-native';
-import { cards, typography, combineClasses, layout } from '../../styles/theme';
+import { View, Text, ScrollView, TouchableOpacity, LayoutChangeEvent, Animated, ActivityIndicator, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { cards, typography, combineClasses, layout, progress as progressStyles } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
+import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService, TransplantChecklist, ChecklistItem } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
 
 type ChecklistTimelineScreenProps = {
   onNavigateToHome?: () => void;
@@ -17,6 +20,23 @@ export const ChecklistTimelineScreen = ({
   const [checklist, setChecklist] = useState<TransplantChecklist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [cardHeights, setCardHeights] = useState<Record<string, number>>({});
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(30));
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   useEffect(() => {
     fetchChecklist();
@@ -36,12 +56,22 @@ export const ChecklistTimelineScreen = ({
 
   if (isLoading || !checklist) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateToHome} />
-        <View className="flex-1 items-center justify-center">
-          <Text>Loading checklist...</Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateToHome} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading checklist...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -54,37 +84,54 @@ export const ChecklistTimelineScreen = ({
   const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateToHome} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        <View className="px-6 pb-2">
-          {/* Header */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h3, 'mb-2')}>Pre-Transplant Checklist</Text>
-            <Text className={combineClasses(typography.body.small, 'text-gray-600')}>
-              Track your progress through required evaluations and tests
-            </Text>
-          </View>
-
-          {/* Progress Summary */}
-          <View className={combineClasses(cards.colored.blue, 'mb-8')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-              Overall Progress
-            </Text>
-            <Text className={combineClasses(typography.body.small, 'mb-3 text-blue-800')}>
-              {completedSteps} of {totalSteps} steps completed
-            </Text>
-            {/* Progress Bar */}
-            <View className="h-3 w-full rounded-full bg-white/50">
-              <View
-                className="h-full rounded-full bg-blue-600"
-                style={{ width: `${progressPercentage}%` }}
-              />
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onNavigateToHome} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              getWebPadding(24, 32),
+            ]}
+            className="px-6 py-8">
+            {/* Header */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+                Pre-Transplant Checklist
+              </Text>
+              <View className="h-1 w-16 rounded-full bg-white shadow" />
+              <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+                Track your progress through required evaluations and tests
+              </Text>
             </View>
-            <Text className={combineClasses(typography.body.small, 'mt-2 text-blue-800')}>
-              {progressPercentage}% Complete
-            </Text>
-          </View>
+
+            {/* Progress Summary */}
+            <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                Overall Progress
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'mb-3 text-blue-800')}>
+                {completedSteps} of {totalSteps} steps completed
+              </Text>
+              {/* Progress Bar */}
+              <View className={progressStyles.container}>
+                <View
+                  className={progressStyles.bar.primary}
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </View>
+              <Text className={combineClasses(typography.body.small, 'mt-2 text-blue-800')}>
+                {progressPercentage}% Complete
+              </Text>
+            </View>
 
           {/* Timeline Items */}
           <View className="mb-8">
@@ -173,9 +220,9 @@ export const ChecklistTimelineScreen = ({
                         onLayout={handleCardLayout}
                         className={combineClasses(
                           cards.default.container,
-                          isCurrent ? 'border-l-4 border-blue-500' : '',
-                          isComplete ? 'bg-green-50' : '',
-                          isFuture ? 'bg-gray-50' : ''
+                          isCurrent ? 'border-l-4 border-blue-500 bg-white/95' : '',
+                          isComplete ? 'bg-green-50/95 border-l-4 border-green-500' : '',
+                          isFuture ? 'bg-gray-50/95 opacity-75' : 'bg-white/95'
                         )}>
                         <View className="mb-2 flex-row items-center justify-between">
                           <Text
@@ -187,7 +234,7 @@ export const ChecklistTimelineScreen = ({
                                   ? 'text-blue-900'
                                   : isFuture
                                     ? 'text-gray-400'
-                                    : ''
+                                    : 'text-gray-900'
                             )}>
                             {item.title}
                           </Text>
@@ -209,7 +256,7 @@ export const ChecklistTimelineScreen = ({
                         )}
 
                         {item.notes && (
-                          <View className="mb-3 rounded-lg bg-white/70 p-3">
+                          <View className="mb-3 rounded-lg bg-white/80 p-3 border border-gray-200">
                             <Text
                               className={combineClasses(
                                 typography.body.small,
@@ -228,9 +275,12 @@ export const ChecklistTimelineScreen = ({
                         )}
 
                         {item.completed_at && (
-                          <Text className={combineClasses(typography.body.small, 'text-green-700')}>
-                            Completed: {new Date(item.completed_at).toLocaleDateString()}
-                          </Text>
+                          <View className="mt-2 flex-row items-center">
+                            <Text className="text-green-600 mr-2">✓</Text>
+                            <Text className={combineClasses(typography.body.small, 'text-green-700')}>
+                              Completed: {new Date(item.completed_at).toLocaleDateString()}
+                            </Text>
+                          </View>
                         )}
                       </TouchableOpacity>
                     </View>
@@ -240,20 +290,27 @@ export const ChecklistTimelineScreen = ({
             })}
           </View>
 
-          {/* Information Card */}
-          <View className={combineClasses(cards.colored.amber, 'mb-6')}>
-            <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
-              About This Checklist
-            </Text>
-            <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
-              This checklist helps you track the evaluations and tests typically required before
-              transplant listing. You can mark items as complete, add notes about where records are
-              stored, and see your overall progress. Work with your transplant team to ensure all
-              required evaluations are completed.
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            {/* Information Card */}
+            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
+                About This Checklist
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>
+                This checklist helps you track the evaluations and tests typically required before
+                transplant listing. You can mark items as complete, add notes about where records are
+                stored, and see your overall progress. Work with your transplant team to ensure all
+                required evaluations are completed.
+              </Text>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
