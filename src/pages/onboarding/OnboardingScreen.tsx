@@ -1,9 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, combineClasses } from '../../styles/theme';
-import { KidneyIcon } from '../../components/KidneyIcon';
 import { PathwayBackground } from '../../components/PathwayBackground';
 
 type OnboardingScreenProps = {
@@ -87,10 +86,16 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
-              <View style={{ marginRight: 12, flexShrink: 0 }}>
-                <KidneyIcon className="shadow" size={48} color="#ffffff" />
-              </View>
-              <Text className="text-2xl font-normal text-white shadow-md">Transplant Compass</Text>
+              <Image
+                source={require('../../../assets/borders-3-stroke.png')}
+                style={{
+                  width: 60,
+                  height: 60,
+                  marginRight: 12,
+                  flexShrink: 0,
+                }}
+                resizeMode="contain"
+              />
             </View>
           </Animated.View>
 
@@ -108,7 +113,7 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
                   typography.h2,
                   'mb-12 text-center font-semibold leading-tight text-white shadow-md'
                 )}>
-                Your personalized guide to navigating the transplant pathway
+                Your Ally in the Fight for a New Kidney
               </Text>
             </Animated.View>
 
