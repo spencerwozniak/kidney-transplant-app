@@ -7,6 +7,7 @@
  */
 
 import { View, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { OnboardingScreen } from '../pages/onboarding/OnboardingScreen';
 import { PatientDetailsScreen1 } from '../pages/onboarding/PatientDetailsScreen1';
 import { PatientDetailsScreen2 } from '../pages/onboarding/PatientDetailsScreen2';
@@ -172,33 +173,50 @@ export function ScreenRouter({
   // ============================================================================
   if (currentScreen === 'home') {
     return (
-      <View className="flex-1">
-        {activeTab === 'pathway' ? (
-          <PathwayScreen
-            patientName={patient?.name || 'Friend'}
-            onViewResults={patientHandlers.handleViewResults}
-            onViewChecklist={checklistHandlers.handleViewChecklist}
-            onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
-            onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
-            onDeletePatient={patientHandlers.handleDeletePatient}
-            onFindReferral={() => setCurrentScreen('transplant-access-navigator')}
-            onViewReferral={() => setCurrentScreen('referral-view')}
-          />
-        ) : activeTab === 'chat' ? (
-          <ChatScreen patientName={patient?.name || 'Friend'} />
-        ) : (
-          <SettingsScreen
-            patientName={patient?.name || 'Friend'}
-            onViewResults={patientHandlers.handleViewResults}
-            onViewChecklist={checklistHandlers.handleViewChecklist}
-            onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
-            onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
-            onDeletePatient={patientHandlers.handleDeletePatient}
-            onDeletePatientConfirmed={patientHandlers.handleDeletePatientConfirmed}
-          />
-        )}
-        <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-      </View>
+      <SafeAreaView 
+        className="flex-1"
+        edges={['top', 'left', 'right']}
+        style={{ 
+          height: '100%', 
+          maxHeight: '100%',
+          overflow: 'hidden',
+        }}>
+        <View 
+          className="flex-1" 
+          style={{ 
+            flexShrink: 1, 
+            minHeight: 0,
+            overflow: 'hidden',
+          }}>
+          {activeTab === 'pathway' ? (
+            <PathwayScreen
+              patientName={patient?.name || 'Friend'}
+              onViewResults={patientHandlers.handleViewResults}
+              onViewChecklist={checklistHandlers.handleViewChecklist}
+              onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
+              onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
+              onDeletePatient={patientHandlers.handleDeletePatient}
+              onFindReferral={() => setCurrentScreen('transplant-access-navigator')}
+              onViewReferral={() => setCurrentScreen('referral-view')}
+            />
+          ) : activeTab === 'chat' ? (
+            <ChatScreen patientName={patient?.name || 'Friend'} />
+          ) : (
+            <SettingsScreen
+              patientName={patient?.name || 'Friend'}
+              onViewResults={patientHandlers.handleViewResults}
+              onViewChecklist={checklistHandlers.handleViewChecklist}
+              onNavigateToQuestionnaire={() => setCurrentScreen('assessment-intro')}
+              onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
+              onDeletePatient={patientHandlers.handleDeletePatient}
+              onDeletePatientConfirmed={patientHandlers.handleDeletePatientConfirmed}
+            />
+          )}
+        </View>
+        <SafeAreaView edges={['bottom']} style={{ flexShrink: 0 }}>
+          <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        </SafeAreaView>
+      </SafeAreaView>
     );
   }
 

@@ -18,18 +18,21 @@ export const WebWrapper = ({ children }: { children: ReactNode }) => {
     <View
       style={{
         width: '100%',
-        minHeight: '100vh',
+        height: '100%',
+        maxHeight: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
         backgroundColor: '#f5f5f5',
+        overflow: 'hidden',
       }}
     >
       <View
         style={{
           width: '100%',
           maxWidth: 428, // Standard mobile width (iPhone 14 Pro Max)
-          minHeight: '100vh',
+          height: '100%',
+          maxHeight: '100%',
           backgroundColor: 'transparent',
           // Ensure proper overflow handling
           overflow: 'hidden',

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Kare App",
-    "slug": "kare-app",
+    "name": "Kare",
+    "slug": "kare",
     "version": "1.0.0",
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/favicon.ico",
       "bundler": "metro",
       "output": "single",
       "build": {

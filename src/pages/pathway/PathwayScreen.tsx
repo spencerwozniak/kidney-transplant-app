@@ -159,8 +159,12 @@ export const PathwayScreen = ({
       end={{ x: 0, y: 1 }}
       style={styles.gradient}>
       <PathwayBackground opacity={0.15} animate={false} />
-      <SafeAreaView className="flex-1">
-        <View className="flex-1">
+      <SafeAreaView 
+        className="flex-1"
+        style={{ height: '100%', maxHeight: '100%' }}>
+        <View 
+          className="flex-1"
+          style={{ height: '100%', maxHeight: '100%' }}>
           <PathwayHeader />
 
           <StageIndicatorDots currentIndex={currentIndex} currentStageIndex={safeCurrentStageIndex} />

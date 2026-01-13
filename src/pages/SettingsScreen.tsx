@@ -77,11 +77,14 @@ export const SettingsScreen = ({
   };
 
   return (
-    <SafeAreaView className={layout.container.default}>
+    <SafeAreaView 
+      className={layout.container.default}
+      style={{ height: '100%', maxHeight: '100%' }}>
       <ScrollView
         className={layout.scrollView}
         contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        style={{ height: '100%', maxHeight: '100%' }}>
         <View 
           style={getWebPadding(24, 32)} // px-6 py-8
           className="flex-1 px-6 py-8">

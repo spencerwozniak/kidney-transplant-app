@@ -301,10 +301,14 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView 
+      className="flex-1 bg-white" 
+      edges={['top']}
+      style={{ height: '100%', maxHeight: '100%' }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1">
+        className="flex-1"
+        style={{ height: '100%', maxHeight: '100%' }}>
         {/* Header */}
         <View className="border-b border-gray-200 bg-white px-4 py-3">
           <View className="flex-row items-center justify-between">

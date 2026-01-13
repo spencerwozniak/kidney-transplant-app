@@ -74,7 +74,7 @@ export const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
   const settingsColor = activeTab === 'settings' ? '#16A34A' : '#6B7280';
 
   return (
-    <View className="relative border-t border-gray-200 bg-white">
+    <View className="relative border-t border-gray-200 bg-white" style={{ flexShrink: 0 }}>
       <View className="flex-row items-center justify-around pb-4 pt-2">
         {/* Pathway Tab */}
         <TouchableOpacity

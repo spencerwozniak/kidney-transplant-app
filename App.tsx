@@ -53,21 +53,23 @@ export default function App() {
 
   const content = (
     <SafeAreaProvider>
-      {appState.isLoading ? (
-        <View className="flex-1 items-center justify-center bg-white">
-          {/* Loading indicator */}
-        </View>
-      ) : (
-        <ScreenRouter
-          state={appState}
-          onboardingHandlers={onboardingHandlers}
-          assessmentHandlers={assessmentHandlers}
-          financialHandlers={financialHandlers}
-          checklistHandlers={checklistHandlers}
-          patientHandlers={patientHandlers}
-        />
-      )}
-      <StatusBar style="dark" />
+      <View style={{ height: '100%', maxHeight: '100%', width: '100%' }}>
+        {appState.isLoading ? (
+          <View className="flex-1 items-center justify-center bg-white">
+            {/* Loading indicator */}
+          </View>
+        ) : (
+          <ScreenRouter
+            state={appState}
+            onboardingHandlers={onboardingHandlers}
+            assessmentHandlers={assessmentHandlers}
+            financialHandlers={financialHandlers}
+            checklistHandlers={checklistHandlers}
+            patientHandlers={patientHandlers}
+          />
+        )}
+        <StatusBar style="dark" />
+      </View>
     </SafeAreaProvider>
   );
 
