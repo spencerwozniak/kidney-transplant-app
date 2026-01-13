@@ -84,11 +84,12 @@ export const StageCard = ({
             <View
               className="h-24 w-24 items-center justify-center rounded-full"
               style={{
-                backgroundColor: isCompleted || isCurrent ? stage.bgColor : 'rgba(255, 255, 255, 0.5)',
+                backgroundColor:
+                  isCompleted || isCurrent ? stage.bgColor : 'rgba(255, 255, 255, 0.5)',
                 borderWidth: 3,
                 borderColor: isCompleted || isCurrent ? stage.color : 'rgba(255, 255, 255, 0.7)',
               }}>
-              <Text className="text-5xl">{stage.icon}</Text>
+              {stage.icon}
             </View>
           </View>
 
@@ -128,15 +129,6 @@ export const StageCard = ({
               isUpcoming ? 'text-gray-400' : 'text-gray-700'
             )}>
             {stage.shortDescription}
-          </Text>
-
-          <Text
-            className={combineClasses(
-              typography.body.medium,
-              'leading-6',
-              isUpcoming ? 'text-gray-400' : 'text-gray-600'
-            )}>
-            {stage.description}
           </Text>
         </View>
 

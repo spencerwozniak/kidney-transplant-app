@@ -30,7 +30,7 @@ export const StageDetailModal = ({ stage, onClose }: StageDetailModalProps) => {
           {/* Modal Header */}
           <View className="mb-4 flex-row items-center justify-between">
             <View className="flex-1 flex-row items-center">
-              <Text className="mr-3 text-3xl">{stage.icon}</Text>
+              <View className="mr-3">{stage.icon}</View>
               <Text className={combineClasses(typography.h4, 'flex-1')}>{stage.title}</Text>
             </View>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7} className="-mr-2 p-2">

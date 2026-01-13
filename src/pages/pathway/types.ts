@@ -12,12 +12,14 @@ export type PathwayStage =
   | 'transplantation'
   | 'post-transplant';
 
+import type { ReactElement } from 'react';
+
 export type PathwayStageData = {
   id: PathwayStage;
   title: string;
   description: string;
   shortDescription: string;
-  icon: string;
+  icon: ReactElement; // SVG component
   color: string;
   bgColor: string;
 };
