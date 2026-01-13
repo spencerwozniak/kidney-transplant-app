@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -312,15 +313,22 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
         {/* Header */}
         <View className="border-b border-gray-200 bg-white px-4 py-3">
           <View className="flex-row items-center justify-between">
-            <View className="flex-1">
-              <Text className="text-lg font-semibold text-gray-900">Chat Assistant</Text>
-              <Text className="text-sm text-gray-500">
-                {aiEnabled === null
-                  ? 'Checking status...'
-                  : aiEnabled
-                    ? 'Ask me about your transplant journey'
-                    : 'AI assistant unavailable'}
-              </Text>
+            <View className="flex-1 flex-row items-center" style={{ gap: 12 }}>
+              <Image
+                source={require('../../assets/favicon-32x32.png')}
+                className="h-10 w-10 rounded-full"
+                resizeMode="cover"
+              />
+              <View className="flex-1">
+                <Text className="text-lg font-semibold text-gray-900">Chat Assistant</Text>
+                <Text className="text-sm text-gray-500">
+                  {aiEnabled === null
+                    ? 'Checking status...'
+                    : aiEnabled
+                      ? 'Ask me about your transplant journey'
+                      : 'AI assistant unavailable'}
+                </Text>
+              </View>
             </View>
             {aiEnabled === false && <View className="ml-2 h-2 w-2 rounded-full bg-red-500" />}
             {aiEnabled === true && <View className="ml-2 h-2 w-2 rounded-full bg-green-500" />}
@@ -388,6 +396,8 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
               maxLength={500}
               onSubmitEditing={handleSend}
               editable={aiEnabled === true && !isLoading}
+              textAlignVertical="center"
+              style={{ paddingTop: 12, paddingBottom: 12 }}
             />
             <TouchableOpacity
               onPress={handleSend}
