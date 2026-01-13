@@ -359,7 +359,11 @@ export const PatientDetailsScreen2 = ({
           transparent={true}
           animationType="slide"
           onRequestClose={() => setShowDatePicker(false)}>
-          <View className="flex-1 justify-end bg-black/50">
+          <View
+            className="flex-1 justify-end bg-black/50"
+            {...(Platform.OS === 'web' && {
+              style: { pointerEvents: 'auto' },
+            })}>
             <View className="overflow-hidden rounded-t-3xl bg-white">
               <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
@@ -416,7 +420,9 @@ export const PatientDetailsScreen2 = ({
           transparent={true}
           animationType="slide"
           onRequestClose={() => setShowHeightPicker(false)}>
-          <View className="flex-1 justify-end bg-black/50" style={styles.modalOverlay}>
+          <View
+            className="flex-1 justify-end bg-black/50"
+            style={[styles.modalOverlay, Platform.OS === 'web' && { pointerEvents: 'auto' }]}>
             <View className="rounded-t-3xl bg-white" style={styles.pickerModal}>
               <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
                 <TouchableOpacity onPress={() => setShowHeightPicker(false)}>

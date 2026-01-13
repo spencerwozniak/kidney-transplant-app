@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "Kare App",
+    "slug": "kare-app",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png",
@@ -9,18 +9,14 @@
       "output": "single",
       "build": {
         "babel": {
-          "include": [
-            "@expo/metro-runtime"
-          ]
+          "include": ["@expo/metro-runtime"]
         }
       }
     },
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [
-      "@react-native-community/datetimepicker"
-    ],
+    "plugins": ["@react-native-community/datetimepicker"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,9 +25,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },

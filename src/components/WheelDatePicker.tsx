@@ -24,8 +24,8 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
   const minYear = 1900;
   const maxYear = maximumDate ? maximumDate.getFullYear() : currentYear;
   const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => ({
-    label: (maxYear - i).toString(),
-    value: maxYear - i,
+    label: (minYear + i).toString(),
+    value: minYear + i,
   }));
 
   // Get days in month

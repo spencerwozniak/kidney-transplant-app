@@ -51,9 +51,10 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
     }, 150);
   };
 
-  const snapToNearestItem = (scrollY: number) => {
+  const snapToNearestItem = React.useCallback((scrollY: number) => {
     // Calculate which item should be selected based on scroll position
     // scrollY is the scroll position, which directly corresponds to item index
+    // Account for padding in the calculation
     const index = Math.round(scrollY / ITEM_HEIGHT);
     const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
     const selectedItem = items[clampedIndex];
@@ -71,7 +72,7 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         onValueChange(selectedItem.value);
       }
     }
-  };
+  }, [items, selectedValue, onValueChange]);
 
   const handleScrollEndDrag = (event: any) => {
     snapToNearestItem(event.nativeEvent.contentOffset.y);
@@ -83,29 +84,78 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
 
   // Add mouse drag support for web
   useEffect(() => {
-    if (Platform.OS !== 'web' || !containerRef.current) return;
+    console.log('WheelPicker: useEffect running, Platform.OS:', Platform.OS, 'containerRef.current:', !!containerRef.current);
+    if (Platform.OS !== 'web' || !containerRef.current) {
+      console.log('WheelPicker: Skipping setup - not web or no containerRef');
+      return;
+    }
 
+    // Find the scrollable element - use exact same logic as WebScrollableScrollView
     const findScrollElement = (): HTMLElement | null => {
-      if (!containerRef.current) return null;
+      if (!containerRef.current) {
+        console.log('WheelPicker: containerRef.current is null');
+        return null;
+      }
 
-      // Get the DOM node
-      const containerNode =
-        (containerRef.current as any)._node || (containerRef.current as any)._nativeNode;
+      // Get the DOM node - try multiple ways React Native Web might store it
+      let containerNode = (containerRef.current as any)._node || 
+                         (containerRef.current as any)._nativeNode;
+      
+      // If not found, try accessing the ref directly (sometimes it IS the DOM node)
+      if (!containerNode && containerRef.current) {
+        // Check if the ref itself is a DOM element
+        if (containerRef.current instanceof HTMLElement) {
+          containerNode = containerRef.current;
+        } else {
+          // Try other possible properties
+          containerNode = (containerRef.current as any).current || 
+                         (containerRef.current as any).__domNode ||
+                         (containerRef.current as any).domNode;
+        }
+      }
 
-      if (!containerNode) return null;
+      console.log('WheelPicker: containerNode:', containerNode, 'containerRef.current:', containerRef.current);
+      
+      if (!containerNode) {
+        console.log('WheelPicker: containerNode is null, cannot find scroll element');
+        return null;
+      }
 
       // Recursive function to find scrollable element
+      // React Native Web uses classes like r-overflowY-* and r-WebkitOverflowScrolling-*
       const finder = (el: any, depth = 0): HTMLElement | null => {
         if (!el || depth > 10) return null;
 
-        if (el.tagName === 'DIV' && el.style) {
+        if (el.tagName === 'DIV') {
+          // Check for React Native Web's scrollable class pattern first
+          // The scrollable div has both r-overflowY-* and r-WebkitOverflowScrolling-* classes
+          if (el.className && typeof el.className === 'string') {
+            const hasOverflowY = el.className.includes('r-overflowY-') || el.className.includes('r-overflow-');
+            const hasWebkitOverflow = el.className.includes('r-WebkitOverflowScrolling-');
+            
+            if (hasOverflowY && hasWebkitOverflow) {
+              // This is likely a React Native Web ScrollView
+              const style = window.getComputedStyle(el);
+              const overflowY = style.overflowY;
+              // Check if it's actually scrollable (has scrollable content)
+              if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
+                  el.scrollHeight > el.clientHeight) {
+                return el;
+              }
+            }
+          }
+
+          // Fall back to checking computed styles
           const style = window.getComputedStyle(el);
+          const overflowX = style.overflowX;
           const overflowY = style.overflowY;
 
-          // Check if it's vertically scrollable
+          // Check if it's scrollable (horizontal or vertical)
           if (
-            (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
-            el.scrollHeight > el.clientHeight
+            ((overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') &&
+              el.scrollWidth > el.clientWidth) ||
+            ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
+              el.scrollHeight > el.clientHeight)
           ) {
             return el;
           }
@@ -136,45 +186,197 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
       return finder(containerNode);
     };
 
+    let retryCount = 0;
+    const maxRetries = 20; // More retries for Modal content
+    
     const setupMouseDrag = () => {
-      const scrollElement = findScrollElement();
+      console.log('WheelPicker: setupMouseDrag called, retry:', retryCount);
+      
+      // Use exact same setup pattern as WebScrollableScrollView
+      let scrollElement = findScrollElement();
+      
+      console.log('WheelPicker: findScrollElement returned:', !!scrollElement);
+      
+      // If not found, try alternative method: look for React Native Web's scrollable class pattern
+      // Use querySelector to find elements with BOTH required classes
+      if (!scrollElement && containerRef.current) {
+        // Try multiple ways to get the DOM node
+        let containerNode = (containerRef.current as any)._node || 
+                           (containerRef.current as any)._nativeNode;
+        if (!containerNode && containerRef.current instanceof HTMLElement) {
+          containerNode = containerRef.current;
+        }
+        if (!containerNode) {
+          containerNode = (containerRef.current as any).current || 
+                         (containerRef.current as any).__domNode ||
+                         (containerRef.current as any).domNode;
+        }
+        if (containerNode) {
+          // Look for divs with React Native Web's scrollable classes
+          // The scrollable div MUST have BOTH r-overflowY-* AND r-WebkitOverflowScrolling-*
+          // Use querySelector with attribute selectors to find elements with both classes
+          const allDivs = containerNode.querySelectorAll('div');
+          for (let i = 0; i < allDivs.length; i++) {
+            const candidate = allDivs[i] as HTMLElement;
+            if (candidate.className && typeof candidate.className === 'string') {
+              const hasOverflowY = candidate.className.includes('r-overflowY-');
+              const hasWebkitOverflow = candidate.className.includes('r-WebkitOverflowScrolling-');
+              
+              // Must have BOTH classes
+              if (hasOverflowY && hasWebkitOverflow) {
+                const style = window.getComputedStyle(candidate);
+                const overflowY = style.overflowY;
+                if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
+                    candidate.scrollHeight > candidate.clientHeight) {
+                  scrollElement = candidate;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Also try getting it from the ScrollView ref directly
+      if (!scrollElement && scrollViewRef.current) {
+        const scrollViewNode = (scrollViewRef.current as any)._node || 
+                              (scrollViewRef.current as any)._nativeNode ||
+                              (scrollViewRef.current as any).getNode?.();
+        if (scrollViewNode) {
+          // Look for the scrollable div inside the ScrollView
+          // Must have BOTH r-overflowY-* AND r-WebkitOverflowScrolling-*
+          const allDivs = scrollViewNode.querySelectorAll('div');
+          for (let i = 0; i < allDivs.length; i++) {
+            const candidate = allDivs[i] as HTMLElement;
+            if (candidate.className && typeof candidate.className === 'string') {
+              const hasOverflowY = candidate.className.includes('r-overflowY-');
+              const hasWebkitOverflow = candidate.className.includes('r-WebkitOverflowScrolling-');
+              
+              // Must have BOTH classes
+              if (hasOverflowY && hasWebkitOverflow) {
+                const style = window.getComputedStyle(candidate);
+                const overflowY = style.overflowY;
+                if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
+                    candidate.scrollHeight > candidate.clientHeight) {
+                  scrollElement = candidate;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Final fallback: search within the container's parent tree for scrollable elements
+      // This ensures we find the element specific to THIS WheelPicker instance
+      if (!scrollElement && containerRef.current) {
+        // Try multiple ways to get the DOM node
+        let containerNode = (containerRef.current as any)._node || 
+                           (containerRef.current as any)._nativeNode;
+        if (!containerNode && containerRef.current instanceof HTMLElement) {
+          containerNode = containerRef.current;
+        }
+        if (!containerNode) {
+          containerNode = (containerRef.current as any).current || 
+                         (containerRef.current as any).__domNode ||
+                         (containerRef.current as any).domNode;
+        }
+        if (containerNode) {
+          // Try searching from the container node itself, going up the tree
+          let searchNode = containerNode;
+          let depth = 0;
+          while (searchNode && depth < 10) {
+            // Search for scrollable elements within this node
+            const candidates = searchNode.querySelectorAll('div[class*="r-overflowY-"][class*="r-WebkitOverflowScrolling-"]');
+            for (let i = 0; i < candidates.length; i++) {
+              const candidate = candidates[i] as HTMLElement;
+              // Make sure this candidate is a descendant of our container (not a sibling)
+              if (containerNode.contains(candidate)) {
+                const style = window.getComputedStyle(candidate);
+                const overflowY = style.overflowY;
+                if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
+                    candidate.scrollHeight > candidate.clientHeight) {
+                  scrollElement = candidate;
+                  break;
+                }
+              }
+            }
+            if (scrollElement) break;
+            // Move up to parent
+            searchNode = searchNode.parentElement;
+            depth++;
+          }
+        }
+      }
+
       if (!scrollElement) {
-        // Retry after a short delay
-        setTimeout(setupMouseDrag, 200);
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Increase delay for Modal content
+          setTimeout(setupMouseDrag, 100);
+        }
         return;
       }
 
-      // Skip if already processed
-      if ((scrollElement as any).__wheelPickerMouseDragEnabled) return;
-      (scrollElement as any).__wheelPickerMouseDragEnabled = true;
+      // Reset retry count on success
+      retryCount = 0;
+
+      // Each WheelPicker instance should set up handlers on its own element
+      // Allow multiple WheelPickers to coexist - each will set up its own handlers
+      // Track handler ID for cleanup
+      const handlerId = `handler_${Date.now()}_${Math.random()}`;
+      if (!(scrollElement as any).__wheelPickerHandlers) {
+        (scrollElement as any).__wheelPickerHandlers = new Set();
+      }
+      (scrollElement as any).__wheelPickerHandlers.add(handlerId);
+      
+      // Always log for debugging (can be removed later)
+      console.log('WheelPicker: Found scroll element:', scrollElement);
+      console.log('WheelPicker: Element classes:', scrollElement.className);
+      console.log('WheelPicker: ScrollHeight:', scrollElement.scrollHeight, 'ClientHeight:', scrollElement.clientHeight);
+      
+      // Determine scroll direction - same as WebScrollableScrollView
+      const isVertical = scrollElement.scrollHeight > scrollElement.clientHeight;
 
       const handleMouseDown = (e: MouseEvent) => {
-        if (e.button !== 0) return; // Only left mouse button
-        isDraggingRef.current = true;
+        // Only handle left mouse button - same as WebScrollableScrollView
+        if (e.button !== 0) return;
+
+        // Check if clicking on the scrollable area
         const rect = scrollElement.getBoundingClientRect();
+        const clickY = e.clientY - rect.top;
+        const clickX = e.clientX - rect.left;
+        
+        // Only start drag if clicking within bounds
+        if (clickY < 0 || clickY > rect.height || clickX < 0 || clickX > rect.width) {
+          return;
+        }
+
+        isDraggingRef.current = true;
         startYRef.current = e.clientY - rect.top;
         scrollTopRef.current = scrollElement.scrollTop;
         scrollElement.style.cursor = 'grabbing';
         scrollElement.style.userSelect = 'none';
+        scrollElement.style.webkitUserSelect = 'none';
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
       };
 
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!isDraggingRef.current) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const rect = scrollElement.getBoundingClientRect();
-        const y = e.clientY - rect.top;
-        const walkY = (y - startYRef.current) * 1.5; // Multiplier for smoother dragging
-        scrollElement.scrollTop = scrollTopRef.current - walkY;
+      const handleMouseLeave = () => {
+        if (isDraggingRef.current) {
+          isDraggingRef.current = false;
+          scrollElement.style.cursor = isVertical ? 'grab' : '';
+          scrollElement.style.userSelect = '';
+        }
       };
 
       const handleMouseUp = () => {
         if (isDraggingRef.current) {
           isDraggingRef.current = false;
-          scrollElement.style.cursor = 'grab';
+          scrollElement.style.cursor = isVertical ? 'grab' : '';
           scrollElement.style.userSelect = '';
+          
           // Snap to nearest item after drag ends
           if (scrollViewRef.current) {
             const scrollY = scrollElement.scrollTop;
@@ -183,28 +385,50 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         }
       };
 
-      const handleMouseLeave = () => {
-        if (isDraggingRef.current) {
-          isDraggingRef.current = false;
-          scrollElement.style.cursor = 'grab';
-          scrollElement.style.userSelect = '';
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!isDraggingRef.current) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const rect = scrollElement.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const walkY = (y - startYRef.current) * 2; // Scroll speed multiplier - same as WebScrollableScrollView
+        
+        // For vertical scrolling - same pattern as WebScrollableScrollView
+        if (isVertical) {
+          const newScrollTop = scrollTopRef.current - walkY;
+          // Clamp to valid scroll range
+          const maxScroll = scrollElement.scrollHeight - scrollElement.clientHeight;
+          const clampedScrollTop = Math.max(0, Math.min(maxScroll, newScrollTop));
+          scrollElement.scrollTop = clampedScrollTop;
+          console.log('WheelPicker: Scrolling to', clampedScrollTop, 'of', maxScroll);
         }
       };
 
       // Handle wheel events to control scroll sensitivity
       // This ensures one wheel tick = one item movement
-      let wheelTimeout: NodeJS.Timeout | null = null;
+      let lastWheelTime = 0;
+      let wheelThrottle = 100; // Minimum time between wheel events (ms)
+      let lastWheelIndex = -1;
+      
       const handleWheel = (e: WheelEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
 
-        // Clear any pending wheel timeout
-        if (wheelTimeout) {
-          clearTimeout(wheelTimeout);
+        const now = Date.now();
+        
+        // Throttle wheel events to prevent double-firing
+        if (now - lastWheelTime < wheelThrottle) {
+          return;
         }
+        lastWheelTime = now;
 
-        // Calculate scroll direction
+        // Calculate scroll direction (only process if significant movement)
         const deltaY = e.deltaY;
+        if (Math.abs(deltaY) < 10) return; // Ignore tiny movements
+        
         const scrollDirection = deltaY > 0 ? 1 : -1; // positive = down, negative = up
 
         // Get current scroll position and calculate current item index
@@ -214,8 +438,11 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         // Calculate target index (one item at a time)
         const targetIndex = Math.max(0, Math.min(items.length - 1, currentIndex + scrollDirection));
 
-        // Only proceed if index actually changed
-        if (targetIndex === currentIndex) return;
+        // Only proceed if index actually changed and is different from last processed index
+        if (targetIndex === currentIndex || targetIndex === lastWheelIndex) {
+          return;
+        }
+        lastWheelIndex = targetIndex;
 
         // Calculate target scroll position
         const targetScrollTop = targetIndex * ITEM_HEIGHT;
@@ -230,31 +457,133 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         }
       };
 
-      scrollElement.style.cursor = 'grab';
+      // Set initial cursor - same as WebScrollableScrollView
+      if (isVertical) {
+        scrollElement.style.cursor = 'grab';
+      }
+      
+      // Ensure the element can receive pointer events
+      scrollElement.style.pointerEvents = 'auto';
+      scrollElement.style.touchAction = 'none'; // Prevent touch scrolling interference
+      
+      // Add event listeners - EXACT same pattern as WebScrollableScrollView (no capture phase)
       scrollElement.addEventListener('mousedown', handleMouseDown, { passive: false });
       scrollElement.addEventListener('mouseleave', handleMouseLeave);
-      scrollElement.addEventListener('wheel', handleWheel, { passive: false });
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('mousemove', handleMouseMove, { passive: false });
+      
+      // Add wheel handler to control scroll sensitivity (WheelPicker-specific)
+      scrollElement.addEventListener('wheel', handleWheel, { passive: false });
+      
+      // Log that handlers were attached
+      console.log('WheelPicker: Handlers attached successfully to element:', scrollElement);
+      console.log('WheelPicker: Element offsetParent:', scrollElement.offsetParent);
+      console.log('WheelPicker: Element display:', window.getComputedStyle(scrollElement).display);
+      console.log('WheelPicker: Element pointerEvents:', window.getComputedStyle(scrollElement).pointerEvents);
+      
+      // Test if element is actually in the DOM and visible
+      if (scrollElement.offsetParent === null && scrollElement.style.display !== 'none') {
+        console.warn('WheelPicker: Element may not be visible in DOM');
+      }
+      
+      // Check for any elements that might be blocking pointer events
+      const rect = scrollElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const elementAtPoint = document.elementFromPoint(centerX, centerY);
+      console.log('WheelPicker: Element at center point:', elementAtPoint);
+      if (elementAtPoint !== scrollElement && !scrollElement.contains(elementAtPoint)) {
+        console.warn('WheelPicker: Another element is on top:', elementAtPoint);
+        console.warn('WheelPicker: Overlaying element classes:', (elementAtPoint as HTMLElement)?.className);
+      }
 
       return () => {
-        if (wheelTimeout) {
-          clearTimeout(wheelTimeout);
-        }
         scrollElement.removeEventListener('mousedown', handleMouseDown);
         scrollElement.removeEventListener('mouseleave', handleMouseLeave);
         scrollElement.removeEventListener('wheel', handleWheel);
         document.removeEventListener('mouseup', handleMouseUp);
         document.removeEventListener('mousemove', handleMouseMove);
+        // Clean up handler tracking
+        if ((scrollElement as any).__wheelPickerHandlers) {
+          (scrollElement as any).__wheelPickerHandlers.delete(handlerId);
+        }
       };
     };
 
-    const timeoutId = setTimeout(setupMouseDrag, 300);
-    return () => clearTimeout(timeoutId);
-  }, []);
+    // Start setup immediately and also after delays (for Modal content)
+    console.log('WheelPicker: Setting up timeouts for mouse drag setup');
+    const timeoutId1 = setTimeout(() => {
+      console.log('WheelPicker: Timeout 1 (100ms) - calling setupMouseDrag');
+      setupMouseDrag();
+    }, 100);
+    const timeoutId2 = setTimeout(() => {
+      console.log('WheelPicker: Timeout 2 (500ms) - calling setupMouseDrag');
+      setupMouseDrag();
+    }, 500); // Extra delay for Modal
+    const timeoutId3 = setTimeout(() => {
+      console.log('WheelPicker: Timeout 3 (1000ms) - calling setupMouseDrag');
+      setupMouseDrag();
+    }, 1000); // Even more delay for Modal
+    
+    // Use MutationObserver to detect when Modal content is added to DOM
+    // Also observe document body to catch when Modal content is added
+    let observer: MutationObserver | null = null;
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      // Try to get container node, but also observe document body for Modal content
+      let containerNode = null;
+      if (containerRef.current) {
+        containerNode = (containerRef.current as any)._node || 
+                       (containerRef.current as any)._nativeNode;
+        if (!containerNode && containerRef.current instanceof HTMLElement) {
+          containerNode = containerRef.current;
+        }
+        if (!containerNode) {
+          containerNode = (containerRef.current as any).current || 
+                         (containerRef.current as any).__domNode ||
+                         (containerRef.current as any).domNode;
+        }
+      }
+      
+      // Observe document body to catch when Modal renders (Modals render to body)
+      const observeTarget = containerNode || document.body;
+      console.log('WheelPicker: Setting up MutationObserver on:', observeTarget === document.body ? 'document.body' : 'containerNode');
+      
+      observer = new MutationObserver(() => {
+        // When DOM changes, try to set up mouse drag again
+        console.log('WheelPicker: MutationObserver detected change - calling setupMouseDrag');
+        setupMouseDrag();
+      });
+      
+      // Observe the container (if found) or document body for Modal content
+      observer.observe(observeTarget, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+    } else {
+      console.warn('WheelPicker: window or document is undefined');
+    }
+    
+    return () => {
+      console.log('WheelPicker: Cleaning up timeouts and observer');
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+      clearTimeout(timeoutId3);
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [items, onValueChange, selectedValue, snapToNearestItem]);
 
   return (
-    <View ref={containerRef} style={[styles.container, style]}>
+    <View 
+      ref={containerRef} 
+      style={[styles.container, style]}
+      {...(Platform.OS === 'web' && {
+        // Enable pointer events on web for mouse dragging
+        pointerEvents: 'auto',
+      })}>
       {/* Selection indicator overlay */}
       <View style={styles.selectionIndicator} pointerEvents="none" />
 
@@ -268,8 +597,12 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        snapToInterval={ITEM_HEIGHT}
-        snapToAlignment="start">
+        snapToInterval={Platform.OS === 'web' ? undefined : ITEM_HEIGHT}
+        snapToAlignment="start"
+        {...(Platform.OS === 'web' && {
+          // On web, we handle scrolling manually, but keep scrollEnabled for wheel events
+          // The mouse drag will override native scrolling
+        })}>
         {items.map((item, index) => {
           const isSelected = item.value === selectedValue;
 
