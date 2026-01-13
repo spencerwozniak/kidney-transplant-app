@@ -19,8 +19,11 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isDraggingRef = useRef(false);
+  const isTouchingRef = useRef(false);
   const startYRef = useRef(0);
   const scrollTopRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const touchScrollTopRef = useRef(0);
 
   // Find the index of the selected value
   const selectedIndex = items.findIndex((item) => item.value === selectedValue);
@@ -464,13 +467,73 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
       
       // Ensure the element can receive pointer events
       scrollElement.style.pointerEvents = 'auto';
-      scrollElement.style.touchAction = 'none'; // Prevent touch scrolling interference
+      scrollElement.style.touchAction = 'pan-y'; // Allow vertical touch scrolling
       
+      // Touch event handlers for mobile/touchscreen support
+      const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches.length !== 1) return; // Only handle single touch
+        
+        const touch = e.touches[0];
+        const rect = scrollElement.getBoundingClientRect();
+        const touchY = touch.clientY - rect.top;
+        const touchX = touch.clientX - rect.left;
+        
+        // Only start touch if within bounds
+        if (touchY < 0 || touchY > rect.height || touchX < 0 || touchX > rect.width) {
+          return;
+        }
+
+        isTouchingRef.current = true;
+        touchStartYRef.current = touch.clientY - rect.top;
+        touchScrollTopRef.current = scrollElement.scrollTop;
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        if (!isTouchingRef.current || e.touches.length !== 1) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const touch = e.touches[0];
+        const rect = scrollElement.getBoundingClientRect();
+        const y = touch.clientY - rect.top;
+        const walkY = (y - touchStartYRef.current) * 2; // Scroll speed multiplier
+        
+        // For vertical scrolling
+        if (isVertical) {
+          const newScrollTop = touchScrollTopRef.current - walkY;
+          // Clamp to valid scroll range
+          const maxScroll = scrollElement.scrollHeight - scrollElement.clientHeight;
+          const clampedScrollTop = Math.max(0, Math.min(maxScroll, newScrollTop));
+          scrollElement.scrollTop = clampedScrollTop;
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        if (isTouchingRef.current) {
+          isTouchingRef.current = false;
+          
+          // Snap to nearest item after touch ends
+          if (scrollViewRef.current) {
+            const scrollY = scrollElement.scrollTop;
+            snapToNearestItem(scrollY);
+          }
+        }
+      };
+
       // Add event listeners - EXACT same pattern as WebScrollableScrollView (no capture phase)
       scrollElement.addEventListener('mousedown', handleMouseDown, { passive: false });
       scrollElement.addEventListener('mouseleave', handleMouseLeave);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('mousemove', handleMouseMove, { passive: false });
+      
+      // Add touch event listeners for mobile/touchscreen support
+      scrollElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+      scrollElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+      scrollElement.addEventListener('touchcancel', handleTouchEnd, { passive: false });
       
       // Add wheel handler to control scroll sensitivity (WheelPicker-specific)
       scrollElement.addEventListener('wheel', handleWheel, { passive: false });
@@ -501,6 +564,10 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         scrollElement.removeEventListener('mousedown', handleMouseDown);
         scrollElement.removeEventListener('mouseleave', handleMouseLeave);
         scrollElement.removeEventListener('wheel', handleWheel);
+        scrollElement.removeEventListener('touchstart', handleTouchStart);
+        scrollElement.removeEventListener('touchmove', handleTouchMove);
+        scrollElement.removeEventListener('touchend', handleTouchEnd);
+        scrollElement.removeEventListener('touchcancel', handleTouchEnd);
         document.removeEventListener('mouseup', handleMouseUp);
         document.removeEventListener('mousemove', handleMouseMove);
         // Clean up handler tracking
@@ -599,9 +666,10 @@ export const WheelPicker = ({ items, selectedValue, onValueChange, style }: Whee
         decelerationRate="fast"
         snapToInterval={Platform.OS === 'web' ? undefined : ITEM_HEIGHT}
         snapToAlignment="start"
+        scrollEnabled={true}
         {...(Platform.OS === 'web' && {
-          // On web, we handle scrolling manually, but keep scrollEnabled for wheel events
-          // The mouse drag will override native scrolling
+          // On web, we handle scrolling manually with mouse drag and touch handlers
+          // Native scrolling is still enabled for fallback and wheel events
         })}>
         {items.map((item, index) => {
           const isSelected = item.value === selectedValue;
