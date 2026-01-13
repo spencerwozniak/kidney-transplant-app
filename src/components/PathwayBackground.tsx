@@ -17,8 +17,10 @@ export const PathwayBackground = ({
 }: PathwayBackgroundProps) => {
   // Create animated values for each path
   // Start with 0.01 instead of 0 on web to ensure paths are in DOM
-  const initialOpacity = Platform.OS === 'web' && animate ? 0.01 : (animate ? 0 : 1);
-  const pathAnimations = useRef(Array.from({ length: 44 }, () => new Animated.Value(initialOpacity))).current;
+  const initialOpacity = Platform.OS === 'web' && animate ? 0.01 : animate ? 0 : 1;
+  const pathAnimations = useRef(
+    Array.from({ length: 44 }, () => new Animated.Value(initialOpacity))
+  ).current;
   const [pathOpacities, setPathOpacities] = useState<number[]>(
     animate ? Array(44).fill(initialOpacity) : Array(44).fill(1)
   );
@@ -189,7 +191,7 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
     // Update opacities as animations progress
     // Store listener IDs and their corresponding animations for cleanup
     const listenerData: Array<{ anim: Animated.Value; listenerId: string }> = [];
-    
+
     pathAnimations.forEach((anim, index) => {
       const listenerId = anim.addListener(({ value }) => {
         setPathOpacities((prev) => {
@@ -213,7 +215,7 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
         useNativeDriver: false, // SVG opacity doesn't support native driver
       });
     });
-    
+
     // On web, ensure initial state is set
     if (Platform.OS === 'web') {
       setPathOpacities(Array(44).fill(initialOpacity));
@@ -223,7 +225,7 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
     // Paths animate in the order they appear in the paths array above
     // Total animation time: (paths.length * staggerDelay) + duration
     // = (44 * 100) + 400 = 4800ms
-    Animated.stagger(100, animations).start(() => {
+    Animated.stagger(50, animations).start(() => {
       // Callback when all path animations complete
       onAnimationCompleteRef.current?.();
     });
@@ -237,16 +239,16 @@ c103 -62 132 -192 63 -287 -36 -50 -76 -71 -145 -78 -66 -7 -132 22 -173 75
   }, [animate, initialOpacity]);
 
   return (
-    <View 
+    <View
       style={[
-        StyleSheet.absoluteFill, 
+        StyleSheet.absoluteFill,
         Platform.OS === 'web' && {
           width: '100%',
           height: '100%',
           zIndex: 0,
           position: 'absolute',
-        }
-      ]} 
+        },
+      ]}
       pointerEvents="none">
       <Svg
         width={SCREEN_WIDTH}
