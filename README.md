@@ -109,24 +109,104 @@ The app supports hot reloading by default. When you save changes to your code:
 ## Directory Structure
 
 ```
-my-expo-app/
+kidney-transplant-app/
 ├── src/
 |   ├── App.tsx
-│   ├── pages/           # Full page/screen components
-│   │   ├── TransplantQuestionnaire.tsx
-│   │   └── StyleExamples.tsx
-│   ├── components/      # Reusable UI/UX components
+│   ├── pages/                     # Full page/screen components
+│   │   ├── ChatScreen.tsx         # AI chat interface
+│   │   ├── ResultsDetailScreen.tsx # Results detail view
+│   │   ├── SettingsScreen.tsx     # Settings screen
+│   │   ├── StyleExamples.tsx      # Style examples (dev)
+│   │   ├── checklist/             # Checklist screens
+│   │   │   ├── ChecklistTimelineScreen.tsx
+│   │   │   ├── ChecklistItemEditScreen.tsx
+│   │   │   └── ChecklistDocumentsScreen.tsx
+│   │   ├── financial-assessment/  # Financial assessment screens
+│   │   │   ├── FinancialIntroScreen.tsx
+│   │   │   └── FinanceQuestionnaire.tsx
+│   │   ├── onboarding/            # Onboarding flow screens
+│   │   │   ├── OnboardingScreen.tsx
+│   │   │   ├── PatientDetailsScreen1.tsx
+│   │   │   ├── PatientDetailsScreen2.tsx
+│   │   │   └── MedicalQuestionsScreen.tsx
+│   │   ├── pathway/               # Pathway visualization screens
+│   │   │   ├── PathwayScreen.tsx
+│   │   │   ├── PathwayHeader.tsx
+│   │   │   ├── StageCard.tsx
+│   │   │   ├── StageDetailModal.tsx
+│   │   │   ├── EvaluationProgress.tsx
+│   │   │   ├── StageActions.tsx
+│   │   │   ├── StageIndicatorDots.tsx
+│   │   │   ├── icons/              # Pathway stage icons
+│   │   │   ├── constants.ts
+│   │   │   ├── pathwayStages.ts
+│   │   │   └── types.ts
+│   │   ├── referral/              # Referral management screens
+│   │   │   ├── ReferralViewScreen.tsx
+│   │   │   └── navigator/         # Transplant access navigator
+│   │   │       ├── TransplantAccessNavigator.tsx
+│   │   │       ├── CentersScreen.tsx
+│   │   │       ├── CenterCard.tsx
+│   │   │       ├── SelectedCenterInfo.tsx
+│   │   │       ├── ProviderInfoForm.tsx
+│   │   │       ├── ReferralPathwayScreen.tsx
+│   │   │       ├── NextStepsScreen.tsx
+│   │   │       ├── DetailedSteps.tsx
+│   │   │       ├── PathwayGuidance.tsx
+│   │   │       ├── ScriptCard.tsx
+│   │   │       ├── ImportantReminder.tsx
+│   │   │       ├── ReferralReceivedButton.tsx
+│   │   │       └── types.ts
+│   │   └── transplant-assessment/ # Transplant assessment screens
+│   │       ├── AssessmentIntroScreen.tsx
+│   │       └── TransplantQuestionnaire.tsx
+│   ├── components/                # Reusable UI/UX components
+│   │   ├── BottomTabBar.tsx
 │   │   ├── Container.tsx
 │   │   ├── EditScreenInfo.tsx
-│   │   └── ScreenContent.tsx
-│   └── styles/          # Theme and style definitions
-│       ├── global.css
-│       ├── theme.ts
-│       ├── index.ts
-│       └── README.md
-├── app.json
-├── metro.config.js
+│   │   ├── InfoIcon.tsx
+│   │   ├── KidneyIcon.tsx
+│   │   ├── NavigationBar.tsx
+│   │   ├── PathwayBackground.tsx
+│   │   ├── ScreenContent.tsx
+│   │   ├── WebScrollableFlatList.tsx
+│   │   ├── WebScrollableScrollView.tsx
+│   │   ├── WebWrapper.tsx
+│   │   ├── WheelDatePicker.tsx
+│   │   └── WheelPicker.tsx
+│   ├── navigation/                # Navigation system
+│   │   ├── ScreenRouter.tsx       # Screen rendering component
+│   │   ├── types.ts               # Screen types and navigation constants
+│   │   ├── useAppState.ts         # App-wide state management hook
+│   │   ├── handlers/              # Navigation handlers organized by flow
+│   │   │   ├── index.ts
+│   │   │   ├── onboardingHandlers.ts
+│   │   │   ├── assessmentHandlers.ts
+│   │   │   ├── financialHandlers.ts
+│   │   │   ├── checklistHandlers.ts
+│   │   │   └── patientHandlers.ts
+│   │   └── README.md
+│   ├── services/                  # API and service layer
+│   │   └── api.ts                 # API service client
+│   ├── styles/                    # Theme and style definitions
+│   │   ├── global.css
+│   │   ├── theme.ts
+│   │   ├── index.ts
+│   │   └── README.md
+│   ├── utils/                     # Utility functions
+│   │   ├── enableWebMouseDrag.ts
+│   │   ├── webStyles.ts
+│   │   └── zipCodeLookup.ts
+│   └── data/                      # Static data files
+│       ├── documents-content.json
+│       └── questions.json
+├── assets/                        # Images and static assets
+├── web/                           # Web-specific files
+│   └── index.html
+├── app.json                       # Expo app configuration
+├── metro.config.js               # Metro bundler configuration
 ├── package.json
-├── tailwind.config.js
-└── tsconfig.json
+├── tailwind.config.js            # Tailwind CSS configuration
+└── tsconfig.json                  # TypeScript configuration
 ```
+

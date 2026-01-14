@@ -131,37 +131,57 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
   };
 
   const handleFindCenters = async () => {
-    // Use ZIP code if provided, otherwise load CA centers
-    if (zipCode && zipCode.trim().length > 0) {
-      await loadCenters(zipCode);
-    } else {
-      await loadCentersByState('CA');
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
+    if (IS_DEBUG) {
+      console.log('[TransplantNavigator] handleFindCenters called, zipCode:', zipCode);
     }
 
-    // Update referral state with location if ZIP code is provided
-    if (zipCode && zipCode.trim().length > 0 && referralState) {
-      try {
-        // Resolve ZIP code to city/state
-        const locationInfo = resolveZipCode(zipCode);
-
-        if (__DEV__) {
-          console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+    try {
+      // Use ZIP code if provided, otherwise load CA centers
+      if (zipCode && zipCode.trim().length > 0) {
+        if (IS_DEBUG) {
+          console.log('[TransplantNavigator] Loading centers by ZIP:', zipCode);
         }
-
-        const updatedLocation = {
-          ...referralState.location,
-          zip: zipCode,
-          ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
-        };
-
-        await apiService.updateReferralState({
-          ...referralState,
-          location: updatedLocation,
-        });
-      } catch (error: any) {
-        console.error('Error updating referral state:', error);
-        // Don't block the UI if state update fails
+        await loadCenters(zipCode);
+      } else {
+        if (IS_DEBUG) {
+          console.log('[TransplantNavigator] Loading centers by state: CA');
+        }
+        await loadCentersByState('CA');
       }
+
+      // Update referral state with location if ZIP code is provided
+      if (zipCode && zipCode.trim().length > 0 && referralState) {
+        try {
+          // Resolve ZIP code to city/state
+          const locationInfo = resolveZipCode(zipCode);
+
+          if (IS_DEBUG) {
+            console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+          }
+
+          const updatedLocation = {
+            ...referralState.location,
+            zip: zipCode,
+            ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
+          };
+
+          await apiService.updateReferralState({
+            ...referralState,
+            location: updatedLocation,
+          });
+        } catch (error: any) {
+          console.error('Error updating referral state:', error);
+          // Don't block the UI if state update fails
+        }
+      }
+    } catch (error: any) {
+      console.error('[TransplantNavigator] Error in handleFindCenters:', error);
+      // Show user-friendly error message
+      alert('Failed to load centers. Please try again.');
     }
   };
 

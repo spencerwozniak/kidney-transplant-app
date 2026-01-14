@@ -1,6 +1,6 @@
 /**
  * Pathway Screen Component
- * 
+ *
  * Main screen displaying the transplant pathway with swipeable stage cards.
  * Orchestrates data fetching, stage navigation, and renders sub-components.
  */
@@ -11,7 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { typography, layout, combineClasses } from '../../styles/theme';
 import { PathwayBackground } from '../../components/PathwayBackground';
-import { apiService, PatientStatus, TransplantChecklist, QuestionnaireSubmission, PatientReferralState } from '../../services/api';
+import {
+  apiService,
+  PatientStatus,
+  TransplantChecklist,
+  QuestionnaireSubmission,
+  PatientReferralState,
+} from '../../services/api';
 import type { PathwayStage, PathwayStageData, PathwayScreenProps, StageStatus } from './types';
 import { PATHWAY_STAGES } from './pathwayStages';
 import { CARD_WIDTH, CARD_SPACING, SNAP_INTERVAL } from './constants';
@@ -39,8 +45,26 @@ export const PathwayScreen = ({
   const [selectedStage, setSelectedStage] = useState<PathwayStageData | null>(null);
   // Typed ref for the scrollable list
   const flatListRef = useRef<FlatList<PathwayStageData> | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const hasInitialScroll = useRef(false);
+  const flatListLayoutReady = useRef(false);
+
+  // Calculate initial stage index from cached data if available
+  const getInitialStageIndex = (): number => {
+    try {
+      const statusCache = apiService.loadCached<PatientStatus>('patient_status');
+      if (statusCache.data && statusCache.data.pathway_stage) {
+        const stageIndex = PATHWAY_STAGES.findIndex(
+          (stage) => stage.id === (statusCache.data!.pathway_stage as PathwayStage)
+        );
+        return stageIndex >= 0 ? stageIndex : 0;
+      }
+    } catch (e) {
+      // ignore cache errors
+    }
+    return 0;
+  };
+
+  const [currentIndex, setCurrentIndex] = useState(getInitialStageIndex());
 
   // Fetch pathway data on mount and when screen comes into focus
   useEffect(() => {
@@ -66,7 +90,8 @@ export const PathwayScreen = ({
           apiService.getReferralState().catch(() => null),
         ])
           .then((results) => {
-            const [statusResult, checklistResult, questionnaireResult, referralStateResult] = results;
+            const [statusResult, checklistResult, questionnaireResult, referralStateResult] =
+              results;
             if (statusResult.status === 'fulfilled') {
               setPatientStatus(statusResult.value as PatientStatus);
             }
@@ -74,7 +99,9 @@ export const PathwayScreen = ({
               setChecklist(checklistResult.value as TransplantChecklist);
             }
             if (questionnaireResult.status === 'fulfilled') {
-              setQuestionnaire((questionnaireResult.value as QuestionnaireSubmission | null) ?? null);
+              setQuestionnaire(
+                (questionnaireResult.value as QuestionnaireSubmission | null) ?? null
+              );
             }
             if (referralStateResult.status === 'fulfilled') {
               setReferralState((referralStateResult.value as PatientReferralState | null) ?? null);
@@ -109,12 +136,13 @@ export const PathwayScreen = ({
     setIsLoading(true);
     try {
       console.time('fetchPathwayData');
-      const [statusResult, checklistResult, questionnaireResult, referralStateResult] = await Promise.allSettled([
-        apiService.getPatientStatus(),
-        apiService.getChecklist(),
-        apiService.getQuestionnaire().catch(() => null),
-        apiService.getReferralState().catch(() => null),
-      ]);
+      const [statusResult, checklistResult, questionnaireResult, referralStateResult] =
+        await Promise.allSettled([
+          apiService.getPatientStatus(),
+          apiService.getChecklist(),
+          apiService.getQuestionnaire().catch(() => null),
+          apiService.getReferralState().catch(() => null),
+        ]);
 
       if (statusResult.status === 'fulfilled') {
         setPatientStatus(statusResult.value as PatientStatus);
@@ -127,7 +155,7 @@ export const PathwayScreen = ({
       if (questionnaireResult.status === 'fulfilled') {
         setQuestionnaire((questionnaireResult.value as QuestionnaireSubmission | null) ?? null);
       }
-      
+
       if (referralStateResult.status === 'fulfilled') {
         setReferralState((referralStateResult.value as PatientReferralState | null) ?? null);
       }
@@ -145,6 +173,13 @@ export const PathwayScreen = ({
   const currentStageIndex = PATHWAY_STAGES.findIndex((stage) => stage.id === currentStage);
   const safeCurrentStageIndex = currentStageIndex >= 0 ? currentStageIndex : 0;
 
+  // Update currentIndex when patientStatus changes
+  useEffect(() => {
+    if (patientStatus) {
+      setCurrentIndex(safeCurrentStageIndex);
+    }
+  }, [patientStatus, safeCurrentStageIndex]);
+
   // Log pathway data once after a load cycle completes (transition from loading -> not loading)
   const prevLoadingRef = React.useRef<boolean>(true);
   React.useEffect(() => {
@@ -155,7 +190,10 @@ export const PathwayScreen = ({
           (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
           (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
         if (IS_DEBUG) {
-          console.log('[Pathway][debug] patientStatus.pathway_stage =', patientStatus?.pathway_stage);
+          console.log(
+            '[Pathway][debug] patientStatus.pathway_stage =',
+            patientStatus?.pathway_stage
+          );
           console.log('[Pathway][debug] patientStatus =', patientStatus);
           const totalItems = checklist?.items?.length ?? 0;
           const completed = checklist?.items?.filter((i) => i.is_complete).length ?? 0;
@@ -175,19 +213,40 @@ export const PathwayScreen = ({
     prevLoadingRef.current = isLoading;
   }, [isLoading, patientStatus, checklist]);
 
-  // Scroll to current stage when data loads (only on first load)
+  // Scroll to current stage when data loads and FlatList is ready (only on first load)
   useEffect(() => {
-    if (!isLoading && flatListRef.current && !hasInitialScroll.current) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index: safeCurrentStageIndex,
-          animated: false,
-        });
-        setCurrentIndex(safeCurrentStageIndex);
-        hasInitialScroll.current = true;
-      }, 100);
+    if (
+      !isLoading &&
+      patientStatus &&
+      flatListRef.current &&
+      flatListLayoutReady.current &&
+      !hasInitialScroll.current
+    ) {
+      const scrollToStage = () => {
+        try {
+          flatListRef.current?.scrollToIndex({
+            index: safeCurrentStageIndex,
+            animated: false,
+          });
+          setCurrentIndex(safeCurrentStageIndex);
+          hasInitialScroll.current = true;
+        } catch (e) {
+          // If scrollToIndex fails, try using scrollToOffset as fallback
+          const offset = safeCurrentStageIndex * SNAP_INTERVAL;
+          flatListRef.current?.scrollToOffset({
+            offset,
+            animated: false,
+          });
+          setCurrentIndex(safeCurrentStageIndex);
+          hasInitialScroll.current = true;
+        }
+      };
+
+      // Small delay to ensure FlatList is fully ready
+      const timeoutId = setTimeout(scrollToStage, 150);
+      return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, safeCurrentStageIndex]);
+  }, [isLoading, patientStatus, safeCurrentStageIndex]);
 
   // Determine stage status (completed, current, or upcoming)
   const getStageStatus = (stageIndex: number): StageStatus => {
@@ -250,21 +309,22 @@ export const PathwayScreen = ({
       end={{ x: 0, y: 1 }}
       style={styles.gradient}>
       <PathwayBackground opacity={0.15} animate={false} />
-      <SafeAreaView 
-        className="flex-1"
-        style={{ height: '100%', maxHeight: '100%' }}>
-        <View 
-          className="flex-1"
-          style={{ height: '100%', maxHeight: '100%' }}>
+      <SafeAreaView className="flex-1" style={{ height: '100%', maxHeight: '100%' }}>
+        <View className="flex-1" style={{ height: '100%', maxHeight: '100%' }}>
           <PathwayHeader />
 
-          <StageIndicatorDots currentIndex={currentIndex} currentStageIndex={safeCurrentStageIndex} />
+          <StageIndicatorDots
+            currentIndex={currentIndex}
+            currentStageIndex={safeCurrentStageIndex}
+          />
 
           {/* Inline lightweight loading indicator / skeleton prompt */}
-          {(isLoading && (!patientStatus || !checklist)) && (
-            <View className="px-4 py-2 items-center">
+          {isLoading && (!patientStatus || !checklist) && (
+            <View className="items-center px-4 py-2">
               <ActivityIndicator size="small" color="#ffffff" />
-              <Text className={combineClasses(typography.body.small, 'mt-2 text-white')}>Loading pathway...</Text>
+              <Text className={combineClasses(typography.body.small, 'mt-2 text-white')}>
+                Loading pathway...
+              </Text>
             </View>
           )}
 
@@ -279,6 +339,7 @@ export const PathwayScreen = ({
             snapToInterval={SNAP_INTERVAL}
             decelerationRate="fast"
             showsHorizontalScrollIndicator={false}
+            initialScrollIndex={patientStatus ? safeCurrentStageIndex : 0}
             contentContainerStyle={{
               paddingHorizontal: CARD_SPACING,
               paddingVertical: 20,
@@ -290,10 +351,19 @@ export const PathwayScreen = ({
               offset: SNAP_INTERVAL * index,
               index,
             })}
+            onLayout={() => {
+              // Mark FlatList as ready for scrolling
+              flatListLayoutReady.current = true;
+            }}
             onScrollToIndexFailed={(info) => {
-              // Fallback if scroll to index fails
+              // Fallback if scroll to index fails - use scrollToOffset instead
+              const offset = info.index * SNAP_INTERVAL;
               setTimeout(() => {
-                flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+                flatListRef.current?.scrollToOffset({
+                  offset,
+                  animated: false,
+                });
+                setCurrentIndex(info.index);
               }, 100);
             }}
           />
@@ -310,4 +380,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
