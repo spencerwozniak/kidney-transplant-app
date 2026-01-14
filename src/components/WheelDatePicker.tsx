@@ -15,18 +15,24 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
   const [year, setYear] = useState(value.getFullYear());
 
   // Generate options
-  const months = Array.from({ length: 12 }, (_, i) => ({
-    label: new Date(2000, i, 1).toLocaleString('default', { month: 'long' }),
-    value: i + 1,
-  }));
+  const months = [
+    ...Array.from({ length: 12 }, (_, i) => ({
+      label: new Date(2000, i, 1).toLocaleString('default', { month: 'long' }),
+      value: i + 1,
+    })),
+    { label: '', value: '' }, // Padding item to allow scrolling to last month
+  ];
 
   const currentYear = new Date().getFullYear();
   const minYear = 1900;
   const maxYear = maximumDate ? maximumDate.getFullYear() : currentYear;
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => ({
-    label: (minYear + i).toString(),
-    value: minYear + i,
-  }));
+  const years = [
+    ...Array.from({ length: maxYear - minYear + 1 }, (_, i) => ({
+      label: (minYear + i).toString(),
+      value: minYear + i,
+    })),
+    { label: '', value: '' }, // Padding item to allow scrolling to last year
+  ];
 
   // Get days in month
   const getDaysInMonth = (m: number, y: number) => {
@@ -34,16 +40,19 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
   };
 
   const daysInMonth = getDaysInMonth(month, year);
-  const days = Array.from({ length: daysInMonth }, (_, i) => ({
-    label: (i + 1).toString(),
-    value: i + 1,
-  }));
+  const days = [
+    ...Array.from({ length: daysInMonth }, (_, i) => ({
+      label: (i + 1).toString(),
+      value: i + 1,
+    })),
+    { label: '', value: '' }, // Padding item to allow scrolling to last day
+  ];
 
   // Update date when month, day, or year changes
   useEffect(() => {
     const daysInNewMonth = getDaysInMonth(month, year);
     let newDay = day;
-    
+
     // Adjust day if it exceeds days in month
     if (day > daysInNewMonth) {
       newDay = daysInNewMonth;
@@ -52,7 +61,7 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
     }
 
     const newDate = new Date(year, month - 1, newDay);
-    
+
     // Check if date exceeds maximumDate
     if (maximumDate && newDate > maximumDate) {
       const maxDate = new Date(maximumDate);
@@ -79,7 +88,7 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
       const newMonth = value.getMonth() + 1;
       const newDay = value.getDate();
       const newYear = value.getFullYear();
-      
+
       // Only update if different to prevent loops
       if (newMonth !== month) setMonth(newMonth);
       if (newDay !== day) setDay(newDay);
@@ -93,7 +102,9 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
         <WheelPicker
           items={months}
           selectedValue={month}
-          onValueChange={(val) => setMonth(Number(val))}
+          onValueChange={(val) => {
+            if (val !== '') setMonth(Number(val));
+          }}
           style={styles.picker}
         />
       </View>
@@ -101,7 +112,9 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
         <WheelPicker
           items={days}
           selectedValue={day}
-          onValueChange={(val) => setDay(Number(val))}
+          onValueChange={(val) => {
+            if (val !== '') setDay(Number(val));
+          }}
           style={styles.picker}
         />
       </View>
@@ -109,7 +122,9 @@ export const WheelDatePicker = ({ value, onChange, maximumDate, style }: WheelDa
         <WheelPicker
           items={years}
           selectedValue={year}
-          onValueChange={(val) => setYear(Number(val))}
+          onValueChange={(val) => {
+            if (val !== '') setYear(Number(val));
+          }}
           style={styles.picker}
         />
       </View>
@@ -139,4 +154,3 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 });
-
