@@ -34,7 +34,9 @@ export type Screen =
   | 'transplant-access-navigator'
   | 'referral-view'
   // Data Export
-  | 'fhir-export'
+  | 'export'
+  | 'clinical-summary'
+  | 'structured-data'
   // Development
   | 'examples';
 

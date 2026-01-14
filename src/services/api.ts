@@ -998,6 +998,12 @@ class ApiService {
       },
     });
   }
+
+  async exportClinicalSummary(): Promise<{ summary: string; generated_at: string; patient_id: string; model: string }> {
+    return this.request<{ summary: string; generated_at: string; patient_id: string; model: string }>(
+      '/api/v1/patients/clinical-summary'
+    );
+  }
 }
 
 export const apiService = new ApiService();

@@ -177,19 +177,19 @@ export const SettingsScreen = ({
               <View className="gap-3">
                 {onExportData && (
                   <TouchableOpacity
-                    className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                     onPress={onExportData}
                     activeOpacity={0.8}>
-                    <Text className={buttons.primary.text}>Export Data</Text>
+                    <Text className={buttons.outline.text}>Export Data</Text>
                   </TouchableOpacity>
                 )}
 
                 {onNavigateToFinancialAssessment && (
                   <TouchableOpacity
-                    className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                     onPress={onNavigateToFinancialAssessment}
                     activeOpacity={0.8}>
-                    <Text className={buttons.primary.text}>Financial Assessment</Text>
+                    <Text className={buttons.outline.text}>Financial Assessment</Text>
                   </TouchableOpacity>
                 )}
               </View>

@@ -1,21 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Animated, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { typography, combineClasses, layout, cards } from '../styles/theme';
+import Markdown from 'react-native-markdown-display';
+import { typography, combineClasses, layout, cards, buttons } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
 import { PathwayBackground } from '../components/PathwayBackground';
 import { apiService } from '../services/api';
 import { getWebPadding } from '../utils/webStyles';
 
-type FhirExportScreenProps = {
+type StructuredDataScreenProps = {
   onBack: () => void;
 };
 
-export const FhirExportScreen = ({ onBack }: FhirExportScreenProps) => {
+export const StructuredDataScreen = ({ onBack }: StructuredDataScreenProps) => {
   const [fhirData, setFhirData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'json' | 'markdown'>('json');
+  const [markdownContent, setMarkdownContent] = useState<string>('');
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
 
@@ -65,7 +76,7 @@ export const FhirExportScreen = ({ onBack }: FhirExportScreenProps) => {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#ffffff" />
             <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
-              Loading your data...
+              Loading structured data...
             </Text>
           </View>
         </SafeAreaView>
@@ -95,7 +106,7 @@ export const FhirExportScreen = ({ onBack }: FhirExportScreenProps) => {
             {/* Header */}
             <View className="mb-8">
               <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
-                Export Data
+                Structured Data (FHIR)
               </Text>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
@@ -113,63 +124,24 @@ export const FhirExportScreen = ({ onBack }: FhirExportScreenProps) => {
             {/* FHIR Data Display */}
             {fhirData && (
               <>
-                {/* Bundle Information */}
-                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                {/* Full JSON Display */}
+                <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
                   <Text className={combineClasses(typography.h5, 'mb-4 text-blue-900')}>
-                    Bundle Information
+                    Full FHIR Bundle (JSON)
                   </Text>
-                  <View className="space-y-2">
-                    <View className="flex-row justify-between">
-                      <Text className={combineClasses(typography.body.small, 'text-blue-800')}>
-                        Resource Type:
-                      </Text>
+                  <View className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <ScrollView
+                      horizontal={false}
+                      showsVerticalScrollIndicator={true}
+                      style={{ maxHeight: 600 }}>
                       <Text
-                        className={combineClasses(
-                          typography.body.small,
-                          'font-semibold text-blue-900'
-                        )}>
-                        {fhirData.resourceType || 'N/A'}
+                        className={combineClasses(typography.body.small, 'font-mono text-gray-800')}
+                        style={{ fontSize: 11 }}>
+                        {JSON.stringify(fhirData, null, 2)}
                       </Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                      <Text className={combineClasses(typography.body.small, 'text-blue-800')}>
-                        Type:
-                      </Text>
-                      <Text
-                        className={combineClasses(
-                          typography.body.small,
-                          'font-semibold text-blue-900'
-                        )}>
-                        {fhirData.type || 'N/A'}
-                      </Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                      <Text className={combineClasses(typography.body.small, 'text-blue-800')}>
-                        Timestamp:
-                      </Text>
-                      <Text
-                        className={combineClasses(
-                          typography.body.small,
-                          'font-semibold text-blue-900'
-                        )}>
-                        {fhirData.timestamp || 'N/A'}
-                      </Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                      <Text className={combineClasses(typography.body.small, 'text-blue-800')}>
-                        Total Entries:
-                      </Text>
-                      <Text
-                        className={combineClasses(
-                          typography.body.small,
-                          'font-semibold text-blue-900'
-                        )}>
-                        {fhirData.entry?.length || 0}
-                      </Text>
-                    </View>
+                    </ScrollView>
                   </View>
                 </View>
-
                 {/* Resource Summary */}
                 {fhirData.entry && fhirData.entry.length > 0 && (
                   <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
@@ -207,39 +179,6 @@ export const FhirExportScreen = ({ onBack }: FhirExportScreenProps) => {
                     </View>
                   </View>
                 )}
-
-                {/* Full JSON Display */}
-                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-4 text-blue-900')}>
-                    Full FHIR Bundle (JSON)
-                  </Text>
-                  <View className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <ScrollView
-                      horizontal={false}
-                      showsVerticalScrollIndicator={true}
-                      style={{ maxHeight: 400 }}>
-                      <Text
-                        className={combineClasses(typography.body.small, 'font-mono text-gray-800')}
-                        style={{ fontSize: 11 }}>
-                        {JSON.stringify(fhirData, null, 2)}
-                      </Text>
-                    </ScrollView>
-                  </View>
-                </View>
-
-                {/* Info Note */}
-                <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-4 text-gray-900')}>
-                    About This Export
-                  </Text>
-                  <Text
-                    className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
-                    This FHIR Bundle contains all your patient data including demographics,
-                    observations, questionnaire responses, conditions, and all uploaded documents
-                    (encoded as base64). You can use this data to share with healthcare providers or
-                    import into other FHIR-compatible systems.
-                  </Text>
-                </View>
               </>
             )}
           </Animated.View>
