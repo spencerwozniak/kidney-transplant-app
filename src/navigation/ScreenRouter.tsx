@@ -201,7 +201,11 @@ export function ScreenRouter({
               onViewReferral={() => setCurrentScreen('referral-view')}
             />
           ) : activeTab === 'chat' ? (
-            <ChatScreen patientName={patient?.name || 'Friend'} />
+            <ChatScreen
+              patientName={patient?.name || 'Friend'}
+              onNavigateToPathway={() => setActiveTab('pathway')}
+              onNavigateToChecklist={checklistHandlers.handleViewChecklist}
+            />
           ) : (
             <SettingsScreen
               patientName={patient?.name || 'Friend'}

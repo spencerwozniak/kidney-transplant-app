@@ -821,7 +821,8 @@ class ApiService {
     },
     onChunk: (chunk: string) => void,
     onError?: (error: string) => void,
-    onComplete?: () => void
+    onComplete?: () => void,
+    onButton?: (buttonMetadata: { show_button: boolean; button_text: string; pathway_stage?: string }) => void
   ): Promise<void> {
     const body: { query: string; provider?: string; model?: string } = {
       query: params.query,
@@ -879,6 +880,9 @@ class ApiService {
                   resolve();
                   return;
                 }
+                if (data.button !== undefined && onButton) {
+                  onButton(data.button);
+                }
                 if (data.chunk !== undefined) {
                   onChunk(data.chunk);
                 }
@@ -906,6 +910,8 @@ class ApiService {
                     if (onComplete) {
                       onComplete();
                     }
+                  } else if (data.button !== undefined && onButton) {
+                    onButton(data.button);
                   } else if (data.chunk !== undefined) {
                     onChunk(data.chunk);
                   }

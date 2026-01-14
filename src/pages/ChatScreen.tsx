@@ -30,14 +30,23 @@ type ChatMessage = {
   isLoading?: boolean;
 };
 
+type ButtonMetadata = {
+  show_button: boolean;
+  button_text: string;
+  pathway_stage?: string;
+};
+
 type Conversation = {
   userMessage: ChatMessage;
   botResponse: string;
   isStreaming: boolean;
+  buttonMetadata?: ButtonMetadata | null;
 };
 
 type ChatScreenProps = {
   patientName?: string;
+  onNavigateToPathway?: () => void;
+  onNavigateToChecklist?: () => void;
 };
 
 const SendIcon = ({ size = 20, color = '#FFFFFF' }: { size?: number; color?: string }) => (
@@ -108,7 +117,11 @@ const markdownStyles = {
   },
 };
 
-export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
+export const ChatScreen = ({
+  patientName = 'Friend',
+  onNavigateToPathway,
+  onNavigateToChecklist,
+}: ChatScreenProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
@@ -203,6 +216,7 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
       userMessage,
       botResponse: '',
       isStreaming: true,
+      buttonMetadata: null,
     };
 
     setConversations((prev) => [...prev, newConversation]);
@@ -268,6 +282,21 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
           setIsTyping(false);
           setTypingMessage('');
           setIsLoading(false);
+          scrollToBottom();
+        },
+        (buttonMetadata: ButtonMetadata) => {
+          // Handle button metadata
+          setConversations((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0) {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                buttonMetadata,
+              };
+            }
+            return updated;
+          });
           scrollToBottom();
         }
       );
@@ -376,7 +405,29 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
                     </View>
                   )
                 ) : (
-                  <Markdown style={markdownStyles}>{conversation.botResponse}</Markdown>
+                  <>
+                    <Markdown style={markdownStyles}>{conversation.botResponse}</Markdown>
+                    {/* Journey Navigation Button */}
+                    {conversation.buttonMetadata?.show_button && (
+                      <View className="mt-4">
+                        <TouchableOpacity
+                          onPress={() => {
+                            const pathwayStage = conversation.buttonMetadata?.pathway_stage;
+                            if (pathwayStage === 'evaluation' && onNavigateToChecklist) {
+                              onNavigateToChecklist();
+                            } else if (onNavigateToPathway) {
+                              onNavigateToPathway();
+                            }
+                          }}
+                          className="rounded-lg bg-green-600 px-6 py-3"
+                          activeOpacity={0.7}>
+                          <Text className="text-center text-base font-semibold text-white">
+                            {conversation.buttonMetadata.button_text}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             </View>
