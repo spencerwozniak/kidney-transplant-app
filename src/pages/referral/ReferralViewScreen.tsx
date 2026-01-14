@@ -425,10 +425,10 @@ export const ReferralViewScreen = ({
             {onNavigateToFindCenters && (
               <View className="mb-6">
                 <TouchableOpacity
-                  className="w-full rounded-full bg-white px-6 py-4 active:opacity-90"
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                   onPress={handleOpenFindCenters}
                   activeOpacity={0.8}>
-                  <Text className="text-center text-base font-semibold text-gray-800">
+                  <Text className={buttons.outline.text}>
                     {referralState.location?.zip ? 'Update Center Location' : 'Find Centers'}
                   </Text>
                 </TouchableOpacity>

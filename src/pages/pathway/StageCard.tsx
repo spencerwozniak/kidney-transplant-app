@@ -83,6 +83,17 @@ export const StageCard = ({
   const heightScale = Math.max(0.7, Math.min(1.0, windowHeight / baseMinHeight));
   const minCardHeight = baseMinHeight * heightScale;
 
+  // Scale fonts based on window height (similar to PathwayHeader)
+  // Base height is 800px, scale proportionally
+  const baseHeight = 800;
+  const fontHeightScale = Math.max(0.8, Math.min(1.2, windowHeight / baseHeight));
+
+  // Calculate responsive font sizes
+  const titleFontSize = Math.max(18, Math.min(28, 22 * fontHeightScale));
+  const statusBadgeFontSize = Math.max(11, Math.min(15, 14 * fontHeightScale));
+  const descriptionFontSize = Math.max(14, Math.min(18, 16 * fontHeightScale));
+  const stageNumberFontSize = Math.max(10, Math.min(13, 12 * fontHeightScale));
+
   // StageCard no longer logs on every render — debug logging is centralized in PathwayScreen after load.
 
   return (
@@ -140,7 +151,8 @@ export const StageCard = ({
                 typography.h3,
                 isSmallHeight ? 'mb-2 text-left' : 'mb-2 text-center',
                 isUpcoming ? 'text-gray-500' : 'text-gray-900'
-              )}>
+              )}
+              style={{ fontSize: titleFontSize }}>
               {stage.title}
             </Text>
           </View>
@@ -149,17 +161,29 @@ export const StageCard = ({
         {/* Status Badge */}
         {isCurrent && (
           <View className="mb-2 self-center rounded-full bg-green-500 px-4 py-2">
-            <Text className="text-sm font-semibold text-white">Current Stage</Text>
+            <Text
+              className="text-sm font-semibold text-white"
+              style={{ fontSize: statusBadgeFontSize }}>
+              Current Stage
+            </Text>
           </View>
         )}
         {isCompleted && (
           <View className="mb-2 mb-4 self-center rounded-full bg-green-600 px-4 py-2">
-            <Text className="text-sm font-semibold text-white">Completed</Text>
+            <Text
+              className="text-sm font-semibold text-white"
+              style={{ fontSize: statusBadgeFontSize }}>
+              Completed
+            </Text>
           </View>
         )}
         {isUpcoming && (
           <View className="mb-2 self-center rounded-full bg-white/50 px-4 py-2">
-            <Text className="text-sm font-semibold text-gray-600">Upcoming</Text>
+            <Text
+              className="text-sm font-semibold text-gray-600"
+              style={{ fontSize: statusBadgeFontSize }}>
+              Upcoming
+            </Text>
           </View>
         )}
 
@@ -171,7 +195,8 @@ export const StageCard = ({
                 typography.body.large,
                 'mb-4 text-center leading-7',
                 isUpcoming ? 'text-gray-400' : 'text-gray-700'
-              )}>
+              )}
+              style={{ fontSize: descriptionFontSize }}>
               {stage.shortDescription}
             </Text>
           </View>
@@ -200,7 +225,7 @@ export const StageCard = ({
 
         {/* Stage Number Indicator */}
         <View className="mt-4 items-center">
-          <Text className="text-xs text-gray-500">
+          <Text className="text-xs text-gray-500" style={{ fontSize: stageNumberFontSize }}>
             Stage {index + 1} of {PATHWAY_STAGES.length}
           </Text>
         </View>

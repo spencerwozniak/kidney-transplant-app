@@ -385,9 +385,9 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
 
         {/* Input Area */}
         <View className="border-t border-gray-200 bg-white px-4 py-3">
-          <View className="flex-row items-center" style={{ gap: 8 }}>
+          <View className="flex-row items-end" style={{ gap: 8 }}>
             <TextInput
-              className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900"
+              className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 text-gray-900"
               placeholder={!aiEnabled ? 'AI assistant is unavailable...' : 'Type your message...'}
               placeholderTextColor="#9CA3AF"
               value={inputText}
@@ -396,8 +396,13 @@ export const ChatScreen = ({ patientName = 'Friend' }: ChatScreenProps) => {
               maxLength={500}
               onSubmitEditing={handleSend}
               editable={aiEnabled === true && !isLoading}
-              textAlignVertical="center"
-              style={{ paddingTop: 12, paddingBottom: 12 }}
+              textAlignVertical="top"
+              style={{
+                paddingTop: 16,
+                paddingBottom: 16,
+                minHeight: 48,
+                maxHeight: 120,
+              }}
             />
             <TouchableOpacity
               onPress={handleSend}
