@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { buttons, combineClasses } from '../../styles/theme';
 import type { PathwayStageData, StageStatus } from './types';
-import type { PatientStatus } from '../../services/api';
+import type { PatientStatus, PatientReferralState } from '../../services/api';
 
 type StageActionsProps = {
   stage: PathwayStageData;
@@ -16,11 +16,13 @@ type StageActionsProps = {
   status: StageStatus;
   currentStageIndex: number;
   patientStatus: PatientStatus | null;
+  referralState: PatientReferralState | null;
   onViewResults?: () => void;
   onViewChecklist?: () => void;
   onNavigateToQuestionnaire?: () => void;
   onFindReferral?: () => void;
   onViewReferral?: () => void;
+  questionnaireCompleted?: boolean;
 };
 
 export const StageActions = ({
@@ -29,14 +31,19 @@ export const StageActions = ({
   status,
   currentStageIndex,
   patientStatus,
+  referralState,
   onViewResults,
   onViewChecklist,
   onNavigateToQuestionnaire,
   onFindReferral,
   onViewReferral,
+  questionnaireCompleted,
 }: StageActionsProps) => {
   const isCompleted = status === 'completed';
   const isCurrent = status === 'current';
+  
+  // Check if referral is received/completed
+  const hasReferral = referralState?.has_referral === true || referralState?.referral_status === 'completed';
 
   // Evaluation Stage Actions
   if (stage.id === 'evaluation' && onViewChecklist && (isCurrent || isCompleted)) {
@@ -57,21 +64,10 @@ export const StageActions = ({
 
   // Identification Stage Actions
   if (stage.id === 'identification') {
+    const hasQuestionnaire = !!questionnaireCompleted;
     return (
       <View className="mb-4">
-        {patientStatus && onViewResults ? (
-          // Has status (questionnaire completed) - show "View Transplant Status"
-          <TouchableOpacity
-            className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-            onPress={(e) => {
-              e.stopPropagation();
-              onViewResults();
-            }}
-            activeOpacity={0.8}>
-            <Text className={buttons.outline.text}>View Transplant Status</Text>
-          </TouchableOpacity>
-        ) : onNavigateToQuestionnaire ? (
-          // No status yet (questionnaire not completed) - show "Begin Assessment"
+        {onNavigateToQuestionnaire && (
           <TouchableOpacity
             className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
             onPress={(e) => {
@@ -79,9 +75,24 @@ export const StageActions = ({
               onNavigateToQuestionnaire();
             }}
             activeOpacity={0.8}>
-            <Text className={buttons.outline.text}>Begin Assessment</Text>
+            <Text className={buttons.outline.text}>
+              {hasQuestionnaire ? 'Edit Eligibility Assessment' : 'Begin Eligibility Assessment'}
+            </Text>
           </TouchableOpacity>
-        ) : null}
+        )}
+        {patientStatus && onViewResults && (
+          <View className="mt-3">
+            <TouchableOpacity
+              className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+              onPress={(e) => {
+                e.stopPropagation();
+                onViewResults();
+              }}
+              activeOpacity={0.8}>
+              <Text className={buttons.outline.text}>View Transplant Status</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   }
@@ -90,8 +101,8 @@ export const StageActions = ({
   if (stage.id === 'referral') {
     return (
       <View className="mb-4">
-        {currentStageIndex > index && onViewReferral ? (
-          // Past referral stage - show "View Referral" button
+        {(hasReferral || currentStageIndex > index) && onViewReferral ? (
+          // Referral received or past referral stage - show "View Referral" button
           <TouchableOpacity
             className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
             onPress={(e) => {
@@ -102,7 +113,7 @@ export const StageActions = ({
             <Text className={buttons.outline.text}>View Referral</Text>
           </TouchableOpacity>
         ) : index === currentStageIndex && onFindReferral ? (
-          // Current referral stage only - show "Find a Referral" button
+          // Current referral stage without referral - show "Find a Referral" button
           <TouchableOpacity
             className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
             onPress={(e) => {

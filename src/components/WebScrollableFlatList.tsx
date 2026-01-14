@@ -7,25 +7,28 @@ import { FlatList, Platform, FlatListProps, View, StyleSheet } from 'react-nativ
  * On web, this component adds mouse drag scrolling support to FlatList.
  * On native, it behaves exactly like a regular FlatList.
  */
-export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
-  const flatListRef = useRef<FlatList>(null);
-  const containerRef = useRef<View>(null);
+function WebScrollableFlatListInner<T>(props: FlatListProps<T>, forwardedRef: React.Ref<FlatList<T> | null>) {
+  const flatListRef = useRef<FlatList<T> | null>(null);
+  const containerRef = useRef<View | null>(null);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
   const scrollElementRef = useRef<HTMLElement | null>(null);
   const [isWeb] = useState(Platform.OS === 'web');
 
-  // Merge refs
+  // Merge forwarded ref with internal ref
   useEffect(() => {
-    if (props.ref) {
-      if (typeof props.ref === 'function') {
-        props.ref(flatListRef.current);
-      } else {
-        (props.ref as React.MutableRefObject<FlatList | null>).current = flatListRef.current;
+    if (!forwardedRef) return;
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(flatListRef.current);
+    } else {
+      try {
+        (forwardedRef as React.MutableRefObject<FlatList<T> | null>).current = flatListRef.current;
+      } catch (e) {
+        // ignore
       }
     }
-  }, [props.ref]);
+  }, [forwardedRef]);
 
   // Find the scrollable element
   const findScrollElement = (): HTMLElement | null => {
@@ -177,6 +180,10 @@ export const WebScrollableFlatList = <T,>(props: FlatListProps<T>) => {
 
   return <FlatList {...props} ref={flatListRef} />;
 };
+
+export const WebScrollableFlatList = React.forwardRef(WebScrollableFlatListInner) as <T>(
+  props: FlatListProps<T> & { children?: React.ReactNode } & { ref?: React.Ref<FlatList<T> | null> }
+) => React.ReactElement | null;
 
 const styles = StyleSheet.create({
   container: {

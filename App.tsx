@@ -35,12 +35,14 @@ import './src/styles/global.css';
  * - Main: Home screen with pathway and settings tabs
  */
 export default function App() {
-  // Load Nunito font
-  const [fontsLoaded, fontError] = useFonts({
-    Nunito_400Regular,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-  });
+  // Load Nunito font (skip JS font loader on web — web/index.html already requests fonts with display=swap)
+  const [fontsLoaded, fontError] = Platform.OS === 'web'
+    ? [true, null]
+    : useFonts({
+        Nunito_400Regular,
+        Nunito_600SemiBold,
+        Nunito_700Bold,
+      });
 
   // Enable mouse drag scrolling for all scrollable elements on web
   useEffect(() => {
@@ -54,9 +56,8 @@ export default function App() {
   const appState = useAppState();
 
   // Show loading screen while fonts are loading
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  // Avoid blocking initial render on fonts; render UI immediately and allow
+  // fonts to load asynchronously to improve time-to-first-interactive.
 
   // Create navigation handlers organized by flow
   const onboardingHandlers = createOnboardingHandlers(appState);

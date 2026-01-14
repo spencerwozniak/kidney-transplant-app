@@ -7,9 +7,10 @@ import { PathwayBackground } from '../../components/PathwayBackground';
 
 type OnboardingScreenProps = {
   onGetStarted: () => void;
+  message?: string | null;
 };
 
-export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
+export const OnboardingScreen = ({ onGetStarted, message }: OnboardingScreenProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
   const [buttonFadeAnim] = useState(new Animated.Value(0));
@@ -120,6 +121,11 @@ export const OnboardingScreen = ({ onGetStarted }: OnboardingScreenProps) => {
 
           {/* Main Content */}
           <View className="mb-10 flex-1 items-center justify-center px-10">
+            {message && (
+              <View className="mb-4 px-4 py-2 rounded bg-white/20">
+                <Text className={combineClasses(typography.body.small, 'text-white text-center')}>{message}</Text>
+              </View>
+            )}
             <Animated.View
               style={{
                 opacity: pathwayComplete ? fadeAnim : 0,

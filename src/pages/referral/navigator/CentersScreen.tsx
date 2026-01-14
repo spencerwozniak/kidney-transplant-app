@@ -1,6 +1,6 @@
 /**
  * Centers Screen Component
- * 
+ *
  * Displays transplant centers search interface with:
  * - Location input (ZIP code)
  * - List of nearby centers
@@ -42,9 +42,7 @@ export const CentersScreen = ({
 
       {/* Location Input */}
       <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
-        <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-          Your Location
-        </Text>
+        <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>Your Location</Text>
         <View className="mb-3">
           <TextInput
             className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-base"
@@ -103,4 +101,3 @@ export const CentersScreen = ({
     </View>
   );
 };
-

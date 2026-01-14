@@ -84,6 +84,11 @@ export function createOnboardingHandlers(state: UseAppStateReturn): OnboardingHa
       }
 
       console.log('Saving patient data:', JSON.stringify(patientData, null, 2));
+      console.log('[Onboarding] Clinical flags in payload:', {
+        has_ckd_esrd: patientData.has_ckd_esrd,
+        last_gfr: patientData.last_gfr,
+        has_referral: patientData.has_referral,
+      });
       const savedPatient = await apiService.createPatient(patientData);
       console.log('Patient saved successfully:', savedPatient);
       setPatient(savedPatient);

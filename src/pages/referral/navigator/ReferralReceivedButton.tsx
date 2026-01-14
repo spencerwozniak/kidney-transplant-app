@@ -36,17 +36,21 @@ export const ReferralReceivedButton = ({
           </Text>
         </View>
         <TouchableOpacity
-          className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+          className="rounded-full bg-white px-6 py-4 active:opacity-90"
           onPress={onMarkReferralReceived}
           disabled={isMarkingReferral}
           activeOpacity={0.8}>
           {isMarkingReferral ? (
             <View className="flex-row items-center justify-center">
-              <ActivityIndicator size="small" color="white" className="mr-2" />
-              <Text className={buttons.outline.text}>Updating...</Text>
+              <ActivityIndicator size="small" color="#1f2937" className="mr-2" />
+              <Text className="font-nunito-semibold text-center text-xl text-gray-800">
+                Updating...
+              </Text>
             </View>
           ) : (
-            <Text className={buttons.outline.text}>I Have Received My Referral</Text>
+            <Text className="font-nunito-semibold text-center text-xl text-gray-800">
+              I Have Received My Referral
+            </Text>
           )}
         </TouchableOpacity>
       </View>

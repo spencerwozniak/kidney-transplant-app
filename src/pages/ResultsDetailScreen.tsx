@@ -162,7 +162,18 @@ export const ResultsDetailScreen = ({
 
             {/* Qualification Status */}
             <View className="mb-8">
-              {hasCKDESRD ? (
+              {hasNoQuestionnaires ? (
+                // Before questionnaire: show neutral message
+                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    Eligibility Assessment
+                  </Text>
+                  <Text
+                    className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                    Complete the eligibility assessment below to determine your transplant qualification status and any contraindications.
+                  </Text>
+                </View>
+              ) : hasCKDESRD ? (
                 <View className={combineClasses(cards.default.container, 'bg-white/95')}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
                     ✓ Qualifies for Transplant Evaluation
@@ -189,7 +200,7 @@ export const ResultsDetailScreen = ({
             </View>
 
             {/* GFR Information */}
-            {gfr !== undefined && gfr !== null && (
+            {!hasNoQuestionnaires && gfr !== undefined && gfr !== null && (
               <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Glomerular Filtration Rate (GFR)
@@ -371,22 +382,25 @@ export const ResultsDetailScreen = ({
             <View className="mb-8">
               <View className={combineClasses(cards.default.container, 'bg-white/95')}>
                 <Text className={combineClasses(typography.h5, 'mb-4 text-center text-gray-900')}>
-                  Complete Eligibility Assessment
+                  {hasNoQuestionnaires ? 'Complete Eligibility Assessment' : 'Edit Eligibility Assessment'}
                 </Text>
                 <Text
                   className={combineClasses(
                     typography.body.small,
                     'mb-6 text-center leading-6 text-gray-700'
                   )}>
-                  To identify your transplant status and contraindications, please complete the
-                  eligibility self-assessment.
+                  {hasNoQuestionnaires
+                    ? 'To identify your transplant status and contraindications, please complete the eligibility self-assessment.'
+                    : 'Review and update your answers to keep your transplant status and contraindications current.'}
                 </Text>
                 {onNavigateToQuestionnaire && (
                   <TouchableOpacity
                     className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
                     onPress={onNavigateToQuestionnaire}
                     activeOpacity={0.8}>
-                    <Text className={buttons.primary.text}>Begin Eligibility Assessment</Text>
+                    <Text className={buttons.primary.text}>
+                      {hasNoQuestionnaires ? 'Begin Eligibility Assessment' : 'Edit Eligibility Assessment'}
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>

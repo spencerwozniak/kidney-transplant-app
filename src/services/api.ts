@@ -2,73 +2,179 @@
  * API Service for backend communication
  */
 
-// Device ID management - generates and stores a unique device ID
-const getDeviceId = (): string => {
-  // Try to get from localStorage (web) or AsyncStorage (React Native)
-  let deviceId: string | null = null;
+// Small debug flag: true in development builds or when __DEV__ is set
+const IS_DEBUG =
+  (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+  (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
 
-  if (typeof window !== 'undefined' && window.localStorage) {
-    // Web environment
-    deviceId = localStorage.getItem('device_id');
-  } else if (typeof require !== 'undefined') {
-    // React Native environment - would need @react-native-async-storage/async-storage
-    // For now, we'll use a fallback that works in both environments
-    try {
-      // Try to use AsyncStorage if available
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      // Note: This is async, but we'll handle it synchronously for now
-      // In production, you might want to make this async or use a different approach
-    } catch (e) {
-      // AsyncStorage not available
-    }
-  }
+function devLog(...args: any[]) {
+  if (IS_DEBUG) console.log(...args);
+}
+function devInfo(...args: any[]) {
+  if (IS_DEBUG) console.info(...args);
+}
+function devWarn(...args: any[]) {
+  if (IS_DEBUG) console.warn(...args);
+}
 
-  // If no device ID exists, generate one
-  if (!deviceId) {
-    // Generate a unique device ID (UUID v4 style)
-    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
+// Device ID management - single source of truth
+// getOrCreateDeviceId will synchronously return an ID when possible (web/localStorage)
+// and will attempt to persist it to AsyncStorage on native platforms asynchronously.
+const generateDeviceId = (): string =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 
-    // Store it
+const getOrCreateDeviceId = (): string => {
+  try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('device_id', deviceId);
+      let id = window.localStorage.getItem('device_id');
+      if (!id) {
+          devLog('[API] Generating new device id');
+        console.time('deviceId:generate');
+        id = generateDeviceId();
+        window.localStorage.setItem('device_id', id);
+        console.timeEnd('deviceId:generate');
+      }
+      return id;
     }
-  }
 
-  return deviceId;
+    // Non-web: try to read from AsyncStorage synchronously is not possible.
+    // We'll fallback to environment variable or generate and attempt to persist asynchronously.
+    let id = (globalThis as any).__DEVICE_ID__ as string | undefined;
+    if (!id) {
+      id = generateDeviceId();
+      (globalThis as any).__DEVICE_ID__ = id;
+
+      // Try to persist asynchronously without blocking execution
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        AsyncStorage.setItem('device_id', id).catch(() => {
+          /* ignore */
+        });
+      } catch (e) {
+        // AsyncStorage not available or require failed; ignore
+      }
+    }
+    return id;
+  } catch (e) {
+    // As a last resort generate a transient id
+    return generateDeviceId();
+  }
 };
 
-const DEVICE_ID = getDeviceId();
+const DEVICE_ID = getOrCreateDeviceId();
+
+// Instrument global network APIs to detect rogue same-origin '/patients' calls in development only
+try {
+  if (IS_DEBUG && typeof window !== 'undefined') {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async function (input: RequestInfo, init?: RequestInit) {
+      try {
+        let url = '';
+        if (typeof input === 'string') url = input;
+        else if (input instanceof Request) url = input.url;
+
+        // If the url is relative (starts with '/') and targets '/patients', log stack
+        if (url && /^\/patients(?:$|[?#\/])/.test(url)) {
+          const stack = new Error('Rogue /patients fetch detected').stack;
+          console.error('[API][rogue] fetch called with relative /patients URL:', url, '\nStack:', stack);
+        } else {
+          // also check absolute same-origin host but missing /api/v1
+          try {
+            const resolved = new URL(url, window.location.href);
+            if (resolved.host === window.location.host && /^\/patients(?:$|[?#\/])/.test(resolved.pathname)) {
+              const stack = new Error('Rogue same-origin /patients fetch detected').stack;
+              console.error('[API][rogue] fetch called to same-origin /patients URL:', resolved.href, '\nStack:', stack);
+            }
+          } catch (e) {
+            // ignore invalid URLs
+          }
+        }
+      } catch (e) {
+        // ignore instrumentation errors
+      }
+      return originalFetch(input, init);
+    } as typeof fetch;
+
+    const origXOpen = XMLHttpRequest.prototype.open;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    XMLHttpRequest.prototype.open = function (method: string, url?: string | URL | null) {
+      try {
+        const u = String(url || '');
+        if (/^\/patients(?:$|[?#\/])/.test(u)) {
+          const stack = new Error('Rogue /patients XHR detected').stack;
+          console.error('[API][rogue] XHR.open called with relative /patients URL:', u, '\nStack:', stack);
+        } else {
+          try {
+            const resolved = new URL(u, window.location.href);
+            if (resolved.host === window.location.host && /^\/patients(?:$|[?#\/])/.test(resolved.pathname)) {
+              const stack = new Error('Rogue same-origin /patients XHR detected').stack;
+              console.error('[API][rogue] XHR.open called to same-origin /patients URL:', resolved.href, '\nStack:', stack);
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+      // @ts-ignore
+      return origXOpen.apply(this, arguments as any);
+    };
+  }
+} catch (e) {
+  // swallow instrumentation errors to avoid breaking runtime
+}
 
 const getApiBaseUrl = (): string => {
-  // Check for environment variables (Expo/React Native Web uses process.env)
+  // Prefer explicit base URL env var (can include /api/v1)
   if (typeof process !== 'undefined' && process.env) {
-    // Try Expo public env var first (works for Expo/React Native)
-    if (process.env.EXPO_PUBLIC_API_URL) {
-      return process.env.EXPO_PUBLIC_API_URL;
-    }
-    // Try Next.js style env var (works for web builds)
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
-    }
-    // Try generic API_URL
-    if (process.env.API_URL) {
-      return process.env.API_URL;
-    }
+    if (process.env.EXPO_PUBLIC_API_BASE_URL) return process.env.EXPO_PUBLIC_API_BASE_URL;
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
+    // Backwards compatible fallbacks
+    if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  // Fallback to localhost
-  return 'http://localhost:8000';
+  // Production builds should use same-origin relative API path by default.
+  // This prevents production bundles from unintentionally pointing at localhost.
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
+      return '/api/v1';
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Development fallback: localhost backend for dev only.
+  return 'http://localhost:8000/api/v1';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = getApiBaseUrl().trim().replace(/\/+$/, '');
 
-// Log the API URL being used (helpful for debugging)
+// Log the resolved API base URL and warn about mixed-content only in dev
 if (typeof window !== 'undefined') {
-  console.log('[API] Using API base URL:', API_BASE_URL);
+  devLog('[API] Resolved API base URL:', API_BASE_URL);
+  try {
+    const runningHttps = window.location?.protocol === 'https:';
+    if (runningHttps && API_BASE_URL.startsWith('http://')) {
+      devWarn('[API] Warning: app is running on https but API base URL uses http. Browser may block requests.');
+      // Only recommend tunneling during development
+      try {
+        if (IS_DEBUG) {
+          devWarn('[API] Recommendation: use an https tunnel or set EXPO_PUBLIC_API_BASE_URL to an https endpoint for web testing.');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
 }
 
 export type Patient = {
@@ -161,6 +267,7 @@ export type PatientReferralState = {
   patient_id: string;
   location: {
     zip?: string;
+    city?: string;
     state?: string;
     lat?: number;
     lng?: number;
@@ -196,19 +303,34 @@ export type ReferralPathway = {
 
 class ApiService {
   public baseUrl: string;
+  private _patientLogEmitted = false;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    console.log(`[API] Making request to: ${url}`);
-
-    // Get current device ID (in case it changed)
-    const deviceId = getDeviceId();
-
+    const url = this.buildUrl(endpoint);
+    const method = (options.method || 'GET').toUpperCase();
+    devLog(`[API] Making request to: ${url} [method=${method}]`);
+    // Definitive trace for debugging relative URL issues
     try {
+      const resolvedBase = this.baseUrl || API_BASE_URL;
+      console.log(`[API][trace] endpoint='${endpoint}' baseUrl='${resolvedBase}' fullUrl='${url}'`);
+    } catch (e) {
+      // ignore
+    }
+
+    // Use canonical device id
+    const deviceId = DEVICE_ID || getOrCreateDeviceId();
+
+    const timingLabel = `API ${endpoint}`;
+    try {
+      console.time(timingLabel);
+      performance?.mark?.(`${timingLabel}:start`);
+      // Log device id for debugging backend mapping issues (dev only)
+      devLog(`[API] X-Device-ID: ${deviceId}`);
+
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -219,16 +341,16 @@ class ApiService {
       });
 
       // Log status for debugging/demo
-      console.log(`[API] Response status for ${url}: ${response.status} ${response.statusText}`);
+      devLog(`[API] Response status for ${url}: ${response.status} ${response.statusText}`);
 
       // Read response body as text for logging and parsing
       const respText = await response.text();
       if (respText) {
         try {
           const parsed = JSON.parse(respText);
-          console.log(`[API] Response body for ${url}:`, parsed);
+          devLog(`[API] Response body for ${url}:`, parsed);
         } catch {
-          console.log(`[API] Response body (non-JSON) for ${url}:`, respText);
+          devLog(`[API] Response body (non-JSON) for ${url}:`, respText);
         }
       }
 
@@ -240,15 +362,67 @@ class ApiService {
         } catch {
           errorMessage = response.statusText || errorMessage;
         }
+
+        // Handle questionnaire GET 404 as an expected 'not yet created' state.
+        if (response.status === 404 && endpoint.includes('/questionnaire') && method === 'GET') {
+          console.info(`[API] No questionnaire found (404) for ${url}; returning null`);
+          console.log('[API][trace] questionnaire request', { endpoint, method, url });
+          console.timeEnd(timingLabel);
+          performance?.mark?.(`${timingLabel}:end`);
+          performance?.measure?.(timingLabel, `${timingLabel}:start`, `${timingLabel}:end`);
+          return null as unknown as T;
+        }
+
+        // Guardrail: convert server 404 "no patient found" into a well-known error
+        if (
+          response.status === 404 &&
+          (endpoint.includes('/patient-status') || endpoint.includes('/checklist') || endpoint.includes('/patients'))
+        ) {
+          const lower = (errorMessage || '').toLowerCase();
+          if (lower.includes('no patient') || lower.includes('patient not found')) {
+            console.warn(`[API] Patient not found (device=${deviceId}) for ${endpoint}`);
+            const err = new Error(`PATIENT_NOT_FOUND: ${errorMessage}`);
+            (err as any).code = 'PATIENT_NOT_FOUND';
+            throw err;
+          }
+        }
+
         throw new Error(errorMessage);
       }
 
       // Try to return parsed JSON if present, otherwise an empty object
-      if (!respText) return {} as T;
+      if (!respText) {
+        console.timeEnd(timingLabel);
+        performance?.mark?.(`${timingLabel}:end`);
+        performance?.measure?.(timingLabel, `${timingLabel}:start`, `${timingLabel}:end`);
+        return {} as T;
+      }
       try {
-        return JSON.parse(respText) as T;
+        const parsed = JSON.parse(respText) as T;
+
+        // Cache common resources locally for faster startup
+        try {
+          if (endpoint === '/api/v1/patients') {
+              this.saveCache('patient', parsed);
+            } else if (endpoint === '/api/v1/patient-status') {
+              this.saveCache('patient_status', parsed);
+            } else if (endpoint === '/api/v1/checklist') {
+              this.saveCache('checklist', parsed);
+            }
+        } catch (e) {
+          // ignore cache errors
+        }
+
+        console.timeEnd(timingLabel);
+        performance?.mark?.(`${timingLabel}:end`);
+        performance?.measure?.(timingLabel, `${timingLabel}:start`, `${timingLabel}:end`);
+
+        return parsed;
       } catch (err) {
         // If parsing fails, return text as unknown
+        console.timeEnd(timingLabel);
+        performance?.mark?.(`${timingLabel}:end`);
+        performance?.measure?.(timingLabel, `${timingLabel}:start`, `${timingLabel}:end`);
         return respText as unknown as T;
       }
     } catch (error: any) {
@@ -262,14 +436,166 @@ class ApiService {
     }
   }
 
+  // Build an absolute URL from the configured base and an endpoint
+  private buildUrl(endpoint: string) {
+    // If endpoint is already absolute, return as-is
+    if (/^https?:\/\//i.test(endpoint)) return endpoint;
+
+    const base = (this.baseUrl || API_BASE_URL || '').replace(/\/+$/, '');
+    let ep = (endpoint || '').replace(/^\/+/, '');
+
+    // If both base and endpoint contain api/v1, remove duplicate
+    if (/\/api\/v1$/i.test(base) && /^api\/v1/i.test(ep)) {
+      ep = ep.replace(/^api\/v1\/?/i, '');
+    }
+
+    return `${base}/${ep}`;
+  }
+
+  // Public helper to construct a URL for external callers (pages/components)
+  // Uses the same normalization as private buildUrl
+  public makeUrl(endpoint: string) {
+    return this.buildUrl(endpoint);
+  }
+
+  // Simple cross-platform cache helper using localStorage on web and AsyncStorage on native if available
+  // Stored value shape: { ts: number, ttl: number, data: any }
+  private saveCache(key: string, value: any, ttlMs = 1000 * 60 * 5) {
+    const payload = {
+      ts: Date.now(),
+      ttl: ttlMs,
+      data: value,
+    };
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, JSON.stringify(payload));
+        console.log(`[API][cache] save '${key}' (ttl=${ttlMs}ms)`);
+      } else {
+        // Try AsyncStorage if available
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          AsyncStorage.setItem(key, JSON.stringify(payload));
+          console.log(`[API][cache] save '${key}' (ttl=${ttlMs}ms) [AsyncStorage]`);
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  /**
+   * Load cached value and return meta about expiry.
+   * If ttlMs is provided, it will override stored ttl for expiry checks.
+   */
+  public loadCached<T>(key: string, ttlMs?: number): { data: T | null; expired: boolean; ts?: number } {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const v = window.localStorage.getItem(key);
+        if (!v) {
+          console.log(`[API][cache] miss '${key}'`);
+          return { data: null, expired: true };
+        }
+        const parsed = JSON.parse(v) as { ts?: number; ttl?: number; data?: T };
+        const ts = parsed?.ts || 0;
+        const storedTtl = parsed?.ttl ?? (1000 * 60 * 5);
+        const effectiveTtl = ttlMs ?? storedTtl;
+        const expired = Date.now() > ts + effectiveTtl;
+        if (expired) {
+          console.log(`[API][cache] expired '${key}' (ts=${ts}, ttl=${effectiveTtl}ms)`);
+        } else {
+          console.log(`[API][cache] hit '${key}' (ts=${ts}, ttl=${effectiveTtl}ms)`);
+        }
+        return { data: parsed?.data ?? null, expired, ts };
+      } else {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          // Note: AsyncStorage is async; returning null for native synchronous path
+          return { data: null, expired: true };
+        } catch (e) {
+          return { data: null, expired: true };
+        }
+      }
+    } catch (e) {
+      return { data: null, expired: true };
+    }
+  }
+
+  // Remove a cache key from storage (localStorage on web, AsyncStorage on native when available)
+  public clearCacheKey(key: string) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const prev = window.localStorage.getItem(key);
+        try {
+          console.log(`[API][cache] clearing '${key}', previous value:`, prev ? JSON.parse(prev) : null);
+        } catch (e) {
+          console.log(`[API][cache] clearing '${key}', previous (raw):`, prev);
+        }
+        window.localStorage.removeItem(key);
+      } else {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          AsyncStorage.removeItem(key).catch(() => {});
+          console.log(`[API][cache] requested clear '${key}' [AsyncStorage]`);
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Convenience: clear common patient-related caches to avoid leaking state between accounts
+  public clearPatientCaches() {
+    const keys = ['patient_status', 'checklist', 'questionnaire', 'referral_state', 'financial_profile'];
+    keys.forEach((k) => this.clearCacheKey(k));
+  }
+
   async createPatient(patient: Patient): Promise<Patient> {
-    return this.request<Patient>('/api/v1/patients', {
+    // One-time diagnostic: log resolved API base and full patient URL
+    try {
+      if (!this._patientLogEmitted) {
+        const url = this.makeUrl('/api/v1/patients');
+        console.log('[API][patient] Resolved API base URL (createPatient):', API_BASE_URL);
+        console.log('[API][patient] Full createPatient URL:', url);
+        this._patientLogEmitted = true;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const resp = await this.request<Patient>('/api/v1/patients', {
       method: 'POST',
       body: JSON.stringify(patient),
     });
+
+    // After creating a patient, clear caches that may contain previous demo/user data
+    try {
+      this.clearPatientCaches();
+      console.log('[API] Cleared patient-related caches after createPatient');
+    } catch (e) {
+      // ignore cache-clear errors
+    }
+
+    return resp;
   }
 
   async getPatient(): Promise<Patient> {
+    try {
+      if (!this._patientLogEmitted) {
+        const url = this.makeUrl('/api/v1/patients');
+        console.log('[API][patient] Resolved API base URL (getPatient):', API_BASE_URL);
+        console.log('[API][patient] Full getPatient URL:', url);
+        this._patientLogEmitted = true;
+      }
+    } catch (e) {
+      // ignore
+    }
     return this.request<Patient>('/api/v1/patients');
   }
 
@@ -319,11 +645,11 @@ class ApiService {
     fileName: string,
     fileType: string
   ): Promise<TransplantChecklist> {
-    const url = `${this.baseUrl}/api/v1/checklist/items/${itemId}/documents`;
+    const url = this.buildUrl(`/api/v1/checklist/items/${itemId}/documents`);
     console.log(`[API] Uploading file to: ${url}`);
 
-    // Get current device ID
-    const deviceId = getDeviceId();
+    // Use canonical device id
+    const deviceId = DEVICE_ID || getOrCreateDeviceId();
 
     // Create FormData for file upload
     const formData = new FormData();
@@ -406,18 +732,60 @@ class ApiService {
     if (params.lng !== undefined) queryParams.append('lng', params.lng.toString());
     if (params.insurance_type) queryParams.append('insurance_type', params.insurance_type);
 
-    return this.request<TransplantCenter[]>(`/api/v1/centers/nearby?${queryParams.toString()}`);
+    const endpoint = `/api/v1/centers/nearby?${queryParams.toString()}`;
+    const fullUrl = this.makeUrl(endpoint);
+    
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+    
+    if (IS_DEBUG) {
+      console.log('[API][debug] findNearbyCenters request:', {
+        method: 'GET',
+        url: fullUrl,
+        params,
+      });
+    }
+    
+    const result = await this.request<TransplantCenter[]>(endpoint);
+    
+    if (IS_DEBUG) {
+      console.log('[API][debug] findNearbyCenters response:', {
+        status: 'success',
+        count: result.length,
+        sample: JSON.stringify(result[0] || {}).substring(0, 200),
+      });
+    }
+    
+    return result;
   }
 
   async getReferralState(): Promise<PatientReferralState> {
-    return this.request<PatientReferralState>('/api/v1/referral-state');
+    const result = await this.request<PatientReferralState>('/api/v1/referral-state');
+    devLog('[API] GET /api/v1/referral-state response:', {
+      has_referral: result.has_referral,
+      referral_status: result.referral_status,
+      location: result.location,
+    });
+    return result;
   }
 
   async updateReferralState(state: Partial<PatientReferralState>): Promise<PatientReferralState> {
-    return this.request<PatientReferralState>('/api/v1/referral-state', {
+    devLog('[API] POST /api/v1/referral-state payload:', {
+      has_referral: state.has_referral,
+      referral_status: state.referral_status,
+      location: state.location,
+    });
+    const result = await this.request<PatientReferralState>('/api/v1/referral-state', {
       method: 'POST',
       body: JSON.stringify(state),
     });
+    devLog('[API] POST /api/v1/referral-state response:', {
+      has_referral: result.has_referral,
+      referral_status: result.referral_status,
+      location: result.location,
+    });
+    return result;
   }
 
   async getReferralPathway(): Promise<ReferralPathway> {
@@ -461,10 +829,10 @@ class ApiService {
     if (params.provider) body.provider = params.provider;
     if (params.model) body.model = params.model;
 
-    const url = `${this.baseUrl}/api/v1/ai-assistant/query/stream`;
+    const url = this.buildUrl(`/api/v1/ai-assistant/query/stream`);
 
-    // Get current device ID
-    const deviceId = getDeviceId();
+    // Use canonical device id
+    const deviceId = DEVICE_ID || getOrCreateDeviceId();
 
     // Use XMLHttpRequest for React Native streaming support
     // React Native's fetch doesn't support streaming (response.body is null)
@@ -619,3 +987,11 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
+
+// Helper to detect patient-not-found errors thrown from the service
+export function isPatientNotFoundError(err: any): boolean {
+  if (!err) return false;
+  if ((err as any).code === 'PATIENT_NOT_FOUND') return true;
+  if (typeof err.message === 'string' && err.message.startsWith('PATIENT_NOT_FOUND')) return true;
+  return false;
+}
