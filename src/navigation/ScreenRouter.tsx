@@ -221,7 +221,12 @@ export function ScreenRouter({
   }
 
   if (currentScreen === 'results-detail') {
-    return <ResultsDetailScreen onNavigateToHome={patientHandlers.handleNavigateToHome} />;
+    return (
+      <ResultsDetailScreen
+        onNavigateToHome={patientHandlers.handleNavigateToHome}
+        onNavigateToQuestionnaire={assessmentHandlers.handleBeginAssessment}
+      />
+    );
   }
 
   // ============================================================================

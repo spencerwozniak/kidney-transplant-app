@@ -35,6 +35,11 @@ type AnswerType = {
   [key: string]: 'yes' | 'no' | null;
 };
 
+// Use index-based answers to ensure each question has unique state
+type IndexBasedAnswers = {
+  [index: number]: 'yes' | 'no';
+};
+
 const questions = questionsData as QuestionType[];
 
 type TransplantQuestionnaireProps = {
@@ -50,7 +55,8 @@ export const TransplantQuestionnaire = ({
   onNavigateToHome,
   onNavigateToAssessmentIntro,
 }: TransplantQuestionnaireProps) => {
-  const [answers, setAnswers] = useState<AnswerType>({});
+  // Store answers by question index to ensure uniqueness
+  const [indexBasedAnswers, setIndexBasedAnswers] = useState<IndexBasedAnswers>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -63,9 +69,10 @@ export const TransplantQuestionnaire = ({
     description: `This assessment helps you understand whether you might be a candidate for transplant evaluation.`,
   };
 
-  const handleAnswer = async (questionId: string, answer: 'yes' | 'no') => {
-    const newAnswers = { ...answers, [questionId]: answer };
-    setAnswers(newAnswers);
+  const handleAnswer = async (answer: 'yes' | 'no') => {
+    // Store answer by question index to ensure uniqueness
+    const newIndexBasedAnswers = { ...indexBasedAnswers, [currentQuestionIndex]: answer };
+    setIndexBasedAnswers(newIndexBasedAnswers);
 
     // Animate the clicked button
     const buttonScale = answer === 'yes' ? yesButtonScale : noButtonScale;
@@ -93,8 +100,14 @@ export const TransplantQuestionnaire = ({
         yesButtonScale.setValue(1);
         noButtonScale.setValue(1);
       } else {
-        // All questions answered, submit
-        submitQuestionnaire(newAnswers);
+        // All questions answered, convert index-based answers to question ID-based format for submission
+        const answersByQuestionId: AnswerType = {};
+        questions.forEach((question, index) => {
+          if (newIndexBasedAnswers[index] !== undefined) {
+            answersByQuestionId[question.id] = newIndexBasedAnswers[index] as 'yes' | 'no';
+          }
+        });
+        submitQuestionnaire(answersByQuestionId);
       }
     }, 300);
   };
@@ -202,8 +215,9 @@ export const TransplantQuestionnaire = ({
               )}
 
               {/* Answer Buttons */}
-              <View className="mt-6">
+              <View className="mt-6 gap-4">
                 <Animated.View
+                  key={`yes-${currentQuestionIndex}`}
                   style={{
                     transform: [{ scale: yesButtonScale }],
                   }}
@@ -211,17 +225,17 @@ export const TransplantQuestionnaire = ({
                   <TouchableOpacity
                     className={combineClasses(
                       'flex-1 rounded-lg border-2 p-3',
-                      answers[currentQuestion.id] === 'yes'
+                      indexBasedAnswers[currentQuestionIndex] === 'yes'
                         ? 'border-green-600 bg-green-100'
                         : 'border-gray-200 bg-white'
                     )}
-                    onPress={() => handleAnswer(currentQuestion.id, 'yes')}
+                    onPress={() => handleAnswer('yes')}
                     activeOpacity={0.8}
                     disabled={isSubmitting}>
                     <Text
                       className={combineClasses(
                         'text-center text-lg font-semibold',
-                        answers[currentQuestion.id] === 'yes'
+                        indexBasedAnswers[currentQuestionIndex] === 'yes'
                           ? 'font-bold text-green-600'
                           : 'text-green-700'
                       )}>
@@ -231,23 +245,24 @@ export const TransplantQuestionnaire = ({
                 </Animated.View>
 
                 <Animated.View
+                  key={`no-${currentQuestionIndex}`}
                   style={{
                     transform: [{ scale: noButtonScale }],
                   }}>
                   <TouchableOpacity
                     className={combineClasses(
                       'flex-1 rounded-lg border-2 p-3',
-                      answers[currentQuestion.id] === 'no'
+                      indexBasedAnswers[currentQuestionIndex] === 'no'
                         ? 'border-green-600 bg-green-100'
                         : 'border-gray-200 bg-white'
                     )}
-                    onPress={() => handleAnswer(currentQuestion.id, 'no')}
+                    onPress={() => handleAnswer('no')}
                     activeOpacity={0.8}
                     disabled={isSubmitting}>
                     <Text
                       className={combineClasses(
                         'text-center text-lg font-semibold',
-                        answers[currentQuestion.id] === 'no'
+                        indexBasedAnswers[currentQuestionIndex] === 'no'
                           ? 'font-bold text-green-600'
                           : 'text-green-700'
                       )}>

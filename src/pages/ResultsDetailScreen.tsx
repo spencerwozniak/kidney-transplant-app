@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, Animated, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   cards,
@@ -8,6 +16,7 @@ import {
   progress as progressStyles,
   combineClasses,
   layout,
+  buttons,
 } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
 import { PathwayBackground } from '../components/PathwayBackground';
@@ -16,9 +25,13 @@ import { getWebPadding } from '../utils/webStyles';
 
 type ResultsDetailScreenProps = {
   onNavigateToHome?: () => void;
+  onNavigateToQuestionnaire?: () => void;
 };
 
-export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenProps) => {
+export const ResultsDetailScreen = ({
+  onNavigateToHome,
+  onNavigateToQuestionnaire,
+}: ResultsDetailScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireSubmission | null>(null);
@@ -118,6 +131,7 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
 
   const hasCKDESRD = patient.has_ckd_esrd === true;
   const gfr = patient.last_gfr;
+  const hasNoQuestionnaires = questionnaire === null;
 
   return (
     <LinearGradient
@@ -203,138 +217,178 @@ export const ResultsDetailScreen = ({ onNavigateToHome }: ResultsDetailScreenPro
               </View>
             )}
 
-            {/* Absolute Contraindications */}
-            <View className="mb-8">
-              {results.hasAbsolute ? (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-3 text-red-900')}>
-                    Absolute Contraindications
-                  </Text>
-                  <Text
-                    className={combineClasses(
-                      typography.body.small,
-                      'mb-4 leading-6 text-red-800'
-                    )}>
-                    The following conditions were identified:
-                  </Text>
-                  <View className="mb-4 space-y-2">
-                    {results.absoluteContraindications.map((q) => (
-                      <View key={q.id} className="rounded-lg bg-red-50 p-3">
-                        <Text
-                          className={combineClasses(
-                            typography.body.small,
-                            'font-semibold text-red-900'
-                          )}>
-                          • {q.question}
-                        </Text>
+            {/* Show button if no questionnaires, otherwise show contraindications and next steps */}
+            {!hasNoQuestionnaires && (
+              <>
+                {/* Absolute Contraindications */}
+                <View className="mb-8">
+                  {results.hasAbsolute ? (
+                    <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                      <Text className={combineClasses(typography.h5, 'mb-3 text-red-900')}>
+                        Absolute Contraindications
+                      </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'mb-4 leading-6 text-red-800'
+                        )}>
+                        The following conditions were identified:
+                      </Text>
+                      <View className="mb-4 space-y-2">
+                        {results.absoluteContraindications.map((q) => (
+                          <View key={q.id} className="rounded-lg bg-red-50 p-3">
+                            <Text
+                              className={combineClasses(
+                                typography.body.small,
+                                'font-semibold text-red-900'
+                              )}>
+                              • {q.question}
+                            </Text>
+                          </View>
+                        ))}
                       </View>
-                    ))}
-                  </View>
-                  <Text
-                    className={combineClasses(
-                      typography.body.small,
-                      'font-semibold leading-6 text-red-900'
-                    )}>
-                    Please discuss these with your care team. Patients with these conditions should
-                    not be referred for transplant evaluation at this time.
-                  </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'font-semibold leading-6 text-red-900'
+                        )}>
+                        Please discuss these with your care team. Patients with these conditions
+                        should not be referred for transplant evaluation at this time.
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                      <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
+                        ✓ No Absolute Contraindications
+                      </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'leading-6 text-green-800'
+                        )}>
+                        Based on your responses, no absolute contraindications were identified.
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              ) : (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
-                    ✓ No Absolute Contraindications
-                  </Text>
-                  <Text
-                    className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
-                    Based on your responses, no absolute contraindications were identified.
-                  </Text>
-                </View>
-              )}
-            </View>
 
-            {/* Relative Contraindications */}
-            <View className="mb-8">
-              {results.hasRelative ? (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-3 text-yellow-900')}>
-                    Relative Contraindications
-                  </Text>
-                  <Text
-                    className={combineClasses(
-                      typography.body.small,
-                      'mb-4 leading-6 text-yellow-800'
-                    )}>
-                    The following factors may need to be addressed:
-                  </Text>
-                  <View className="mb-4 space-y-2">
-                    {results.relativeContraindications.map((q) => (
-                      <View key={q.id} className="rounded-lg bg-yellow-50 p-3">
-                        <Text
-                          className={combineClasses(
-                            typography.body.small,
-                            'font-semibold text-yellow-900'
-                          )}>
-                          • {q.question}
-                        </Text>
+                {/* Relative Contraindications */}
+                <View className="mb-8">
+                  {results.hasRelative ? (
+                    <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                      <Text className={combineClasses(typography.h5, 'mb-3 text-yellow-900')}>
+                        Relative Contraindications
+                      </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'mb-4 leading-6 text-yellow-800'
+                        )}>
+                        The following factors may need to be addressed:
+                      </Text>
+                      <View className="mb-4 space-y-2">
+                        {results.relativeContraindications.map((q) => (
+                          <View key={q.id} className="rounded-lg bg-yellow-50 p-3">
+                            <Text
+                              className={combineClasses(
+                                typography.body.small,
+                                'font-semibold text-yellow-900'
+                              )}>
+                              • {q.question}
+                            </Text>
+                          </View>
+                        ))}
                       </View>
-                    ))}
-                  </View>
-                  <Text
-                    className={combineClasses(
-                      typography.body.small,
-                      'font-semibold leading-6 text-yellow-900'
-                    )}>
-                    These factors can often be addressed with treatment and support. Discuss with
-                    your care team to develop a plan.
-                  </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'font-semibold leading-6 text-yellow-900'
+                        )}>
+                        These factors can often be addressed with treatment and support. Discuss
+                        with your care team to develop a plan.
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                      <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
+                        ✓ No Relative Contraindications
+                      </Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'leading-6 text-green-800'
+                        )}>
+                        No relative contraindications that need to be addressed were identified.
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              ) : (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                  <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
-                    ✓ No Relative Contraindications
-                  </Text>
-                  <Text
-                    className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
-                    No relative contraindications that need to be addressed were identified.
-                  </Text>
-                </View>
-              )}
-            </View>
 
-            {/* Age Information - Only show if age_concern is "yes" */}
-            {questionnaire?.answers?.age_concern === 'yes' && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
-                <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-                  About Age
-                </Text>
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-                  There is no absolute age limit for kidney transplantation. Advanced age alone is
-                  not a contraindication. Patients over 70 can receive successful transplants. Your
-                  care team will evaluate your overall health and fitness, not just your age.
-                </Text>
-              </View>
+                {/* Age Information - Only show if age_concern is "yes" */}
+                {questionnaire?.answers?.age_concern === 'yes' && (
+                  <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                    <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                      About Age
+                    </Text>
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                      There is no absolute age limit for kidney transplantation. Advanced age alone
+                      is not a contraindication. Patients over 70 can receive successful
+                      transplants. Your care team will evaluate your overall health and fitness, not
+                      just your age.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Next Steps */}
+                <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-4 text-gray-900')}>
+                    Next Steps
+                  </Text>
+                  <View className="space-y-3">
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
+                      1. Review these results with your nephrologist or primary care physician
+                    </Text>
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
+                      2. Discuss whether transplant evaluation referral is appropriate for you
+                    </Text>
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
+                      3. If you have relative contraindications, work with your care team to address
+                      them
+                    </Text>
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
+                      4. Remember: This assessment is educational only. Your medical team will make
+                      the final determination.
+                    </Text>
+                  </View>
+                </View>
+              </>
             )}
-
-            {/* Next Steps */}
-            <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
-              <Text className={combineClasses(typography.h5, 'mb-4 text-gray-900')}>
-                Next Steps
-              </Text>
-              <View className="space-y-3">
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
-                  1. Review these results with your nephrologist or primary care physician
+            <View className="mb-8">
+              <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                <Text className={combineClasses(typography.h5, 'mb-4 text-center text-gray-900')}>
+                  Complete Eligibility Assessment
                 </Text>
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
-                  2. Discuss whether transplant evaluation referral is appropriate for you
+                <Text
+                  className={combineClasses(
+                    typography.body.small,
+                    'mb-6 text-center leading-6 text-gray-700'
+                  )}>
+                  To identify your transplant status and contraindications, please complete the
+                  eligibility self-assessment.
                 </Text>
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
-                  3. If you have relative contraindications, work with your care team to address
-                  them
-                </Text>
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-gray-700')}>
-                  4. Remember: This assessment is educational only. Your medical team will make the
-                  final determination.
-                </Text>
+                {onNavigateToQuestionnaire && (
+                  <TouchableOpacity
+                    className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+                    onPress={onNavigateToQuestionnaire}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.primary.text}>Begin Eligibility Assessment</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </Animated.View>
