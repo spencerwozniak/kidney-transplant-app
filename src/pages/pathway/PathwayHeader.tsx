@@ -27,7 +27,7 @@ export const PathwayHeader = () => {
   // Calculate responsive padding and font sizes
   const headerPaddingTop = Math.max(24, Math.min(48, 12 * heightScale * 2));
   const headerPaddingBottom = Math.max(4, Math.min(8, 2 * heightScale * 2));
-  const titleFontSize = Math.max(20, Math.min(32, 24 * heightScale));
+  const titleFontSize = Math.max(20, Math.min(36, 24 * heightScale));
   const subtitleFontSize = Math.max(12, Math.min(16, 14 * heightScale));
 
   return (
@@ -42,10 +42,10 @@ export const PathwayHeader = () => {
         style={{
           fontSize: titleFontSize,
         }}>
-        Your Pathway
+        Your Journey
       </Text>
       <Text
-        className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}
+        className={combineClasses(typography.body.small, 'mb-2 text-center text-white/90 shadow')}
         style={{
           fontSize: subtitleFontSize,
         }}>
