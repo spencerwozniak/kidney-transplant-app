@@ -1,6 +1,6 @@
 /**
  * Referral Received Button Component
- * 
+ *
  * Displays button to mark referral as received, or confirmation message if already received
  */
 
@@ -22,28 +22,31 @@ export const ReferralReceivedButton = ({
   if (!hasReferral) {
     return (
       <View className="mb-6">
-        <View className={combineClasses(cards.colored.green, 'mb-4')}>
-          <Text className={combineClasses(typography.h6, 'mb-2 text-green-900')}>
+        <View
+          className={combineClasses(
+            cards.default.container,
+            'mb-4 border-l-4 border-green-500 bg-white/95'
+          )}>
+          <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
             Received Your Referral?
           </Text>
-          <Text
-            className={combineClasses(typography.body.small, 'mb-4 leading-6 text-green-800')}>
+          <Text className={combineClasses(typography.body.small, 'mb-4 leading-6 text-green-800')}>
             Once you've received confirmation that your referral has been sent to the transplant
             center, mark it here to move to the next stage of your transplant journey.
           </Text>
         </View>
         <TouchableOpacity
-          className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
+          className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
           onPress={onMarkReferralReceived}
           disabled={isMarkingReferral}
           activeOpacity={0.8}>
           {isMarkingReferral ? (
             <View className="flex-row items-center justify-center">
               <ActivityIndicator size="small" color="white" className="mr-2" />
-              <Text className={buttons.primary.text}>Updating...</Text>
+              <Text className={buttons.outline.text}>Updating...</Text>
             </View>
           ) : (
-            <Text className={buttons.primary.text}>I Have Received My Referral</Text>
+            <Text className={buttons.outline.text}>I Have Received My Referral</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -51,8 +54,12 @@ export const ReferralReceivedButton = ({
   }
 
   return (
-    <View className={combineClasses(cards.colored.green, 'mb-6')}>
-      <Text className={combineClasses(typography.h6, 'mb-2 text-green-900')}>
+    <View
+      className={combineClasses(
+        cards.default.container,
+        'mb-6 border-l-4 border-green-500 bg-white/95'
+      )}>
+      <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
         ✓ Referral Received
       </Text>
       <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
@@ -62,4 +69,3 @@ export const ReferralReceivedButton = ({
     </View>
   );
 };
-

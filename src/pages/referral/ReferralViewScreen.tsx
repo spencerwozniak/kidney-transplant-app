@@ -124,12 +124,19 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
                 Referral Information
               </Text>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
+              <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+                View your referral status and related information
+              </Text>
             </View>
 
             {/* Referral Status */}
-            <View className="mb-8">
+            <View className="mb-6">
               {referralState.has_referral ? (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                <View
+                  className={combineClasses(
+                    cards.default.container,
+                    'mb-6 border-l-4 border-green-500 bg-white/95'
+                  )}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
                     ✓ Referral Received
                   </Text>
@@ -140,7 +147,11 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
                   )}
                 </View>
               ) : (
-                <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                <View
+                  className={combineClasses(
+                    cards.default.container,
+                    'mb-6 border-l-4 border-blue-500 bg-white/95'
+                  )}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                     No Referral Yet
                   </Text>
@@ -153,7 +164,11 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
 
             {/* Referral Source */}
             {referralState.referral_source && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Referral Source
                 </Text>
@@ -165,7 +180,11 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
 
             {/* Location */}
             {referralState.location && (referralState.location.zip || referralState.location.state) && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>Location</Text>
                 <View className="space-y-2">
                   {referralState.location.zip && (
@@ -185,7 +204,11 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
             {/* Nephrologist Information */}
             {referralState.last_nephrologist &&
               (referralState.last_nephrologist.name || referralState.last_nephrologist.clinic) && (
-                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                <View
+                  className={combineClasses(
+                    cards.default.container,
+                    'mb-6 border-l-4 border-blue-500 bg-white/95'
+                  )}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                     Nephrologist
                   </Text>
@@ -204,7 +227,11 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
 
             {/* Dialysis Center Information */}
             {referralState.dialysis_center && referralState.dialysis_center.name && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Dialysis Center
                 </Text>
@@ -221,17 +248,26 @@ export const ReferralViewScreen = ({ onNavigateBack }: ReferralViewScreenProps) 
 
             {/* Preferred Centers */}
             {referralState.preferred_centers && referralState.preferred_centers.length > 0 && (
-              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Preferred Centers
                 </Text>
                 <View className="space-y-2">
                   {referralState.preferred_centers.map((centerId, index) => (
-                    <Text
-                      key={index}
-                      className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-                      • {centerId}
-                    </Text>
+                    <View key={index} className="flex-row">
+                      <Text className="mr-2 text-blue-800">•</Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'flex-1 leading-6 text-blue-800'
+                        )}>
+                        {centerId}
+                      </Text>
+                    </View>
                   ))}
                 </View>
               </View>

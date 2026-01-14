@@ -17,13 +17,18 @@ type CenterCardProps = {
 export const CenterCard = ({ center, onSelect }: CenterCardProps) => {
   return (
     <TouchableOpacity
-      className={combineClasses(cards.default.container, 'mb-4')}
+      className={combineClasses(
+        cards.default.container,
+        'mb-4 border-l-4 border-blue-500 bg-white/95'
+      )}
       onPress={onSelect}
       activeOpacity={0.7}>
       <View className="mb-2 flex-row items-start justify-between">
         <View className="flex-1">
-          <Text className={combineClasses(typography.h6, 'mb-1')}>{center.name}</Text>
-          <Text className={combineClasses(typography.body.small, 'text-gray-600')}>
+          <Text className={combineClasses(typography.h6, 'mb-1 text-blue-900')}>
+            {center.name}
+          </Text>
+          <Text className={combineClasses(typography.body.small, 'text-blue-800')}>
             {center.location.city}, {center.location.state}
             {center.distance_miles && ` • ${center.distance_miles} miles away`}
           </Text>
@@ -41,7 +46,7 @@ export const CenterCard = ({ center, onSelect }: CenterCardProps) => {
           </View>
         )}
       </View>
-      <Text className="mt-2 text-xs text-gray-500">Tap to view referral pathway →</Text>
+      <Text className="mt-2 text-xs text-blue-700">Tap to view referral pathway →</Text>
     </TouchableOpacity>
   );
 };

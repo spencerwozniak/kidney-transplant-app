@@ -10,8 +10,12 @@ import { typography, cards, combineClasses } from '../../../styles/theme';
 
 export const ImportantReminder = () => {
   return (
-    <View className={combineClasses(cards.colored.amber, 'mb-6')}>
-      <Text className={combineClasses(typography.h6, 'mb-2 text-amber-900')}>
+    <View
+      className={combineClasses(
+        cards.default.container,
+        'mb-6 border-l-4 border-amber-500 bg-white/95'
+      )}>
+      <Text className={combineClasses(typography.h5, 'mb-2 text-amber-900')}>
         Important Reminder
       </Text>
       <Text className={combineClasses(typography.body.small, 'leading-6 text-amber-800')}>

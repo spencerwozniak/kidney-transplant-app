@@ -8,10 +8,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { typography, combineClasses, layout } from '../../../styles/theme';
 import { NavigationBar } from '../../../components/NavigationBar';
+import { PathwayBackground } from '../../../components/PathwayBackground';
 import { apiService, TransplantCenter, PatientReferralState, ReferralPathway } from '../../../services/api';
 import type { NavigatorScreen, TransplantAccessNavigatorProps } from './types';
 import { CentersScreen } from './CentersScreen';
@@ -141,22 +143,35 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
 
   if (isLoading) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateBack} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Loading...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateBack} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onNavigateBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
         {currentScreen === 'centers' && (
           <CentersScreen
             centers={centers}
@@ -211,7 +226,14 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
           />
         )}
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
 

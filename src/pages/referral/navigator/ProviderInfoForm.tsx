@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import { buttons, typography, combineClasses } from '../../../styles/theme';
+import { buttons, typography, cards, combineClasses } from '../../../styles/theme';
 import type { ReferralPathway, PatientReferralState } from '../../../services/api';
 
 type ProviderInfoFormProps = {
@@ -51,12 +51,16 @@ export const ProviderInfoForm = ({
 
   if (pathway.pathway === 'nephrologist_referral') {
     return (
-      <View className="mb-6">
-        <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>
+      <View
+        className={combineClasses(
+          cards.default.container,
+          'mb-6 border-l-4 border-blue-500 bg-white/95'
+        )}>
+        <Text className={combineClasses(typography.h5, 'mb-4 text-blue-900')}>
           Provider Information
         </Text>
         <View className="mb-4">
-          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
+          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold text-blue-800')}>
             Nephrologist Name
           </Text>
           <TextInput
@@ -67,7 +71,7 @@ export const ProviderInfoForm = ({
           />
         </View>
         <View className="mb-4">
-          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
+          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold text-blue-800')}>
             Clinic/Office Name
           </Text>
           <TextInput
@@ -89,12 +93,16 @@ export const ProviderInfoForm = ({
 
   if (pathway.pathway === 'dialysis_center_referral') {
     return (
-      <View className="mb-6">
-        <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>
+      <View
+        className={combineClasses(
+          cards.default.container,
+          'mb-6 border-l-4 border-blue-500 bg-white/95'
+        )}>
+        <Text className={combineClasses(typography.h5, 'mb-4 text-blue-900')}>
           Dialysis Center Information
         </Text>
         <View className="mb-4">
-          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold')}>
+          <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold text-blue-800')}>
             Dialysis Center Name
           </Text>
           <TextInput
