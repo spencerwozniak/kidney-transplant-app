@@ -27,9 +27,11 @@ export const SettingsScreen = ({
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [questionnaireCompleted, setQuestionnaireCompleted] = useState(false);
 
   useEffect(() => {
     fetchPatientStatus();
+    fetchQuestionnaire();
   }, []);
 
   const fetchPatientStatus = async () => {
@@ -44,6 +46,15 @@ export const SettingsScreen = ({
       setPatientStatus(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchQuestionnaire = async () => {
+    try {
+      const questionnaire = await apiService.getQuestionnaire();
+      setQuestionnaireCompleted(!!questionnaire);
+    } catch (error) {
+      setQuestionnaireCompleted(false);
     }
   };
 
@@ -121,24 +132,6 @@ export const SettingsScreen = ({
           <View className="mb-6">
             <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>Actions</Text>
             <View className="gap-3">
-              {currentStage === 'identification' && onNavigateToQuestionnaire && (
-                <TouchableOpacity
-                  className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-                  onPress={onNavigateToQuestionnaire}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.primary.text}>Begin Eligibility Assessment</Text>
-                </TouchableOpacity>
-              )}
-
-              {currentStage === 'evaluation' && onViewChecklist && (
-                <TouchableOpacity
-                  className={combineClasses(buttons.primary.base, buttons.primary.enabled)}
-                  onPress={onViewChecklist}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.primary.text}>View Evaluation Checklist</Text>
-                </TouchableOpacity>
-              )}
-
               <TouchableOpacity
                 className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                 onPress={onViewResults}
@@ -153,6 +146,15 @@ export const SettingsScreen = ({
                   onPress={onNavigateToFinancialAssessment}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>Financial Assessment</Text>
+                </TouchableOpacity>
+              )}
+
+              {onViewChecklist && (
+                <TouchableOpacity
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                  onPress={onViewChecklist}
+                  activeOpacity={0.8}>
+                  <Text className={buttons.outline.text}>View Evaluation Checklist</Text>
                 </TouchableOpacity>
               )}
             </View>

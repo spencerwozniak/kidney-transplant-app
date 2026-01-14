@@ -8,15 +8,18 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { typography, combineClasses, layout } from '../../../styles/theme';
 import { NavigationBar } from '../../../components/NavigationBar';
+import { PathwayBackground } from '../../../components/PathwayBackground';
 import { apiService, TransplantCenter, PatientReferralState, ReferralPathway } from '../../../services/api';
 import type { NavigatorScreen, TransplantAccessNavigatorProps } from './types';
 import { CentersScreen } from './CentersScreen';
 import { ReferralPathwayScreen } from './ReferralPathwayScreen';
 import { NextStepsScreen } from './NextStepsScreen';
+import { resolveZipCode } from '../../../utils/zipCodeLookup';
 
 export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNavigatorProps) => {
   const [currentScreen, setCurrentScreen] = useState<NavigatorScreen>('centers');
@@ -54,11 +57,28 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
   };
 
   const loadCentersByState = async (stateCode: string) => {
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+    
     try {
       setIsSearchingCenters(true);
+      
+      if (IS_DEBUG) {
+        console.log('[Centers][debug] Searching by state:', stateCode);
+      }
+      
       const nearbyCenters = await apiService.findNearbyCenters({
         state: stateCode,
       });
+      
+      if (IS_DEBUG) {
+        console.log('[Centers][debug] Response:', {
+          count: nearbyCenters.length,
+          centers: nearbyCenters.slice(0, 2).map(c => ({ name: c.name, city: c.city })),
+        });
+      }
+      
       setCenters(nearbyCenters);
     } catch (error: any) {
       console.error('Error loading centers:', error);
@@ -74,11 +94,28 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       return;
     }
 
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
     try {
       setIsSearchingCenters(true);
+      
+      if (IS_DEBUG) {
+        console.log('[Centers][debug] Searching by ZIP:', zipToUse);
+      }
+      
       const nearbyCenters = await apiService.findNearbyCenters({
         zip_code: zipToUse,
       });
+      
+      if (IS_DEBUG) {
+        console.log('[Centers][debug] Response:', {
+          count: nearbyCenters.length,
+          centers: nearbyCenters.slice(0, 2).map(c => ({ name: c.name, city: c.city })),
+        });
+      }
+      
       setCenters(nearbyCenters);
     } catch (error: any) {
       console.error('Error loading centers:', error);
@@ -89,18 +126,32 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
   };
 
   const handleFindCenters = async () => {
-    // Load CA centers by default (location-based logic will be added later)
-    await loadCentersByState('CA');
+    // Use ZIP code if provided, otherwise load CA centers
+    if (zipCode && zipCode.trim().length > 0) {
+      await loadCenters(zipCode);
+    } else {
+      await loadCentersByState('CA');
+    }
 
     // Update referral state with location if ZIP code is provided
     if (zipCode && zipCode.trim().length > 0 && referralState) {
       try {
+        // Resolve ZIP code to city/state
+        const locationInfo = resolveZipCode(zipCode);
+        
+        if (__DEV__) {
+          console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+        }
+        
+        const updatedLocation = {
+          ...referralState.location,
+          zip: zipCode,
+          ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
+        };
+        
         await apiService.updateReferralState({
           ...referralState,
-          location: {
-            ...referralState.location,
-            zip: zipCode,
-          },
+          location: updatedLocation,
         });
       } catch (error: any) {
         console.error('Error updating referral state:', error);
@@ -123,9 +174,23 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
           has_referral: true,
           referral_status: 'completed',
         });
+        
+        // Invalidate all relevant caches so PathwayScreen refreshes
+        apiService.clearCacheKey('referral_state');
+        apiService.clearCacheKey('patient_status');
+        apiService.clearCacheKey('checklist');
+        
         // Reload referral state to get updated data
         const updatedState = await apiService.getReferralState();
         setReferralState(updatedState);
+        
+        // Dev log
+        const IS_DEBUG =
+          (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+          (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+        if (IS_DEBUG) {
+          console.log('[Referral][debug] Marked referral as received, caches cleared');
+        }
       }
       // Show success message and navigate back after a moment
       setTimeout(() => {
@@ -141,22 +206,35 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
 
   if (isLoading) {
     return (
-      <SafeAreaView className={layout.container.default}>
-        <NavigationBar onBack={onNavigateBack} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={combineClasses(typography.body.medium, 'mt-4 text-gray-600')}>
-            Loading...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={['#90dcb5', '#57a67f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}>
+        <PathwayBackground opacity={0.15} animate={false} />
+        <SafeAreaView className="flex-1">
+          <NavigationBar onBack={onNavigateBack} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#ffffff" />
+            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+              Loading...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView className={layout.container.default}>
-      <NavigationBar onBack={onNavigateBack} />
-      <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <NavigationBar onBack={onNavigateBack} />
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
         {currentScreen === 'centers' && (
           <CentersScreen
             centers={centers}
@@ -210,8 +288,15 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
             onNavigateBack={onNavigateBack}
           />
         )}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});
 

@@ -83,3 +83,14 @@ export const getWebPadding = (
   return styles;
 };
 
+// Ensure runtime availability in environments that may access this helper globally
+try {
+  // @ts-ignore
+  if (typeof globalThis !== 'undefined') {
+    // @ts-ignore
+    globalThis.getWebPadding = getWebPadding;
+  }
+} catch (e) {
+  // ignore
+}
+

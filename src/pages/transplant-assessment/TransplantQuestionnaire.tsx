@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -59,6 +59,7 @@ export const TransplantQuestionnaire = ({
   const [indexBasedAnswers, setIndexBasedAnswers] = useState<IndexBasedAnswers>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPrefilling, setIsPrefilling] = useState(true);
 
   // Animation values for button feedback
   const yesButtonScale = useRef(new Animated.Value(1)).current;
@@ -68,6 +69,55 @@ export const TransplantQuestionnaire = ({
     heading: 'Transplant Eligibility Self-Assessment',
     description: `This assessment helps you understand whether you might be a candidate for transplant evaluation.`,
   };
+
+  // Prefill answers from an existing questionnaire (if any)
+  useEffect(() => {
+    let mounted = true;
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
+    apiService
+      .getQuestionnaire()
+      .then((q) => {
+        if (!mounted) return;
+        if (q && q.answers) {
+          const prefilled: IndexBasedAnswers = {};
+          questions.forEach((question, idx) => {
+            const ans = (q.answers as Record<string, string>)[question.id];
+            if (ans === 'yes' || ans === 'no') {
+              prefilled[idx] = ans;
+            }
+          });
+
+          setIndexBasedAnswers(prefilled);
+
+          // Move to first unanswered question if any
+          const firstUnanswered = questions.findIndex((_, idx) => prefilled[idx] === undefined);
+          if (firstUnanswered >= 0) {
+            setCurrentQuestionIndex(firstUnanswered);
+          }
+
+          if (IS_DEBUG) {
+            console.log('[Questionnaire][prefill] detected existing questionnaire', {
+              answerCount: Object.keys(prefilled).length,
+            });
+          }
+        } else if (IS_DEBUG) {
+          console.log('[Questionnaire][prefill] no existing questionnaire');
+        }
+      })
+      .catch(() => {
+        // ignore
+      })
+      .finally(() => {
+        if (mounted) setIsPrefilling(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleAnswer = async (answer: 'yes' | 'no') => {
     // Store answer by question index to ensure uniqueness
@@ -122,6 +172,15 @@ export const TransplantQuestionnaire = ({
       };
 
       await apiService.submitQuestionnaire(submission);
+
+      // Refresh caches so UI updates immediately
+      try {
+        apiService.clearCacheKey('patient_status');
+        apiService.clearCacheKey('checklist');
+        await Promise.allSettled([apiService.getPatientStatus(), apiService.getChecklist()]);
+      } catch (e) {
+        // ignore cache refresh errors
+      }
       // Status is computed and saved on backend
       // Navigate to home where status will be fetched
       onComplete();
@@ -142,7 +201,7 @@ export const TransplantQuestionnaire = ({
     }
   };
 
-  if (isSubmitting) {
+  if (isPrefilling || isSubmitting) {
     return (
       <LinearGradient
         colors={['#90dcb5', '#57a67f']}
@@ -155,7 +214,7 @@ export const TransplantQuestionnaire = ({
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#ffffff" />
             <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
-              Saving your assessment...
+              {isPrefilling ? 'Loading your assessment...' : 'Saving your assessment...'}
             </Text>
           </View>
         </SafeAreaView>

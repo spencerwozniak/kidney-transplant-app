@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, inputs, combineClasses, layout } from '../../styles/theme';
+import { ViewStyle, TextStyle } from 'react-native';
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
 import { Patient } from '../../services/api';
@@ -38,7 +39,8 @@ export const PatientDetailsScreen1 = ({
     phone: initialData?.phone || '',
   });
 
-  const [errors, setErrors] = useState<{ name?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
+  const [touched, setTouched] = useState<{ name?: boolean; email?: boolean; phone?: boolean }>({});
   const nameInputRef = useRef<TextInput>(null);
   const emailInputRef = useRef<TextInput>(null);
   const phoneInputRef = useRef<TextInput>(null);
@@ -64,11 +66,49 @@ export const PatientDetailsScreen1 = ({
     ]).start();
   }, []);
 
-  const validate = (): boolean => {
-    const newErrors: { name?: string } = {};
+  // Reusable field error / helper text component
+  const FieldError = ({
+    message,
+    colorClass,
+  }: {
+    message?: string | null;
+    colorClass?: string;
+  }) => {
+    const color = colorClass || 'text-black';
+    // Use className to match existing theme utility classes for color/size
+    return (
+      <View style={styles.errorWrapper} accessible accessibilityLiveRegion="polite">
+        <Text className={combineClasses('mt-1', 'text-xs', color)}>{message || ' '}</Text>
+      </View>
+    );
+  };
 
+  const validate = (): boolean => {
+    const newErrors: { name?: string; email?: string; phone?: string } = {};
+
+    // Name: required, min 2 chars
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'Full name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Full name must be at least 2 characters';
+    }
+
+    // Email: required, basic email regex
+    const email = formData.email.trim();
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRe.test(email)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+
+    // Phone: required, digits only (allow leading +), length 8-15
+    const phone = formData.phone.trim();
+    const phoneRe = /^\+?\d{8,15}$/;
+    if (!phone) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!phoneRe.test(phone)) {
+      newErrors.phone = 'Enter a valid phone (digits only, 8-15 characters, + allowed)';
     }
 
     setErrors(newErrors);
@@ -103,6 +143,8 @@ export const PatientDetailsScreen1 = ({
     if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    // mark touched when user types (helpful for immediate validation UX)
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleNameChange = (value: string) => {
@@ -120,6 +162,12 @@ export const PatientDetailsScreen1 = ({
         emailInputRef.current?.focus();
       }, 0);
     }
+  };
+
+  const handleBlur = (field: 'name' | 'email' | 'phone') => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    // validate single field on blur
+    validate();
   };
 
   const handleEmailChange = (value: string) => {
@@ -188,7 +236,7 @@ export const PatientDetailsScreen1 = ({
                   typography.body.large,
                   'mb-2 font-semibold text-white shadow'
                 )}>
-                Full Name <Text className="text-red-200">*</Text>
+                Full Name
               </Text>
               <View className={inputs.default.container}>
                 <TextInput
@@ -201,13 +249,14 @@ export const PatientDetailsScreen1 = ({
                   textContentType="name"
                   autoComplete="name"
                   inputAccessoryViewID={null}
+                  onBlur={() => handleBlur('name')}
                   returnKeyType="done"
                   onSubmitEditing={() => {
                     emailInputRef.current?.focus();
                   }}
                 />
               </View>
-              {errors.name && <Text className="mt-1 text-xs text-red-200">{errors.name}</Text>}
+              <FieldError message={touched.name && errors.name ? errors.name : undefined} />
             </View>
 
             {/* Email - Optional */}
@@ -228,16 +277,17 @@ export const PatientDetailsScreen1 = ({
                   value={formData.email}
                   onChangeText={handleEmailChange}
                   textContentType="emailAddress"
-                  autoComplete="email"
-                  keyboardType="email-address"
                   inputAccessoryViewID={null}
                   autoCapitalize="none"
+                  onBlur={() => handleBlur('email')}
+                  {...(Platform.OS === 'web' ? ({ inputMode: 'email' } as any) : {})}
                   returnKeyType="done"
                   onSubmitEditing={() => {
                     phoneInputRef.current?.focus();
                   }}
                 />
               </View>
+              <FieldError message={touched.email && errors.email ? errors.email : undefined} />
             </View>
 
             {/* Phone - Optional */}
@@ -260,22 +310,32 @@ export const PatientDetailsScreen1 = ({
                   textContentType="telephoneNumber"
                   autoComplete="tel"
                   keyboardType="phone-pad"
-                  inputAccessoryViewID={
-                    Platform.OS === 'ios' ? phoneInputAccessoryViewID : undefined
-                  }
+                  inputAccessoryViewID={Platform.OS === 'ios' ? phoneInputAccessoryViewID : undefined}
+                  onBlur={() => handleBlur('phone')}
+                  {...(Platform.OS === 'web' ? ({ inputMode: 'tel' } as any) : {})}
                   returnKeyType="done"
                   onSubmitEditing={() => {
                     phoneInputRef.current?.blur();
                   }}
                 />
               </View>
+              <FieldError message={touched.phone && errors.phone ? errors.phone : undefined} />
             </View>
 
             {/* Next Button */}
             <TouchableOpacity
-              className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+              className={combineClasses(
+                buttons.outline.base,
+                // show disabled look when not valid
+                // reuse enabled class only when all fields valid
+                (formData.name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) && /^\+?\d{8,15}$/.test(formData.phone.trim()))
+                  ? buttons.outline.enabled
+                  : buttons.outline.disabled
+              )}
               onPress={handleNext}
-              activeOpacity={0.8}>
+              activeOpacity={0.8}
+              disabled={!(formData.name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) && /^\+?\d{8,15}$/.test(formData.phone.trim()))}
+            >
               <Text className={buttons.outline.text}>Next</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -310,4 +370,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, // px-6 = 1.5rem = 24px
     paddingVertical: 32, // py-8 = 2rem = 32px
   },
+  errorWrapper: {
+    minHeight: 22,
+    marginTop: 12,
+    paddingLeft: 20,
+  } as ViewStyle,
+  errorText: {
+    fontSize: 13,
+    lineHeight: 18,
+  } as TextStyle,
 });

@@ -66,12 +66,13 @@ export function ScreenRouter({
     patientDataPart2,
     patientDataMedical,
   } = state;
+  const { onboardingMessage } = state;
 
   // ============================================================================
   // ONBOARDING FLOW
   // ============================================================================
   if (currentScreen === 'onboarding') {
-    return <OnboardingScreen onGetStarted={onboardingHandlers.handleGetStarted} />;
+    return <OnboardingScreen onGetStarted={onboardingHandlers.handleGetStarted} message={onboardingMessage} />;
   }
 
   if (currentScreen === 'patient-details-1') {
@@ -270,7 +271,12 @@ export function ScreenRouter({
   }
 
   if (currentScreen === 'referral-view') {
-    return <ReferralViewScreen onNavigateBack={() => setCurrentScreen('home')} />;
+    return (
+      <ReferralViewScreen
+        onNavigateBack={() => setCurrentScreen('home')}
+        onNavigateToFindCenters={() => setCurrentScreen('transplant-navigator')}
+      />
+    );
   }
 
   // ============================================================================

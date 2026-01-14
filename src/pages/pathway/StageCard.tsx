@@ -9,7 +9,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { buttons, typography, cards, combineClasses } from '../../styles/theme';
 import { InfoIcon } from '../../components/InfoIcon';
 import type { PathwayStageData, StageStatus } from './types';
-import type { PatientStatus, TransplantChecklist } from '../../services/api';
+import type { PatientStatus, TransplantChecklist, PatientReferralState } from '../../services/api';
 import { PATHWAY_STAGES } from './pathwayStages';
 import { EvaluationProgress } from './EvaluationProgress';
 import { StageActions } from './StageActions';
@@ -22,6 +22,7 @@ type StageCardProps = {
   currentStageIndex: number;
   patientStatus: PatientStatus | null;
   checklist: TransplantChecklist | null;
+  referralState: PatientReferralState | null;
   onPress: () => void;
   onViewResults?: () => void;
   onViewChecklist?: () => void;
@@ -30,6 +31,7 @@ type StageCardProps = {
   onViewReferral?: () => void;
   cardWidth: number;
   cardSpacing: number;
+  questionnaireCompleted?: boolean;
 };
 
 export const StageCard = ({
@@ -39,6 +41,7 @@ export const StageCard = ({
   currentStageIndex,
   patientStatus,
   checklist,
+  referralState,
   onPress,
   onViewResults,
   onViewChecklist,
@@ -47,10 +50,13 @@ export const StageCard = ({
   onViewReferral,
   cardWidth,
   cardSpacing,
+  questionnaireCompleted,
 }: StageCardProps) => {
   const isCompleted = status === 'completed';
   const isCurrent = status === 'current';
   const isUpcoming = status === 'upcoming';
+
+  // StageCard no longer logs on every render — debug logging is centralized in PathwayScreen after load.
 
   return (
     <View
@@ -144,11 +150,13 @@ export const StageCard = ({
           status={status}
           currentStageIndex={currentStageIndex}
           patientStatus={patientStatus}
+          referralState={referralState}
           onViewResults={onViewResults}
           onViewChecklist={onViewChecklist}
           onNavigateToQuestionnaire={onNavigateToQuestionnaire}
           onFindReferral={onFindReferral}
           onViewReferral={onViewReferral}
+          questionnaireCompleted={questionnaireCompleted}
         />
 
         {/* Stage Number Indicator */}

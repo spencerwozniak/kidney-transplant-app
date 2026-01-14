@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, cards, combineClasses, layout, decorative } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
+import { apiService } from '../../services/api';
+import { getWebPadding } from '../../utils/webStyles';
 
 type AssessmentIntroScreenProps = {
   onBeginAssessment: () => void;
@@ -17,6 +19,27 @@ export const AssessmentIntroScreen = ({
 }: AssessmentIntroScreenProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+  const [ctaLabel, setCtaLabel] = useState('Begin Eligibility Assessment');
+
+  useEffect(() => {
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
+    apiService
+      .getQuestionnaire()
+      .then((q) => {
+        if (q) {
+          setCtaLabel('Edit Eligibility Assessment');
+          if (IS_DEBUG) {
+            console.log('[AssessmentIntro] Questionnaire detected; using edit CTA');
+          }
+        }
+      })
+      .catch(() => {
+        // ignore missing questionnaire
+      });
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -128,12 +151,12 @@ export const AssessmentIntroScreen = ({
               </View>
             </View>
 
-            {/* Begin Assessment Button */}
+            {/* Begin/Edit Assessment Button */}
             <TouchableOpacity
               className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
               onPress={handleBegin}
               activeOpacity={0.8}>
-              <Text className={buttons.outline.text}>Begin Assessment</Text>
+              <Text className={buttons.outline.text}>{ctaLabel}</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>

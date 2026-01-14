@@ -378,7 +378,7 @@ export const ChecklistDocumentsScreen = ({
     // Document path format: documents/{patient_id}/{item_id}/{filename}
     // URL encode the path for the API
     const encodedPath = encodeURIComponent(docPath);
-    return `${apiService.baseUrl}/api/v1/documents/${encodedPath}`;
+    return apiService.makeUrl(`/api/v1/documents/${encodedPath}`);
   };
 
   const viewDocument = async (docPath: string) => {
