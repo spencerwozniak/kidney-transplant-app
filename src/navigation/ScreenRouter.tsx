@@ -16,6 +16,7 @@ import { AssessmentIntroScreen } from '../pages/transplant-assessment/Assessment
 import { PathwayScreen } from '../pages/pathway';
 import { SettingsScreen } from '../pages/SettingsScreen';
 import { ChatScreen } from '../pages/ChatScreen';
+import { FhirExportScreen } from '../pages/FhirExportScreen';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { TransplantQuestionnaire } from '../pages/transplant-assessment/TransplantQuestionnaire';
 import { FinancialIntroScreen } from '../pages/financial-assessment/FinancialIntroScreen';
@@ -215,6 +216,7 @@ export function ScreenRouter({
               onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
               onDeletePatient={patientHandlers.handleDeletePatient}
               onDeletePatientConfirmed={patientHandlers.handleDeletePatientConfirmed}
+              onExportData={() => setCurrentScreen('fhir-export')}
             />
           )}
         </View>
@@ -279,6 +281,17 @@ export function ScreenRouter({
       <ReferralViewScreen
         onNavigateBack={() => setCurrentScreen('home')}
         onNavigateToFindCenters={() => setCurrentScreen('transplant-navigator')}
+      />
+    );
+  }
+
+  // ============================================================================
+  // DATA EXPORT
+  // ============================================================================
+  if (currentScreen === 'fhir-export') {
+    return (
+      <FhirExportScreen
+        onBack={() => setCurrentScreen('home')}
       />
     );
   }

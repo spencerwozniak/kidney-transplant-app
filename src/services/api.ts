@@ -990,6 +990,14 @@ class ApiService {
       '/api/v1/ai-assistant/status'
     );
   }
+
+  async exportFhirData(): Promise<any> {
+    return this.request<any>('/api/v1/patients/fhir', {
+      headers: {
+        'Accept': 'application/fhir+json',
+      },
+    });
+  }
 }
 
 export const apiService = new ApiService();
