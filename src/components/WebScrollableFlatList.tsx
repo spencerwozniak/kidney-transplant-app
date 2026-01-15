@@ -146,7 +146,7 @@ function WebScrollableFlatListInner<T>(props: FlatListProps<T>, forwardedRef: Re
       scrollElement.style.cursor = 'grab';
       scrollElement.style.overflowX = 'auto';
       scrollElement.style.overflowY = 'hidden';
-      scrollElement.style.WebkitOverflowScrolling = 'touch';
+      (scrollElement.style as any).WebkitOverflowScrolling = 'touch';
 
       scrollElement.addEventListener('mousedown', handleMouseDown, { passive: false });
       scrollElement.addEventListener('mouseleave', handleMouseLeave);

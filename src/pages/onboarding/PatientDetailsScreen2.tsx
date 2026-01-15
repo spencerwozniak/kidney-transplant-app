@@ -24,13 +24,13 @@ import { WheelPicker } from '../../components/WheelPicker';
 import { WheelDatePicker } from '../../components/WheelDatePicker';
 
 type PatientDetailsScreen2Props = {
-  onNext: (data: { date_of_birth: string; sex?: string; height?: number; weight?: number }) => void;
+  onNext: (data: { date_of_birth: string; sex?: string; height_cm?: number; weight_kg?: number }) => void;
   onBack?: () => void;
   initialData?: {
     date_of_birth?: string;
     sex?: string;
-    height?: number;
-    weight?: number;
+    height_cm?: number;
+    weight_kg?: number;
   };
 };
 
@@ -56,14 +56,25 @@ export const PatientDetailsScreen2 = ({
   const [formData, setFormData] = useState({
     dateOfBirth: initialDOB,
     sex: initialData?.sex || '',
-    heightFeet: initialData?.height ? Math.floor(initialData.height / 30.48).toString() : '',
-    heightInches: initialData?.height
-      ? Math.round((initialData.height % 30.48) / 2.54).toString()
+    heightFeet: initialData?.height_cm ? Math.floor(initialData.height_cm / 30.48).toString() : '',
+    heightInches: initialData?.height_cm
+      ? Math.round((initialData.height_cm % 30.48) / 2.54).toString()
       : '',
-    weightLbs: initialData?.weight ? Math.round(initialData.weight * 2.20462).toString() : '',
+    weightLbs: initialData?.weight_kg ? Math.round(initialData.weight_kg * 2.20462).toString() : '',
   });
 
-  const [errors, setErrors] = useState<{ date_of_birth?: string }>({});
+  const [errors, setErrors] = useState<{
+    dateOfBirth?: string;
+    sex?: string;
+    height?: string;
+    weight?: string;
+  }>({});
+  const [touched, setTouched] = useState<{
+    dateOfBirth?: boolean;
+    sex?: boolean;
+    height?: boolean;
+    weight?: boolean;
+  }>({});
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showHeightPicker, setShowHeightPicker] = useState(false);
   const weightInputRef = useRef<TextInput>(null);
@@ -99,17 +110,112 @@ export const PatientDetailsScreen2 = ({
   }));
 
   const validate = (): boolean => {
-    const newErrors: { date_of_birth?: string } = {};
+    const newErrors: {
+      dateOfBirth?: string;
+      sex?: string;
+      height?: string;
+      weight?: string;
+    } = {};
 
+    // Date of Birth validation
     const date = formData.dateOfBirth;
-    const isValid = date && date <= new Date() && date.getTime() > 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (!date) {
+      newErrors.dateOfBirth = 'Date of birth is required.';
+    } else if (date >= today) {
+      newErrors.dateOfBirth = 'Enter a valid date of birth.';
+    } else {
+      // Check if age <= 120 years
+      const age = today.getFullYear() - date.getFullYear();
+      if (age > 120) {
+        newErrors.dateOfBirth = 'Enter a valid date of birth.';
+      }
+    }
 
-    if (!isValid) {
-      newErrors.date_of_birth = 'Please enter a valid date';
+    // Sex validation
+    if (!formData.sex || formData.sex.trim() === '') {
+      newErrors.sex = 'Please select sex assigned at birth.';
+    }
+
+    // Height validation
+    if (!formData.heightFeet || formData.heightFeet === '') {
+      newErrors.height = 'Height is required.';
+    }
+
+    // Weight validation
+    const weightStr = formData.weightLbs.trim();
+    if (!weightStr) {
+      newErrors.weight = 'Weight is required.';
+    } else if (!/^\d+(\.\d+)?$/.test(weightStr)) {
+      newErrors.weight = 'Enter weight as a number.';
+    } else {
+      const weight = parseFloat(weightStr);
+      if (weight <= 0 || weight < 50 || weight > 700) {
+        newErrors.weight = 'Enter a valid weight in lbs.';
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const validateField = (field: keyof typeof formData) => {
+    const newErrors = { ...errors };
+
+    if (field === 'dateOfBirth') {
+      const date = formData.dateOfBirth;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (!date) {
+        newErrors.dateOfBirth = 'Date of birth is required.';
+      } else if (date >= today) {
+        newErrors.dateOfBirth = 'Enter a valid date of birth.';
+      } else {
+        const age = today.getFullYear() - date.getFullYear();
+        if (age > 120) {
+          newErrors.dateOfBirth = 'Enter a valid date of birth.';
+        } else {
+          delete newErrors.dateOfBirth;
+        }
+      }
+    }
+
+    if (field === 'sex') {
+      if (!formData.sex || formData.sex.trim() === '') {
+        newErrors.sex = 'Please select sex assigned at birth.';
+      } else {
+        delete newErrors.sex;
+      }
+    }
+
+    if (field === 'heightFeet' || field === 'heightInches') {
+      if (!formData.heightFeet || formData.heightFeet === '') {
+        newErrors.height = 'Height is required.';
+      } else {
+        delete newErrors.height;
+      }
+    }
+
+    if (field === 'weightLbs') {
+      const weightStr = formData.weightLbs.trim();
+      if (!weightStr) {
+        newErrors.weight = 'Weight is required.';
+      } else if (!/^\d+(\.\d+)?$/.test(weightStr)) {
+        newErrors.weight = 'Enter weight as a number.';
+      } else {
+        const weight = parseFloat(weightStr);
+        if (weight <= 0 || weight < 50 || weight > 700) {
+          newErrors.weight = 'Enter a valid weight in lbs.';
+        } else {
+          delete newErrors.weight;
+        }
+      }
+    }
+
+    setErrors(newErrors);
   };
 
   const handleNext = () => {
@@ -130,7 +236,23 @@ export const PatientDetailsScreen2 = ({
       }
 
       // Convert weight from lbs to kg
-      const weightInKg = formData.weightLbs ? parseFloat(formData.weightLbs) / 2.20462 : undefined;
+      const weightLbs = formData.weightLbs ? parseFloat(formData.weightLbs) : undefined;
+      const weightInKg = weightLbs ? weightLbs / 2.20462 : undefined;
+
+      // Dev logging for conversion verification
+      if (__DEV__) {
+        console.log('[PersonalDetails][Dev] Form Data Conversion:');
+        console.log('  Input:');
+        console.log('    • DOB selected:', date);
+        console.log('    • Sex selected:', formData.sex);
+        console.log('    • Height entered:', formData.heightFeet, 'ft', formData.heightInches, 'in');
+        console.log('    • Weight entered:', weightLbs, 'lbs');
+        console.log('  Output:');
+        console.log('    • DOB (ISO):', date_of_birth);
+        console.log('    • Sex:', formData.sex);
+        console.log('    • Height (cm):', heightInCm?.toFixed(2));
+        console.log('    • Weight (kg):', weightInKg?.toFixed(2));
+      }
 
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -147,8 +269,8 @@ export const PatientDetailsScreen2 = ({
         onNext({
           date_of_birth,
           sex: formData.sex || undefined,
-          height: heightInCm && heightInCm > 0 ? heightInCm : undefined,
-          weight: weightInKg,
+          height_cm: heightInCm && heightInCm > 0 ? heightInCm : undefined,
+          weight_kg: weightInKg,
         });
       });
     }
@@ -156,9 +278,51 @@ export const PatientDetailsScreen2 = ({
 
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing/selecting
     if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const handleBlur = (field: keyof typeof formData) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    validateField(field);
+  };
+
+  const isFormValid = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check DOB
+    if (!formData.dateOfBirth || formData.dateOfBirth >= today) {
+      return false;
+    }
+    const age = today.getFullYear() - formData.dateOfBirth.getFullYear();
+    if (age > 120) {
+      return false;
+    }
+
+    // Check sex
+    if (!formData.sex || formData.sex.trim() === '') {
+      return false;
+    }
+
+    // Check height
+    if (!formData.heightFeet || formData.heightFeet === '') {
+      return false;
+    }
+
+    // Check weight
+    const weightStr = formData.weightLbs.trim();
+    if (!weightStr || !/^\d+(\.\d+)?$/.test(weightStr)) {
+      return false;
+    }
+    const weight = parseFloat(weightStr);
+    if (weight <= 0 || weight < 50 || weight > 700) {
+      return false;
+    }
+
+    return true;
   };
 
   const formatDate = (date: Date) => {
@@ -244,19 +408,19 @@ export const PatientDetailsScreen2 = ({
                   {formData.dateOfBirth ? formatDate(formData.dateOfBirth) : 'Select date of birth'}
                 </Text>
               </TouchableOpacity>
-              {errors.date_of_birth && (
-                <Text className="mt-1 text-xs text-red-200">{errors.date_of_birth}</Text>
+              {(touched.dateOfBirth || errors.dateOfBirth) && errors.dateOfBirth && (
+                <Text className="mt-1 text-xs text-red-200">{errors.dateOfBirth}</Text>
               )}
             </View>
 
-            {/* Sex - Optional */}
+            {/* Sex - Required */}
             <View className="mb-6">
               <Text
                 className={combineClasses(
                   typography.body.large,
                   'mb-2 font-semibold text-white shadow'
                 )}>
-                Sex Assigned at Birth
+                Sex Assigned at Birth <Text className="text-red-200">*</Text>
               </Text>
               <View className="flex-row gap-2">
                 {['male', 'female'].map((option) => (
@@ -268,7 +432,10 @@ export const PatientDetailsScreen2 = ({
                         ? 'border-green-600 bg-green-100'
                         : 'border-gray-200 bg-white'
                     )}
-                    onPress={() => updateField('sex', option)}>
+                    onPress={() => {
+                      updateField('sex', option);
+                      handleBlur('sex');
+                    }}>
                     <Text
                       className={combineClasses(
                         'text-center capitalize',
@@ -279,16 +446,19 @@ export const PatientDetailsScreen2 = ({
                   </TouchableOpacity>
                 ))}
               </View>
+              {(touched.sex || errors.sex) && errors.sex && (
+                <Text className="mt-1 text-xs text-red-200">{errors.sex}</Text>
+              )}
             </View>
 
-            {/* Height - Optional */}
+            {/* Height - Required */}
             <View className="mb-6">
               <Text
                 className={combineClasses(
                   typography.body.large,
                   'mb-2 font-semibold text-white shadow'
                 )}>
-                Height
+                Height <Text className="text-red-200">*</Text>
               </Text>
               <TouchableOpacity
                 className={combineClasses(inputs.default.container, 'justify-center')}
@@ -303,7 +473,10 @@ export const PatientDetailsScreen2 = ({
                   {formatHeight()}
                 </Text>
               </TouchableOpacity>
-              {(formData.heightFeet || formData.heightInches) && (
+              {(touched.height || errors.height) && errors.height && (
+                <Text className="mt-1 text-xs text-red-200">{errors.height}</Text>
+              )}
+              {(formData.heightFeet || formData.heightInches) && !errors.height && (
                 <Text className="mt-2 text-xs text-white/80">
                   {Math.round(
                     ((parseFloat(formData.heightFeet) || 0) * 30.48 +
@@ -315,14 +488,14 @@ export const PatientDetailsScreen2 = ({
               )}
             </View>
 
-            {/* Weight - Optional */}
+            {/* Weight - Required */}
             <View className="mb-6">
               <Text
                 className={combineClasses(
                   typography.body.large,
                   'mb-2 font-semibold text-white shadow'
                 )}>
-                Weight
+                Weight <Text className="text-red-200">*</Text>
               </Text>
               <View className={inputs.default.container}>
                 <TextInput
@@ -332,11 +505,15 @@ export const PatientDetailsScreen2 = ({
                   placeholderTextColor={inputs.default.placeholder}
                   value={formData.weightLbs as string}
                   onChangeText={(value) => updateField('weightLbs', value)}
+                  onBlur={() => handleBlur('weightLbs')}
                   keyboardType="numeric"
                   inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
                 />
               </View>
-              {formData.weightLbs && (
+              {(touched.weight || errors.weight) && errors.weight && (
+                <Text className="mt-1 text-xs text-red-200">{errors.weight}</Text>
+              )}
+              {formData.weightLbs && !errors.weight && (
                 <Text className="mt-2 text-xs text-white/80">
                   {Math.round((parseFloat(formData.weightLbs) / 2.20462) * 10) / 10} kg
                 </Text>
@@ -345,9 +522,13 @@ export const PatientDetailsScreen2 = ({
 
             {/* Next Button */}
             <TouchableOpacity
-              className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+              className={combineClasses(
+                buttons.outline.base,
+                isFormValid() ? buttons.outline.enabled : buttons.outline.disabled
+              )}
               onPress={handleNext}
-              activeOpacity={0.8}>
+              activeOpacity={0.8}
+              disabled={!isFormValid()}>
               <Text className={buttons.outline.text}>Next</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -373,6 +554,7 @@ export const PatientDetailsScreen2 = ({
                 <TouchableOpacity
                   onPress={() => {
                     setShowDatePicker(false);
+                    handleBlur('dateOfBirth');
                   }}>
                   <Text className="text-xl font-semibold text-blue-500">Done</Text>
                 </TouchableOpacity>
@@ -432,6 +614,7 @@ export const PatientDetailsScreen2 = ({
                 <TouchableOpacity
                   onPress={() => {
                     setShowHeightPicker(false);
+                    handleBlur('heightFeet');
                   }}>
                   <Text className="text-xl font-semibold text-blue-500">Done</Text>
                 </TouchableOpacity>

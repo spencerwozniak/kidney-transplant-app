@@ -21,8 +21,8 @@ export type PatientDataPart1 = {
 export type PatientDataPart2 = {
   date_of_birth: string;
   sex?: string;
-  height?: number;
-  weight?: number;
+  height_cm?: number;
+  weight_kg?: number;
 };
 
 export type PatientDataMedical = {

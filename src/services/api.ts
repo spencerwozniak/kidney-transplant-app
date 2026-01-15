@@ -182,8 +182,8 @@ export type Patient = {
   name: string;
   date_of_birth: string; // YYYY-MM-DD
   sex?: string;
-  height?: number; // cm
-  weight?: number; // kg
+  height_cm?: number; // cm
+  weight_kg?: number; // kg
   email?: string;
   phone?: string;
   has_ckd_esrd?: boolean;
@@ -569,10 +569,33 @@ class ApiService {
       // ignore
     }
 
+    // Dev logging for payload details
+    if (IS_DEBUG) {
+      devLog('[API][Dev] createPatient payload:', {
+        date_of_birth: patient.date_of_birth,
+        sex: patient.sex,
+        height_cm: patient.height_cm,
+        weight_kg: patient.weight_kg,
+        has_ckd_esrd: patient.has_ckd_esrd,
+        last_gfr: patient.last_gfr,
+      });
+    }
+
     const resp = await this.request<Patient>('/api/v1/patients', {
       method: 'POST',
       body: JSON.stringify(patient),
     });
+
+    // Dev logging for response verification
+    if (IS_DEBUG) {
+      devLog('[API][Dev] createPatient response:', {
+        id: resp.id,
+        date_of_birth: resp.date_of_birth,
+        sex: resp.sex,
+        height_cm: resp.height_cm,
+        weight_kg: resp.weight_kg,
+      });
+    }
 
     // After creating a patient, clear caches that may contain previous demo/user data
     try {
@@ -617,7 +640,52 @@ class ApiService {
   }
 
   async getPatientStatus(): Promise<PatientStatus> {
-    return this.request<PatientStatus>('/api/v1/patient-status');
+    const status = await this.request<PatientStatus>('/api/v1/patient-status');
+    
+    // Dev logging for prediction/feature verification
+    if (IS_DEBUG) {
+      devLog('[API][Dev] Patient Status retrieved - this may include prediction features:', {
+        pathway_stage: status.pathway_stage,
+        has_absolute: status.has_absolute,
+        has_relative: status.has_relative,
+        absolute_count: status.absolute_contraindications?.length || 0,
+        relative_count: status.relative_contraindications?.length || 0,
+      });
+    }
+    
+    return status;
+  }
+
+  async getPatientStatusDebug(): Promise<any> {
+    // Attempt to fetch prediction debug features from status endpoint
+    // Backend may return additional debug info showing ML input features
+    try {
+      const status = await this.request<any>('/api/v1/patient-status?debug=true', {
+        method: 'GET',
+      });
+      
+      if (IS_DEBUG) {
+        devLog('[API][Dev] Patient Status Debug (prediction features):', {
+          patient_features: status.patient_features || null,
+          ml_input_date_of_birth: status.ml_input_date_of_birth || status.date_of_birth || null,
+          ml_input_sex: status.ml_input_sex || status.sex || null,
+          ml_input_height_cm: status.ml_input_height_cm || status.height_cm || null,
+          ml_input_weight_kg: status.ml_input_weight_kg || status.weight_kg || null,
+          contraindications_computed: {
+            has_absolute: status.has_absolute,
+            has_relative: status.has_relative,
+          },
+        });
+      }
+      
+      return status;
+    } catch (error) {
+      if (IS_DEBUG) {
+        devLog('[API][Dev] Debug endpoint not available, falling back to standard status');
+      }
+      // Fall back to standard status
+      return this.getPatientStatus();
+    }
   }
 
   async getChecklist(): Promise<TransplantChecklist> {
