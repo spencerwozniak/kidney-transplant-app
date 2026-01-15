@@ -22,7 +22,6 @@ import {
 } from '../../../services/api';
 import type { NavigatorScreen, TransplantAccessNavigatorProps } from './types';
 import { CentersScreen } from './CentersScreen';
-import { ReferralPathwayScreen } from './ReferralPathwayScreen';
 import { NextStepsScreen } from './NextStepsScreen';
 import { resolveZipCode } from '../../../utils/zipCodeLookup';
 
@@ -80,7 +79,7 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       if (IS_DEBUG) {
         console.log('[Centers][debug] Response:', {
           count: nearbyCenters.length,
-          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.city })),
+          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.location.city })),
         });
       }
 
@@ -94,8 +93,14 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
   };
 
   const loadCenters = async (zip?: string) => {
-    const zipToUse = zip || zipCode;
-    if (!zipToUse || zipToUse.trim().length === 0) {
+    const zipToUse = (zip || zipCode)?.trim();
+    if (!zipToUse || zipToUse.length === 0) {
+      return;
+    }
+
+    // Validate zip code format (should be 5 digits)
+    if (!/^\d{5}$/.test(zipToUse)) {
+      alert('Please enter a valid 5-digit ZIP code.');
       return;
     }
 
@@ -117,7 +122,7 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       if (IS_DEBUG) {
         console.log('[Centers][debug] Response:', {
           count: nearbyCenters.length,
-          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.city })),
+          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.location.city })),
         });
       }
 
@@ -125,6 +130,11 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
     } catch (error: any) {
       console.error('Error loading centers:', error);
       setCenters([]); // Clear centers on error
+
+      // Show user-friendly error message
+      const errorMessage =
+        error?.response?.data?.detail || error?.message || 'Failed to load centers';
+      alert(`Error: ${errorMessage}. Please try again.`);
     } finally {
       setIsSearchingCenters(false);
     }
@@ -135,17 +145,26 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
       (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
 
+    // Get the current zip code value (trimmed)
+    const currentZipCode = zipCode?.trim() || '';
+
     if (IS_DEBUG) {
-      console.log('[TransplantNavigator] handleFindCenters called, zipCode:', zipCode);
+      console.log('[TransplantNavigator] handleFindCenters called, zipCode:', currentZipCode);
+    }
+
+    // Validate zip code if provided
+    if (currentZipCode.length > 0 && !/^\d{5}$/.test(currentZipCode)) {
+      alert('Please enter a valid 5-digit ZIP code.');
+      return;
     }
 
     try {
       // Use ZIP code if provided, otherwise load CA centers
-      if (zipCode && zipCode.trim().length > 0) {
+      if (currentZipCode.length > 0) {
         if (IS_DEBUG) {
-          console.log('[TransplantNavigator] Loading centers by ZIP:', zipCode);
+          console.log('[TransplantNavigator] Loading centers by ZIP:', currentZipCode);
         }
-        await loadCenters(zipCode);
+        await loadCenters(currentZipCode);
       } else {
         if (IS_DEBUG) {
           console.log('[TransplantNavigator] Loading centers by state: CA');
@@ -154,18 +173,18 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       }
 
       // Update referral state with location if ZIP code is provided
-      if (zipCode && zipCode.trim().length > 0 && referralState) {
+      if (currentZipCode.length > 0 && referralState) {
         try {
           // Resolve ZIP code to city/state
-          const locationInfo = resolveZipCode(zipCode);
+          const locationInfo = resolveZipCode(currentZipCode);
 
           if (IS_DEBUG) {
-            console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+            console.log('[TransplantNavigator] Resolved ZIP:', currentZipCode, '→', locationInfo);
           }
 
           const updatedLocation = {
             ...referralState.location,
-            zip: zipCode,
+            zip: currentZipCode,
             ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
           };
 
@@ -173,6 +192,10 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
             ...referralState,
             location: updatedLocation,
           });
+
+          // Reload referral state to get updated data
+          const updatedState = await apiService.getReferralState();
+          setReferralState(updatedState);
         } catch (error: any) {
           console.error('Error updating referral state:', error);
           // Don't block the UI if state update fails
@@ -180,14 +203,13 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       }
     } catch (error: any) {
       console.error('[TransplantNavigator] Error in handleFindCenters:', error);
-      // Show user-friendly error message
-      alert('Failed to load centers. Please try again.');
+      // Error handling is done in loadCenters, so we don't need to show another alert here
     }
   };
 
   const handleSelectCenter = (center: TransplantCenter) => {
     setSelectedCenter(center);
-    setCurrentScreen('pathway');
+    setCurrentScreen('next-steps');
   };
 
   const handleMarkReferralReceived = async () => {
@@ -258,7 +280,13 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       style={styles.gradient}>
       <PathwayBackground opacity={0.15} animate={false} />
       <SafeAreaView className="flex-1">
-        <NavigationBar onBack={onNavigateBack} />
+        <NavigationBar
+          onBack={
+            currentScreen === 'next-steps'
+              ? () => setCurrentScreen('centers')
+              : onNavigateBack
+          }
+        />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
           {currentScreen === 'centers' && (
             <CentersScreen
@@ -274,31 +302,12 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
             />
           )}
 
-          {currentScreen === 'pathway' && referralPathway && (
-            <ReferralPathwayScreen
-              pathway={referralPathway}
-              selectedCenter={selectedCenter}
-              referralState={referralState}
-              onBack={() => setCurrentScreen('centers')}
-              onNextSteps={() => setCurrentScreen('next-steps')}
-              onUpdateReferralState={async (updates) => {
-                if (referralState) {
-                  const updated = await apiService.updateReferralState({
-                    ...referralState,
-                    ...updates,
-                  });
-                  setReferralState(updated);
-                }
-              }}
-            />
-          )}
-
           {currentScreen === 'next-steps' && referralPathway && (
             <NextStepsScreen
               pathway={referralPathway}
               selectedCenter={selectedCenter}
               referralState={referralState}
-              onBack={() => setCurrentScreen('pathway')}
+              onBack={() => setCurrentScreen('centers')}
               onUpdateReferralState={async (updates) => {
                 if (referralState) {
                   const updated = await apiService.updateReferralState({

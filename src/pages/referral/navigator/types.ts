@@ -6,7 +6,7 @@
 
 import type { TransplantCenter, PatientReferralState, ReferralPathway } from '../../../services/api';
 
-export type NavigatorScreen = 'centers' | 'pathway' | 'next-steps';
+export type NavigatorScreen = 'centers' | 'next-steps';
 
 export type TransplantAccessNavigatorProps = {
   onNavigateBack: () => void;
@@ -22,15 +22,6 @@ export type CentersScreenProps = {
   onFindCenters: () => void;
   onSelectCenter: (center: TransplantCenter) => void;
   onMarkReferralReceived: () => void;
-};
-
-export type ReferralPathwayScreenProps = {
-  pathway: ReferralPathway;
-  selectedCenter: TransplantCenter | null;
-  referralState: PatientReferralState | null;
-  onBack: () => void;
-  onNextSteps: () => void;
-  onUpdateReferralState: (updates: Partial<PatientReferralState>) => Promise<void>;
 };
 
 export type NextStepsScreenProps = {

@@ -9,7 +9,6 @@ export type {
   NavigatorScreen,
   TransplantAccessNavigatorProps,
   CentersScreenProps,
-  ReferralPathwayScreenProps,
   NextStepsScreenProps,
 } from './types';
 

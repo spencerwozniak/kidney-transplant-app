@@ -154,6 +154,13 @@ export const ReferralViewScreen = ({
           setIsFindCentersModalOpen(true);
         }, 300);
       }
+
+      // If resetting (marking as not received), navigate back to pathway screen
+      if (!newHasReferral) {
+        setTimeout(() => {
+          onNavigateBack();
+        }, 300);
+      }
     } catch (error: any) {
       console.error('Error updating referral status:', error);
       alert('Failed to update referral status. Please try again.');
@@ -275,7 +282,7 @@ export const ReferralViewScreen = ({
                     <TouchableOpacity
                       onPress={() => setIsEditingReferralStatus(true)}
                       activeOpacity={0.7}>
-                      <Text className="text-sm font-semibold text-green-600">Edit</Text>
+                      <Text className="text-sm font-semibold text-red-600">Reset</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -420,20 +427,6 @@ export const ReferralViewScreen = ({
                 </View>
               </View>
             )}
-
-            {/* Find Centers Button */}
-            {onNavigateToFindCenters && (
-              <View className="mb-6">
-                <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={handleOpenFindCenters}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>
-                    {referralState.location?.zip ? 'Update Center Location' : 'Find Centers'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </Animated.View>
         </ScrollView>
 
@@ -483,69 +476,6 @@ export const ReferralViewScreen = ({
                       {referralState?.has_referral ? 'Reset' : 'Confirm'}
                     </Text>
                   )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Find Centers Modal */}
-        <Modal
-          visible={isFindCentersModalOpen}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setIsFindCentersModalOpen(false)}>
-          <View className="flex-1 items-center justify-center bg-black/50 px-4">
-            <View className={combineClasses(cards.default.elevated, 'w-full max-w-md p-6')}>
-              <Text className={combineClasses(typography.h4, 'mb-4 text-gray-900')}>
-                Find Transplant Centers
-              </Text>
-              <Text className={combineClasses(typography.body.small, 'mb-6 text-gray-700')}>
-                Enter your ZIP code to search for transplant centers near you.
-              </Text>
-
-              <View className="mb-6">
-                <Text
-                  className={combineClasses(
-                    typography.body.small,
-                    'mb-2 font-semibold text-gray-700'
-                  )}>
-                  ZIP Code
-                </Text>
-                <TextInput
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-base"
-                  placeholder="Enter ZIP Code"
-                  value={findCentersZipCode}
-                  onChangeText={setFindCentersZipCode}
-                  keyboardType="numeric"
-                  maxLength={5}
-                />
-              </View>
-
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  className={combineClasses(
-                    buttons.outline.base,
-                    buttons.outline.enabled,
-                    'flex-1'
-                  )}
-                  onPress={() => setIsFindCentersModalOpen(false)}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className={combineClasses(
-                    buttons.primary.base,
-                    findCentersZipCode.trim().length > 0
-                      ? buttons.primary.enabled
-                      : buttons.primary.disabled,
-                    'flex-1'
-                  )}
-                  onPress={handleFindCentersSubmit}
-                  disabled={!findCentersZipCode.trim().length}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.primary.text}>Continue</Text>
                 </TouchableOpacity>
               </View>
             </View>
