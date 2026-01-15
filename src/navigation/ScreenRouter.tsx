@@ -27,6 +27,7 @@ import { ResultsDetailScreen } from '../pages/ResultsDetailScreen';
 import { ChecklistTimelineScreen } from '../pages/checklist/ChecklistTimelineScreen';
 import { ChecklistItemEditScreen } from '../pages/checklist/ChecklistItemEditScreen';
 import { ChecklistDocumentsScreen } from '../pages/checklist/ChecklistDocumentsScreen';
+import { DocumentTextViewerScreen } from '../pages/checklist/DocumentTextViewerScreen';
 import { StyleExamples } from '../pages/StyleExamples';
 import { TransplantAccessNavigator } from '../pages/referral/navigator';
 import { ReferralViewScreen } from '../pages/referral/ReferralViewScreen';
@@ -63,6 +64,7 @@ export function ScreenRouter({
     setActiveTab,
     setCurrentScreen,
     editingChecklistItem,
+    viewingDocumentPath,
     isFirstTimeFinancialFlow,
     setIsFirstTimeFinancialFlow,
     patientDataPart1,
@@ -269,6 +271,16 @@ export function ScreenRouter({
       <ChecklistDocumentsScreen
         checklistItem={editingChecklistItem.item}
         onNavigateBack={checklistHandlers.handleNavigateBackFromDocuments}
+        onNavigateToDocumentText={checklistHandlers.handleViewDocumentText}
+      />
+    );
+  }
+
+  if (currentScreen === 'document-text-viewer' && viewingDocumentPath) {
+    return (
+      <DocumentTextViewerScreen
+        documentPath={viewingDocumentPath}
+        onNavigateBack={checklistHandlers.handleNavigateBackFromDocumentText}
       />
     );
   }

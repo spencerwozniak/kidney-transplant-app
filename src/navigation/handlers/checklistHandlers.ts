@@ -15,6 +15,8 @@ type ChecklistHandlers = {
   handleNavigateBackFromChecklistItem: () => void;
   handleRequestDocuments: () => void;
   handleNavigateBackFromDocuments: () => void;
+  handleViewDocumentText: (documentPath: string) => void;
+  handleNavigateBackFromDocumentText: () => void;
 };
 
 export function createChecklistHandlers(
@@ -24,6 +26,7 @@ export function createChecklistHandlers(
     setCurrentScreen,
     setEditingChecklistItem,
     editingChecklistItem,
+    setViewingDocumentPath,
   } = state;
 
   const handleViewChecklist = () => {
@@ -54,6 +57,16 @@ export function createChecklistHandlers(
     setCurrentScreen('checklist-item-edit');
   };
 
+  const handleViewDocumentText = (documentPath: string) => {
+    setViewingDocumentPath(documentPath);
+    setCurrentScreen('document-text-viewer');
+  };
+
+  const handleNavigateBackFromDocumentText = () => {
+    setViewingDocumentPath(null);
+    setCurrentScreen('checklist-documents');
+  };
+
   return {
     handleViewChecklist,
     handleEditChecklistItem,
@@ -61,6 +74,8 @@ export function createChecklistHandlers(
     handleNavigateBackFromChecklistItem,
     handleRequestDocuments,
     handleNavigateBackFromDocuments,
+    handleViewDocumentText,
+    handleNavigateBackFromDocumentText,
   };
 }
 

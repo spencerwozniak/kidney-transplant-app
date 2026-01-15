@@ -30,6 +30,7 @@ export type Screen =
   | 'checklist-timeline'
   | 'checklist-item-edit'
   | 'checklist-documents'
+  | 'document-text-viewer'
   // Referral Flow
   | 'transplant-access-navigator'
   | 'referral-view'

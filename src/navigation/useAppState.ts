@@ -39,6 +39,7 @@ export function useAppState() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFirstTimeFinancialFlow, setIsFirstTimeFinancialFlow] = useState(false);
   const [editingChecklistItem, setEditingChecklistItem] = useState<ChecklistEditingItem | null>(null);
+  const [viewingDocumentPath, setViewingDocumentPath] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('pathway');
   const [onboardingMessage, setOnboardingMessage] = useState<string | null>(null);
 
@@ -185,6 +186,8 @@ export function useAppState() {
     // Checklist state
     editingChecklistItem,
     setEditingChecklistItem,
+    viewingDocumentPath,
+    setViewingDocumentPath,
     
     // Tab state
     activeTab,

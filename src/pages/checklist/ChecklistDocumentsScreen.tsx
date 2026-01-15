@@ -39,11 +39,13 @@ const DOCUMENTS_CONTENT = DOCUMENTS_CONTENT_JSON as DocumentsContent;
 type ChecklistDocumentsScreenProps = {
   checklistItem: ChecklistItem;
   onNavigateBack?: () => void;
+  onNavigateToDocumentText?: (documentPath: string) => void;
 };
 
 export const ChecklistDocumentsScreen = ({
   checklistItem,
   onNavigateBack,
+  onNavigateToDocumentText,
 }: ChecklistDocumentsScreenProps) => {
   const content = DOCUMENTS_CONTENT[checklistItem.id];
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>(
@@ -382,6 +384,13 @@ export const ChecklistDocumentsScreen = ({
   };
 
   const viewDocument = async (docPath: string) => {
+    // Navigate to document text viewer if handler is provided
+    if (onNavigateToDocumentText) {
+      onNavigateToDocumentText(docPath);
+      return;
+    }
+
+    // Fallback: open document in browser (original behavior)
     try {
       const url = getDocumentUrl(docPath);
       const fileName = getFileName(docPath);

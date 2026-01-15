@@ -226,6 +226,35 @@ export const ChecklistItemEditScreen = ({
                 </View>
               </View>
 
+              {/* Documents Card - Always visible */}
+              {onRequestDocuments && (
+                <View
+                  className={combineClasses(
+                    cards.default.container,
+                    'mb-6 border-l-4 border-blue-500 bg-white/95',
+                    !isComplete ? 'opacity-50' : ''
+                  )}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    Upload Documents
+                  </Text>
+                  <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
+                    Learn what documents you should request from your provider for this evaluation
+                  </Text>
+                  <TouchableOpacity
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                    onPress={async () => {
+                      // Save changes before navigating to documents screen
+                      // Skip the onSave callback to preserve editingChecklistItem state
+                      await handleSave(true);
+                      onRequestDocuments();
+                    }}
+                    disabled={!isComplete}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>Upload Documents</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Completion Date/Time */}
               <View
                 className={combineClasses(
@@ -267,35 +296,6 @@ export const ChecklistItemEditScreen = ({
                   />
                 )}
               </View>
-
-              {/* Documents Card - Always visible */}
-              {onRequestDocuments && (
-                <View
-                  className={combineClasses(
-                    cards.default.container,
-                    'mb-6 border-l-4 border-blue-500 bg-white/95',
-                    !isComplete ? 'opacity-50' : ''
-                  )}>
-                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-                    Upload Documents
-                  </Text>
-                  <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
-                    Learn what documents you should request from your provider for this evaluation
-                  </Text>
-                  <TouchableOpacity
-                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                    onPress={async () => {
-                      // Save changes before navigating to documents screen
-                      // Skip the onSave callback to preserve editingChecklistItem state
-                      await handleSave(true);
-                      onRequestDocuments();
-                    }}
-                    disabled={!isComplete}
-                    activeOpacity={0.8}>
-                    <Text className={buttons.outline.text}>Upload Documents</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
 
               {/* Notes */}
               <View
