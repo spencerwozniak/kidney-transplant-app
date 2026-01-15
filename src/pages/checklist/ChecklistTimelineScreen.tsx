@@ -385,6 +385,20 @@ export const ChecklistTimelineScreen = ({
                               </Text>
                             </View>
                           )}
+
+                          {!isFuture && (
+                            <Text
+                              className={combineClasses(
+                                'mt-2 text-xs',
+                                isComplete
+                                  ? 'text-green-700'
+                                  : isCurrent
+                                    ? 'text-blue-700'
+                                    : 'text-gray-600'
+                              )}>
+                              Tap to edit →
+                            </Text>
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>

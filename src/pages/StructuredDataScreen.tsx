@@ -106,7 +106,7 @@ export const StructuredDataScreen = ({ onBack }: StructuredDataScreenProps) => {
             {/* Header */}
             <View className="mb-8">
               <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
-                Structured Data (FHIR)
+                Structured Data
               </Text>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
