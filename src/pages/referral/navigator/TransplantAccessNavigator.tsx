@@ -1,6 +1,6 @@
 /**
  * Transplant Access Navigator Component
- * 
+ *
  * Main orchestrator component that manages:
  * - Data loading (referral state, pathway, centers)
  * - Screen navigation (centers, pathway, next-steps)
@@ -14,7 +14,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { typography, combineClasses, layout } from '../../../styles/theme';
 import { NavigationBar } from '../../../components/NavigationBar';
 import { PathwayBackground } from '../../../components/PathwayBackground';
-import { apiService, TransplantCenter, PatientReferralState, ReferralPathway } from '../../../services/api';
+import {
+  apiService,
+  TransplantCenter,
+  PatientReferralState,
+  ReferralPathway,
+} from '../../../services/api';
 import type { NavigatorScreen, TransplantAccessNavigatorProps } from './types';
 import { CentersScreen } from './CentersScreen';
 import { ReferralPathwayScreen } from './ReferralPathwayScreen';
@@ -60,25 +65,25 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
     const IS_DEBUG =
       (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
       (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
-    
+
     try {
       setIsSearchingCenters(true);
-      
+
       if (IS_DEBUG) {
         console.log('[Centers][debug] Searching by state:', stateCode);
       }
-      
+
       const nearbyCenters = await apiService.findNearbyCenters({
         state: stateCode,
       });
-      
+
       if (IS_DEBUG) {
         console.log('[Centers][debug] Response:', {
           count: nearbyCenters.length,
-          centers: nearbyCenters.slice(0, 2).map(c => ({ name: c.name, city: c.city })),
+          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.city })),
         });
       }
-      
+
       setCenters(nearbyCenters);
     } catch (error: any) {
       console.error('Error loading centers:', error);
@@ -100,22 +105,22 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
 
     try {
       setIsSearchingCenters(true);
-      
+
       if (IS_DEBUG) {
         console.log('[Centers][debug] Searching by ZIP:', zipToUse);
       }
-      
+
       const nearbyCenters = await apiService.findNearbyCenters({
         zip_code: zipToUse,
       });
-      
+
       if (IS_DEBUG) {
         console.log('[Centers][debug] Response:', {
           count: nearbyCenters.length,
-          centers: nearbyCenters.slice(0, 2).map(c => ({ name: c.name, city: c.city })),
+          centers: nearbyCenters.slice(0, 2).map((c) => ({ name: c.name, city: c.city })),
         });
       }
-      
+
       setCenters(nearbyCenters);
     } catch (error: any) {
       console.error('Error loading centers:', error);
@@ -126,37 +131,57 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
   };
 
   const handleFindCenters = async () => {
-    // Use ZIP code if provided, otherwise load CA centers
-    if (zipCode && zipCode.trim().length > 0) {
-      await loadCenters(zipCode);
-    } else {
-      await loadCentersByState('CA');
+    const IS_DEBUG =
+      (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
+    if (IS_DEBUG) {
+      console.log('[TransplantNavigator] handleFindCenters called, zipCode:', zipCode);
     }
 
-    // Update referral state with location if ZIP code is provided
-    if (zipCode && zipCode.trim().length > 0 && referralState) {
-      try {
-        // Resolve ZIP code to city/state
-        const locationInfo = resolveZipCode(zipCode);
-        
-        if (__DEV__) {
-          console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+    try {
+      // Use ZIP code if provided, otherwise load CA centers
+      if (zipCode && zipCode.trim().length > 0) {
+        if (IS_DEBUG) {
+          console.log('[TransplantNavigator] Loading centers by ZIP:', zipCode);
         }
-        
-        const updatedLocation = {
-          ...referralState.location,
-          zip: zipCode,
-          ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
-        };
-        
-        await apiService.updateReferralState({
-          ...referralState,
-          location: updatedLocation,
-        });
-      } catch (error: any) {
-        console.error('Error updating referral state:', error);
-        // Don't block the UI if state update fails
+        await loadCenters(zipCode);
+      } else {
+        if (IS_DEBUG) {
+          console.log('[TransplantNavigator] Loading centers by state: CA');
+        }
+        await loadCentersByState('CA');
       }
+
+      // Update referral state with location if ZIP code is provided
+      if (zipCode && zipCode.trim().length > 0 && referralState) {
+        try {
+          // Resolve ZIP code to city/state
+          const locationInfo = resolveZipCode(zipCode);
+
+          if (IS_DEBUG) {
+            console.log('[TransplantNavigator] Resolved ZIP:', zipCode, '→', locationInfo);
+          }
+
+          const updatedLocation = {
+            ...referralState.location,
+            zip: zipCode,
+            ...(locationInfo && { city: locationInfo.city, state: locationInfo.state }),
+          };
+
+          await apiService.updateReferralState({
+            ...referralState,
+            location: updatedLocation,
+          });
+        } catch (error: any) {
+          console.error('Error updating referral state:', error);
+          // Don't block the UI if state update fails
+        }
+      }
+    } catch (error: any) {
+      console.error('[TransplantNavigator] Error in handleFindCenters:', error);
+      // Show user-friendly error message
+      alert('Failed to load centers. Please try again.');
     }
   };
 
@@ -174,16 +199,16 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
           has_referral: true,
           referral_status: 'completed',
         });
-        
+
         // Invalidate all relevant caches so PathwayScreen refreshes
         apiService.clearCacheKey('referral_state');
         apiService.clearCacheKey('patient_status');
         apiService.clearCacheKey('checklist');
-        
+
         // Reload referral state to get updated data
         const updatedState = await apiService.getReferralState();
         setReferralState(updatedState);
-        
+
         // Dev log
         const IS_DEBUG =
           (typeof __DEV__ !== 'undefined' && (__DEV__ as boolean)) ||
@@ -235,59 +260,59 @@ export const TransplantAccessNavigator = ({ onNavigateBack }: TransplantAccessNa
       <SafeAreaView className="flex-1">
         <NavigationBar onBack={onNavigateBack} />
         <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
-        {currentScreen === 'centers' && (
-          <CentersScreen
-            centers={centers}
-            zipCode={zipCode}
-            isSearching={isSearchingCenters}
-            referralState={referralState}
-            isMarkingReferral={isMarkingReferral}
-            onZipCodeChange={setZipCode}
-            onFindCenters={handleFindCenters}
-            onSelectCenter={handleSelectCenter}
-            onMarkReferralReceived={handleMarkReferralReceived}
-          />
-        )}
+          {currentScreen === 'centers' && (
+            <CentersScreen
+              centers={centers}
+              zipCode={zipCode}
+              isSearching={isSearchingCenters}
+              referralState={referralState}
+              isMarkingReferral={isMarkingReferral}
+              onZipCodeChange={setZipCode}
+              onFindCenters={handleFindCenters}
+              onSelectCenter={handleSelectCenter}
+              onMarkReferralReceived={handleMarkReferralReceived}
+            />
+          )}
 
-        {currentScreen === 'pathway' && referralPathway && (
-          <ReferralPathwayScreen
-            pathway={referralPathway}
-            selectedCenter={selectedCenter}
-            referralState={referralState}
-            onBack={() => setCurrentScreen('centers')}
-            onNextSteps={() => setCurrentScreen('next-steps')}
-            onUpdateReferralState={async (updates) => {
-              if (referralState) {
-                const updated = await apiService.updateReferralState({
-                  ...referralState,
-                  ...updates,
-                });
-                setReferralState(updated);
-              }
-            }}
-          />
-        )}
+          {currentScreen === 'pathway' && referralPathway && (
+            <ReferralPathwayScreen
+              pathway={referralPathway}
+              selectedCenter={selectedCenter}
+              referralState={referralState}
+              onBack={() => setCurrentScreen('centers')}
+              onNextSteps={() => setCurrentScreen('next-steps')}
+              onUpdateReferralState={async (updates) => {
+                if (referralState) {
+                  const updated = await apiService.updateReferralState({
+                    ...referralState,
+                    ...updates,
+                  });
+                  setReferralState(updated);
+                }
+              }}
+            />
+          )}
 
-        {currentScreen === 'next-steps' && referralPathway && (
-          <NextStepsScreen
-            pathway={referralPathway}
-            selectedCenter={selectedCenter}
-            referralState={referralState}
-            onBack={() => setCurrentScreen('pathway')}
-            onUpdateReferralState={async (updates) => {
-              if (referralState) {
-                const updated = await apiService.updateReferralState({
-                  ...referralState,
-                  ...updates,
-                });
-                setReferralState(updated);
-                // Reload pathway data to reflect changes
-                await loadInitialData();
-              }
-            }}
-            onNavigateBack={onNavigateBack}
-          />
-        )}
+          {currentScreen === 'next-steps' && referralPathway && (
+            <NextStepsScreen
+              pathway={referralPathway}
+              selectedCenter={selectedCenter}
+              referralState={referralState}
+              onBack={() => setCurrentScreen('pathway')}
+              onUpdateReferralState={async (updates) => {
+                if (referralState) {
+                  const updated = await apiService.updateReferralState({
+                    ...referralState,
+                    ...updates,
+                  });
+                  setReferralState(updated);
+                  // Reload pathway data to reflect changes
+                  await loadInitialData();
+                }
+              }}
+              onNavigateBack={onNavigateBack}
+            />
+          )}
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -299,4 +324,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

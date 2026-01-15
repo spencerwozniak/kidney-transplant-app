@@ -889,7 +889,8 @@ class ApiService {
     },
     onChunk: (chunk: string) => void,
     onError?: (error: string) => void,
-    onComplete?: () => void
+    onComplete?: () => void,
+    onButton?: (buttonMetadata: { show_button: boolean; button_text: string; pathway_stage?: string }) => void
   ): Promise<void> {
     const body: { query: string; provider?: string; model?: string } = {
       query: params.query,
@@ -947,6 +948,9 @@ class ApiService {
                   resolve();
                   return;
                 }
+                if (data.button !== undefined && onButton) {
+                  onButton(data.button);
+                }
                 if (data.chunk !== undefined) {
                   onChunk(data.chunk);
                 }
@@ -974,6 +978,8 @@ class ApiService {
                     if (onComplete) {
                       onComplete();
                     }
+                  } else if (data.button !== undefined && onButton) {
+                    onButton(data.button);
                   } else if (data.chunk !== undefined) {
                     onChunk(data.chunk);
                   }
@@ -1050,6 +1056,20 @@ class ApiService {
   }> {
     return this.request<{ enabled: boolean; provider: string | null; message: string }>(
       '/api/v1/ai-assistant/status'
+    );
+  }
+
+  async exportFhirData(): Promise<any> {
+    return this.request<any>('/api/v1/patients/fhir', {
+      headers: {
+        'Accept': 'application/fhir+json',
+      },
+    });
+  }
+
+  async exportClinicalSummary(): Promise<{ summary: string; generated_at: string; patient_id: string; model: string }> {
+    return this.request<{ summary: string; generated_at: string; patient_id: string; model: string }>(
+      '/api/v1/patients/clinical-summary'
     );
   }
 }

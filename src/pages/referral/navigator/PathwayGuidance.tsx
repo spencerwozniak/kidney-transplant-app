@@ -23,13 +23,24 @@ export const PathwayGuidance = ({ pathway }: PathwayGuidanceProps) => {
       {/* Next Steps */}
       {pathway.guidance.steps && (
         <View className="mb-6">
-          <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>Next Steps</Text>
+          <Text className={combineClasses(typography.h5, 'mb-4 text-white shadow')}>
+            Next Steps
+          </Text>
           {pathway.guidance.steps.map((step, index) => (
-            <View key={index} className="mb-3 flex-row">
-              <View className="mr-3 h-6 w-6 items-center justify-center rounded-full bg-green-100">
-                <Text className="text-sm font-semibold text-green-700">{index + 1}</Text>
+            <View
+              key={index}
+              className={combineClasses(
+                cards.default.container,
+                'mb-3 border-l-4 border-blue-500 bg-white/95'
+              )}>
+              <View className="mb-2 flex-row items-center">
+                <View className="mr-3 h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                  <Text className="text-sm font-semibold text-green-700">{index + 1}</Text>
+                </View>
+                <Text className={combineClasses(typography.body.small, 'flex-1 text-blue-800')}>
+                  {step}
+                </Text>
               </View>
-              <Text className={combineClasses(typography.body.medium, 'flex-1')}>{step}</Text>
             </View>
           ))}
         </View>
@@ -37,9 +48,13 @@ export const PathwayGuidance = ({ pathway }: PathwayGuidanceProps) => {
 
       {/* Script */}
       {pathway.guidance.script && (
-        <View className={combineClasses(cards.colored.green, 'mb-6')}>
-          <Text className={combineClasses(typography.h6, 'mb-2 text-green-900')}>What to Say</Text>
-          <Text className={combineClasses(typography.body.medium, 'leading-6 text-green-800')}>
+        <View
+          className={combineClasses(
+            cards.default.container,
+            'mb-6 border-l-4 border-green-500 bg-white/95'
+          )}>
+          <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>What to Say</Text>
+          <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
             "{pathway.guidance.script}"
           </Text>
         </View>
@@ -47,12 +62,21 @@ export const PathwayGuidance = ({ pathway }: PathwayGuidanceProps) => {
 
       {/* What to Send */}
       {pathway.guidance.what_to_send && (
-        <View className="mb-6">
-          <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>What to Send</Text>
+        <View
+          className={combineClasses(
+            cards.default.container,
+            'mb-6 border-l-4 border-blue-500 bg-white/95'
+          )}>
+          <Text className={combineClasses(typography.h5, 'mb-4 text-blue-900')}>
+            What to Send
+          </Text>
           {pathway.guidance.what_to_send.map((item, index) => (
             <View key={index} className="mb-2 flex-row">
               <Text className="mr-2 text-green-600">✓</Text>
-              <Text className={combineClasses(typography.body.medium, 'flex-1')}>{item}</Text>
+              <Text
+                className={combineClasses(typography.body.small, 'flex-1 leading-6 text-blue-800')}>
+                {item}
+              </Text>
             </View>
           ))}
         </View>
@@ -61,13 +85,20 @@ export const PathwayGuidance = ({ pathway }: PathwayGuidanceProps) => {
       {/* Available Pathways */}
       {pathway.guidance.paths && (
         <View className="mb-6">
-          <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>
+          <Text className={combineClasses(typography.h5, 'mb-4 text-white shadow')}>
             Available Pathways
           </Text>
           {pathway.guidance.paths.map((path, index) => (
-            <View key={index} className={combineClasses(cards.default.container, 'mb-4')}>
-              <Text className={combineClasses(typography.h6, 'mb-2')}>{path.name}</Text>
-              <Text className={combineClasses(typography.body.small, 'mb-3 text-gray-600')}>
+            <View
+              key={index}
+              className={combineClasses(
+                cards.default.container,
+                'mb-4 border-l-4 border-blue-500 bg-white/95'
+              )}>
+              <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                {path.name}
+              </Text>
+              <Text className={combineClasses(typography.body.small, 'mb-3 leading-6 text-blue-800')}>
                 {path.description}
               </Text>
               <Text

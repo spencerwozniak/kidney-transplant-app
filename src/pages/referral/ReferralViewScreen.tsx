@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Animated, StyleSheet, Modal, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  buttons,
-  typography,
-  cards,
-  combineClasses,
-  layout,
-} from '../../styles/theme';
+import { buttons, typography, cards, combineClasses, layout } from '../../styles/theme';
 import { NavigationBar } from '../../components/NavigationBar';
 import { PathwayBackground } from '../../components/PathwayBackground';
 import { apiService, PatientReferralState } from '../../services/api';
@@ -20,7 +24,10 @@ type ReferralViewScreenProps = {
   onNavigateToFindCenters?: () => void;
 };
 
-export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: ReferralViewScreenProps) => {
+export const ReferralViewScreen = ({
+  onNavigateBack,
+  onNavigateToFindCenters,
+}: ReferralViewScreenProps) => {
   const [referralState, setReferralState] = useState<PatientReferralState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -57,11 +64,16 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
     try {
       const state = await apiService.getReferralState();
       setReferralState(state);
-      
+
       // Dev-only log for display label
       if (__DEV__ && state.location) {
         const displayLabel = formatLocation(state.location);
-        console.log('[ReferralView] Display label:', displayLabel, 'from location:', state.location);
+        console.log(
+          '[ReferralView] Display label:',
+          displayLabel,
+          'from location:',
+          state.location
+        );
       }
     } catch (error: any) {
       console.error('Error fetching referral state:', error);
@@ -81,11 +93,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
     try {
       // Resolve ZIP code to city/state
       const locationInfo = resolveZipCode(editZipCode);
-      
+
       if (__DEV__) {
         console.log('[ReferralView] Resolved ZIP:', editZipCode, '→', locationInfo);
       }
-      
+
       const updated = await apiService.updateReferralState({
         ...referralState,
         location: {
@@ -96,7 +108,7 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
       });
       setReferralState(updated);
       setIsEditingLocation(false);
-      
+
       if (__DEV__ && updated.location) {
         const displayLabel = formatLocation(updated.location);
         console.log('[ReferralView] Updated display label:', displayLabel);
@@ -119,19 +131,22 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
         has_referral: newHasReferral,
         referral_status: newHasReferral ? 'completed' : 'not_started',
       });
-      
+
       // Invalidate all relevant caches so PathwayScreen updates
       apiService.clearCacheKey('referral_state');
       apiService.clearCacheKey('patient_status');
       apiService.clearCacheKey('checklist');
-      
+
       setReferralState(updated);
       setIsEditingReferralStatus(false);
-      
+
       if (__DEV__) {
-        console.log('[ReferralView] Referral status changed to:', newHasReferral ? 'RECEIVED' : 'NOT RECEIVED');
+        console.log(
+          '[ReferralView] Referral status changed to:',
+          newHasReferral ? 'RECEIVED' : 'NOT RECEIVED'
+        );
       }
-      
+
       // If marking as received and no location set, open find centers modal
       if (newHasReferral && !updated.location?.zip) {
         setTimeout(() => {
@@ -198,7 +213,8 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
             <Text className={combineClasses(typography.h5, 'mb-2 text-center text-white shadow')}>
               No Referral Information
             </Text>
-            <Text className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
+            <Text
+              className={combineClasses(typography.body.small, 'text-center text-white/90 shadow')}>
               No referral information found.
             </Text>
           </View>
@@ -232,10 +248,13 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
                 Referral Information
               </Text>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
+              <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+                View your referral status and related information
+              </Text>
             </View>
 
             {/* Referral Status */}
-            <View className="mb-8">
+            <View className="mb-6">
               {referralState.has_referral ? (
                 <View className={combineClasses(cards.default.container, 'bg-white/95')}>
                   <View className="flex-row items-center justify-between">
@@ -244,7 +263,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
                         ✓ Referral Received
                       </Text>
                       {referralState.referral_status && (
-                        <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
+                        <Text
+                          className={combineClasses(
+                            typography.body.small,
+                            'leading-6 text-green-800'
+                          )}>
                           Status: {referralState.referral_status.replace('_', ' ').toUpperCase()}
                         </Text>
                       )}
@@ -252,76 +275,96 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
                     <TouchableOpacity
                       onPress={() => setIsEditingReferralStatus(true)}
                       activeOpacity={0.7}>
-                      <Text className="text-green-600 font-semibold text-sm">Edit</Text>
+                      <Text className="text-sm font-semibold text-green-600">Edit</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               ) : (
                 <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-                        No Referral Yet
-                      </Text>
-                      <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-                        No referral has been received at this time.
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => setIsEditingReferralStatus(true)}
-                      activeOpacity={0.7}>
-                      <Text className="text-blue-600 font-semibold text-sm">Edit</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    No Referral Yet
+                  </Text>
+                  <Text
+                    className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                    No referral has been received at this time.
+                  </Text>
                 </View>
               )}
             </View>
 
             {/* Referral Source */}
             {referralState.referral_source && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Referral Source
                 </Text>
-                <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800 capitalize')}>
+                <Text
+                  className={combineClasses(
+                    typography.body.small,
+                    'capitalize leading-6 text-blue-800'
+                  )}>
                   {referralState.referral_source.replace('_', ' ')}
                 </Text>
               </View>
             )}
 
             {/* Location */}
-            {referralState.location && (referralState.location.zip || referralState.location.state) && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
-                <View className="flex-row items-center justify-between">
-                  <Text className={combineClasses(typography.h5, 'text-blue-900')}>Location</Text>
-                  <TouchableOpacity
-                    onPress={handleEditLocation}
-                    activeOpacity={0.7}>
-                    <Text className="text-blue-600 font-semibold text-sm">Edit</Text>
-                  </TouchableOpacity>
-                </View>
-                <View className="mt-2 space-y-2">
-                  <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-                    {formatLocation(referralState.location)}
+            {referralState.location &&
+              (referralState.location.zip || referralState.location.state) && (
+                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                  <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
+                    Location
                   </Text>
+                  <View className="space-y-2">
+                    {referralState.location.zip && (
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'leading-6 text-blue-800'
+                        )}>
+                        ZIP Code: {referralState.location.zip}
+                      </Text>
+                    )}
+                    {referralState.location.state && (
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'leading-6 text-blue-800'
+                        )}>
+                        State: {referralState.location.state}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
             {/* Nephrologist Information */}
             {referralState.last_nephrologist &&
               (referralState.last_nephrologist.name || referralState.last_nephrologist.clinic) && (
-                <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+                <View
+                  className={combineClasses(
+                    cards.default.container,
+                    'mb-6 border-l-4 border-blue-500 bg-white/95'
+                  )}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                     Nephrologist
                   </Text>
                   {referralState.last_nephrologist.name && (
-                    <Text className={combineClasses(typography.body.small, 'mb-2 leading-6 text-blue-800')}>
+                    <Text
+                      className={combineClasses(
+                        typography.body.small,
+                        'mb-2 leading-6 text-blue-800'
+                      )}>
                       {referralState.last_nephrologist.name}
                     </Text>
                   )}
                   {referralState.last_nephrologist.clinic && (
-                    <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                    <Text
+                      className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
                       {referralState.last_nephrologist.clinic}
                     </Text>
                   )}
@@ -330,15 +373,21 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
 
             {/* Dialysis Center Information */}
             {referralState.dialysis_center && referralState.dialysis_center.name && (
-              <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Dialysis Center
                 </Text>
-                <Text className={combineClasses(typography.body.small, 'mb-2 leading-6 text-blue-800')}>
+                <Text
+                  className={combineClasses(typography.body.small, 'mb-2 leading-6 text-blue-800')}>
                   {referralState.dialysis_center.name}
                 </Text>
                 {referralState.dialysis_center.social_worker_contact && (
-                  <Text className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
+                  <Text
+                    className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
                     Social Worker: {referralState.dialysis_center.social_worker_contact}
                   </Text>
                 )}
@@ -347,17 +396,26 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
 
             {/* Preferred Centers */}
             {referralState.preferred_centers && referralState.preferred_centers.length > 0 && (
-              <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>
+              <View
+                className={combineClasses(
+                  cards.default.container,
+                  'mb-6 border-l-4 border-blue-500 bg-white/95'
+                )}>
                 <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
                   Preferred Centers
                 </Text>
                 <View className="space-y-2">
                   {referralState.preferred_centers.map((centerId, index) => (
-                    <Text
-                      key={index}
-                      className={combineClasses(typography.body.small, 'leading-6 text-blue-800')}>
-                      • {centerId}
-                    </Text>
+                    <View key={index} className="flex-row">
+                      <Text className="mr-2 text-blue-800">•</Text>
+                      <Text
+                        className={combineClasses(
+                          typography.body.small,
+                          'flex-1 leading-6 text-blue-800'
+                        )}>
+                        {centerId}
+                      </Text>
+                    </View>
                   ))}
                 </View>
               </View>
@@ -367,10 +425,10 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
             {onNavigateToFindCenters && (
               <View className="mb-6">
                 <TouchableOpacity
-                  className="rounded-full px-6 py-4 active:opacity-90 bg-white w-full"
+                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
                   onPress={handleOpenFindCenters}
                   activeOpacity={0.8}>
-                  <Text className="text-center text-base font-semibold text-gray-800">
+                  <Text className={buttons.outline.text}>
                     {referralState.location?.zip ? 'Update Center Location' : 'Find Centers'}
                   </Text>
                 </TouchableOpacity>
@@ -398,7 +456,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
 
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled, 'flex-1')}
+                  className={combineClasses(
+                    buttons.outline.base,
+                    buttons.outline.enabled,
+                    'flex-1'
+                  )}
                   onPress={() => setIsEditingReferralStatus(false)}
                   disabled={isSavingReferralStatus}
                   activeOpacity={0.8}>
@@ -406,7 +468,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  className={combineClasses(buttons.primary.base, buttons.primary.enabled, 'flex-1')}
+                  className={combineClasses(
+                    buttons.primary.base,
+                    buttons.primary.enabled,
+                    'flex-1'
+                  )}
                   onPress={handleChangeReferralStatus}
                   disabled={isSavingReferralStatus}
                   activeOpacity={0.8}>
@@ -439,7 +505,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
               </Text>
 
               <View className="mb-6">
-                <Text className={combineClasses(typography.body.small, 'mb-2 font-semibold text-gray-700')}>
+                <Text
+                  className={combineClasses(
+                    typography.body.small,
+                    'mb-2 font-semibold text-gray-700'
+                  )}>
                   ZIP Code
                 </Text>
                 <TextInput
@@ -454,7 +524,11 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
 
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled, 'flex-1')}
+                  className={combineClasses(
+                    buttons.outline.base,
+                    buttons.outline.enabled,
+                    'flex-1'
+                  )}
                   onPress={() => setIsFindCentersModalOpen(false)}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>Cancel</Text>
@@ -463,7 +537,9 @@ export const ReferralViewScreen = ({ onNavigateBack, onNavigateToFindCenters }: 
                 <TouchableOpacity
                   className={combineClasses(
                     buttons.primary.base,
-                    findCentersZipCode.trim().length > 0 ? buttons.primary.enabled : buttons.primary.disabled,
+                    findCentersZipCode.trim().length > 0
+                      ? buttons.primary.enabled
+                      : buttons.primary.disabled,
                     'flex-1'
                   )}
                   onPress={handleFindCentersSubmit}
@@ -485,4 +561,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

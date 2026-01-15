@@ -27,10 +27,16 @@ export const NextStepsScreen = ({
 }: NextStepsScreenProps) => {
   return (
     <View className="px-6 py-8">
-      <Text className={combineClasses(typography.h2, 'mb-2 text-left')}>What to Do Next</Text>
-      <Text className={combineClasses(typography.body.medium, 'mb-6 text-left text-gray-600')}>
-        Clear, actionable steps to secure your referral
-      </Text>
+      {/* Header */}
+      <View className="mb-8">
+        <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+          What to Do Next
+        </Text>
+        <View className="h-1 w-16 rounded-full bg-white shadow" />
+        <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+          Clear, actionable steps to secure your referral
+        </Text>
+      </View>
 
       {/* Selected Center Contact Information */}
       {selectedCenter && <SelectedCenterInfo center={selectedCenter} />}

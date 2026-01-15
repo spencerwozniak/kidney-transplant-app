@@ -13,8 +13,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const PathwayBackground = ({
   opacity = 0.15,
   onAnimationComplete,
-  // Disable heavy SVG path animation on web to reduce LCP and initial paint cost
-  animate = Platform.OS === 'web' ? false : true,
+  animate = true,
 }: PathwayBackgroundProps) => {
   // Create animated values for each path
   // Start with 0.01 instead of 0 on web to ensure paths are in DOM

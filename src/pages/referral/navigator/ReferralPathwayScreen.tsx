@@ -25,15 +25,25 @@ export const ReferralPathwayScreen = ({
 }: ReferralPathwayScreenProps) => {
   return (
     <View className="px-6 py-8">
-      <Text className={combineClasses(typography.h2, 'mb-2 text-left')}>Your Referral Pathway</Text>
-      <Text className={combineClasses(typography.body.medium, 'mb-6 text-left text-gray-600')}>
-        {pathway.guidance.title}
-      </Text>
+      {/* Header */}
+      <View className="mb-8">
+        <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+          Your Referral Pathway
+        </Text>
+        <View className="h-1 w-16 rounded-full bg-white shadow" />
+        <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
+          {pathway.guidance.title}
+        </Text>
+      </View>
 
       {/* Selected Center */}
       {selectedCenter && (
-        <View className={combineClasses(cards.colored.blue, 'mb-6')}>
-          <Text className={combineClasses(typography.h6, 'mb-2 text-blue-900')}>
+        <View
+          className={combineClasses(
+            cards.default.container,
+            'mb-6 border-l-4 border-blue-500 bg-white/95'
+          )}>
+          <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
             Selected Center
           </Text>
           <Text className={combineClasses(typography.body.medium, 'text-blue-800')}>

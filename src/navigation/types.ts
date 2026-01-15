@@ -33,6 +33,10 @@ export type Screen =
   // Referral Flow
   | 'transplant-access-navigator'
   | 'referral-view'
+  // Data Export
+  | 'export'
+  | 'clinical-summary'
+  | 'structured-data'
   // Development
   | 'examples';
 

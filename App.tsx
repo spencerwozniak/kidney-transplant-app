@@ -36,13 +36,11 @@ import './src/styles/global.css';
  */
 export default function App() {
   // Load Nunito font (skip JS font loader on web — web/index.html already requests fonts with display=swap)
-  const [fontsLoaded, fontError] = Platform.OS === 'web'
-    ? [true, null]
-    : useFonts({
-        Nunito_400Regular,
-        Nunito_600SemiBold,
-        Nunito_700Bold,
-      });
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  });
 
   // Enable mouse drag scrolling for all scrollable elements on web
   useEffect(() => {

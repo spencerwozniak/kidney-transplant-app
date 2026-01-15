@@ -15,8 +15,12 @@ type SelectedCenterInfoProps = {
 
 export const SelectedCenterInfo = ({ center }: SelectedCenterInfoProps) => {
   return (
-    <View className={combineClasses(cards.colored.blue, 'mb-6')}>
-      <Text className={combineClasses(typography.h6, 'mb-2 text-blue-900')}>
+    <View
+      className={combineClasses(
+        cards.default.container,
+        'mb-6 border-l-4 border-blue-500 bg-white/95'
+      )}>
+      <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
         Contact Information
       </Text>
       <Text className={combineClasses(typography.body.medium, 'mb-1 text-blue-800')}>

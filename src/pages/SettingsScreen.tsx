@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Modal,
+  Animated,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { buttons, typography, combineClasses, layout, cards } from '../styles/theme';
+import { NavigationBar } from '../components/NavigationBar';
+import { PathwayBackground } from '../components/PathwayBackground';
 import { apiService, PatientStatus } from '../services/api';
 import { getWebPadding } from '../utils/webStyles';
 
@@ -13,6 +25,7 @@ type SettingsScreenProps = {
   onNavigateToFinancialAssessment?: () => void;
   onDeletePatient?: () => void;
   onDeletePatientConfirmed?: () => Promise<void>; // For web modal
+  onExportData?: () => void;
 };
 
 export const SettingsScreen = ({
@@ -23,11 +36,29 @@ export const SettingsScreen = ({
   onNavigateToFinancialAssessment,
   onDeletePatient,
   onDeletePatientConfirmed,
+  onExportData,
 }: SettingsScreenProps) => {
   const [patientStatus, setPatientStatus] = useState<PatientStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionnaireCompleted, setQuestionnaireCompleted] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(30));
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   useEffect(() => {
     fetchPatientStatus();
@@ -88,94 +119,99 @@ export const SettingsScreen = ({
   };
 
   return (
-    <SafeAreaView 
-      className={layout.container.default}
-      style={{ height: '100%', maxHeight: '100%' }}>
-      <ScrollView
-        className={layout.scrollView}
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-        style={{ height: '100%', maxHeight: '100%' }}>
-        <View 
-          style={getWebPadding(24, 32)} // px-6 py-8
-          className="flex-1 px-6 py-8">
-          {/* Header */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h2, 'mb-2 text-left')}>Settings</Text>
-            <Text className={combineClasses(typography.body.medium, 'text-left text-gray-600')}>
-              Manage your account and preferences
-            </Text>
-          </View>
-
-          {/* Patient Info */}
-          <View className="mb-8">
-            <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>Account</Text>
-            <View className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
-              <Text className={combineClasses(typography.body.small, 'mb-1 text-gray-500')}>
-                Patient Name
+    <LinearGradient
+      colors={['#90dcb5', '#57a67f']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradient}>
+      <PathwayBackground opacity={0.15} animate={false} />
+      <SafeAreaView className="flex-1">
+        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+              getWebPadding(24, 32),
+            ]}
+            className="px-6 py-8">
+            {/* Header */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
+                Account
               </Text>
-              <Text className={combineClasses(typography.body.large, 'font-semibold')}>
-                {patientName}
-              </Text>
+              <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
-            <View className="rounded-2xl bg-white p-4 shadow-sm">
-              <Text className={combineClasses(typography.body.small, 'mb-1 text-gray-500')}>
-                Current Pathway Stage
-              </Text>
-              <Text className={combineClasses(typography.body.large, 'font-semibold capitalize')}>
-                {currentStage.replace('-', ' ')}
-              </Text>
+
+            {/* Patient Info */}
+            <View className="mb-8">
+              <View className={combineClasses(cards.default.container, 'mb-4 bg-white/95')}>
+                <Text className={combineClasses(typography.body.small, 'mb-2 text-gray-500')}>
+                  Patient Name
+                </Text>
+                <Text
+                  className={combineClasses(typography.body.large, 'font-semibold text-blue-900')}>
+                  {patientName}
+                </Text>
+              </View>
+              <View className={combineClasses(cards.default.container, 'bg-white/95')}>
+                <Text className={combineClasses(typography.body.small, 'mb-2 text-gray-500')}>
+                  Current Pathway Stage
+                </Text>
+                <Text
+                  className={combineClasses(
+                    typography.body.large,
+                    'font-semibold capitalize text-blue-900'
+                  )}>
+                  {currentStage.replace('-', ' ')}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Actions */}
-          <View className="mb-6">
-            <Text className={combineClasses(typography.h5, 'mb-4 text-left')}>Actions</Text>
-            <View className="gap-3">
-              <TouchableOpacity
-                className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                onPress={onViewResults}
-                activeOpacity={0.8}
-                disabled={!onViewResults}>
-                <Text className={buttons.outline.text}>View Transplant Status</Text>
-              </TouchableOpacity>
+            {/* Actions */}
+            <View className="mb-8">
+              <Text className={combineClasses(typography.h5, 'mb-4 text-left text-white shadow')}>
+                Actions
+              </Text>
+              <View className="gap-3">
+                {onExportData && (
+                  <TouchableOpacity
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                    onPress={onExportData}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>Export Data</Text>
+                  </TouchableOpacity>
+                )}
 
-              {onNavigateToFinancialAssessment && (
+                {onNavigateToFinancialAssessment && (
+                  <TouchableOpacity
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                    onPress={onNavigateToFinancialAssessment}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>Financial Assessment</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            {/* Danger Zone */}
+            {onDeletePatient && (
+              <View className="mb-6">
+                <Text className={combineClasses(typography.h5, 'mb-4 text-left text-white shadow')}>
+                  Danger Zone
+                </Text>
                 <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={onNavigateToFinancialAssessment}
+                  className={combineClasses(buttons.danger.base, buttons.danger.enabled)}
+                  onPress={handleDeletePress}
                   activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>Financial Assessment</Text>
+                  <Text className={buttons.danger.text}>Delete Patient Data</Text>
                 </TouchableOpacity>
-              )}
-
-              {onViewChecklist && (
-                <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={onViewChecklist}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>View Evaluation Checklist</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* Danger Zone */}
-          {onDeletePatient && (
-            <View className="mb-6">
-              <Text className={combineClasses(typography.h5, 'mb-4 text-left text-red-600')}>
-                Danger Zone
-              </Text>
-              <TouchableOpacity
-                className={combineClasses(buttons.danger.base, buttons.danger.enabled)}
-                onPress={handleDeletePress}
-                activeOpacity={0.8}>
-                <Text className={buttons.danger.text}>Delete Patient Data</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+              </View>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
 
       {/* Web Delete Confirmation Modal */}
       {Platform.OS === 'web' && (
@@ -201,7 +237,11 @@ export const SettingsScreen = ({
               {/* Modal Actions */}
               <View className="mt-6 flex-row gap-3">
                 <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled, 'flex-1')}
+                  className={combineClasses(
+                    buttons.outline.base,
+                    buttons.outline.enabled,
+                    'flex-1'
+                  )}
                   onPress={handleCancelDelete}
                   activeOpacity={0.8}>
                   <Text className={buttons.outline.text}>Cancel</Text>
@@ -217,7 +257,12 @@ export const SettingsScreen = ({
           </View>
         </Modal>
       )}
-    </SafeAreaView>
+    </LinearGradient>
   );
 };
 
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+});

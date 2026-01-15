@@ -81,7 +81,7 @@ export const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
             className={`text-xs font-semibold ${
               activeTab === 'pathway' ? 'text-green-600' : 'text-gray-500'
             }`}>
-            Pathway
+            Journey
           </Text>
           {activeTab === 'pathway' && <View className="mt-1 h-0.5 w-8 rounded-full bg-green-600" />}
         </TouchableOpacity>

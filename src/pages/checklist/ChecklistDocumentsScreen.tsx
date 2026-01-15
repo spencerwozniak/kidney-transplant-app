@@ -455,11 +455,11 @@ export const ChecklistDocumentsScreen = ({
             {/* Header */}
             <View className="mb-8">
               <Text className={combineClasses(typography.h2, 'mb-6 text-white shadow')}>
-                {content.title}
+                Upload Documents
               </Text>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
               <Text className={combineClasses(typography.body.large, 'mt-4 text-white shadow')}>
-                {content.description}
+                {content.title}
               </Text>
             </View>
 
@@ -503,20 +503,6 @@ export const ChecklistDocumentsScreen = ({
                 </Text>
               </View>
             )}
-
-            {/* Why This Matters */}
-            <View
-              className={combineClasses(
-                cards.default.container,
-                'mb-6 border-l-4 border-green-500 bg-white/95'
-              )}>
-              <Text className={combineClasses(typography.h5, 'mb-2 text-green-900')}>
-                Why this matters:
-              </Text>
-              <Text className={combineClasses(typography.body.small, 'leading-6 text-green-800')}>
-                {content.why}
-              </Text>
-            </View>
 
             {/* Upload Documents Section */}
             <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95')}>

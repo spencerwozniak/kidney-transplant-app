@@ -16,6 +16,9 @@ import { AssessmentIntroScreen } from '../pages/transplant-assessment/Assessment
 import { PathwayScreen } from '../pages/pathway';
 import { SettingsScreen } from '../pages/SettingsScreen';
 import { ChatScreen } from '../pages/ChatScreen';
+import { ExportScreen } from '../pages/ExportScreen';
+import { ClinicalSummaryScreen } from '../pages/ClinicalSummaryScreen';
+import { StructuredDataScreen } from '../pages/StructuredDataScreen';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { TransplantQuestionnaire } from '../pages/transplant-assessment/TransplantQuestionnaire';
 import { FinancialIntroScreen } from '../pages/financial-assessment/FinancialIntroScreen';
@@ -143,12 +146,14 @@ export function ScreenRouter({
       <FinancialIntroScreen
         onBeginAssessment={financialHandlers.handleBeginFinancialAssessment}
         onBack={() => {
-          // Navigate back to assessment intro (if no financial profile exists)
-          setCurrentScreen('assessment-intro');
+          // Navigate to Settings screen (home with account tab)
+          setCurrentScreen('home');
+          setActiveTab('account');
         }}
         onNavigateToHome={() => {
-          // Navigate to home (if financial profile exists)
+          // Navigate to Settings screen (home with account tab)
           setCurrentScreen('home');
+          setActiveTab('account');
         }}
       />
     );
@@ -201,7 +206,11 @@ export function ScreenRouter({
               onViewReferral={() => setCurrentScreen('referral-view')}
             />
           ) : activeTab === 'chat' ? (
-            <ChatScreen patientName={patient?.name || 'Friend'} />
+            <ChatScreen
+              patientName={patient?.name || 'Friend'}
+              onNavigateToPathway={() => setActiveTab('pathway')}
+              onNavigateToChecklist={checklistHandlers.handleViewChecklist}
+            />
           ) : (
             <SettingsScreen
               patientName={patient?.name || 'Friend'}
@@ -211,6 +220,7 @@ export function ScreenRouter({
               onNavigateToFinancialAssessment={financialHandlers.handleEditFinancialAssessment}
               onDeletePatient={patientHandlers.handleDeletePatient}
               onDeletePatientConfirmed={patientHandlers.handleDeletePatientConfirmed}
+              onExportData={() => setCurrentScreen('export')}
             />
           )}
         </View>
@@ -275,6 +285,35 @@ export function ScreenRouter({
       <ReferralViewScreen
         onNavigateBack={() => setCurrentScreen('home')}
         onNavigateToFindCenters={() => setCurrentScreen('transplant-navigator')}
+      />
+    );
+  }
+
+  // ============================================================================
+  // DATA EXPORT
+  // ============================================================================
+  if (currentScreen === 'export') {
+    return (
+      <ExportScreen
+        onBack={() => setCurrentScreen('home')}
+        onExportClinicalSummary={() => setCurrentScreen('clinical-summary')}
+        onExportStructuredData={() => setCurrentScreen('structured-data')}
+      />
+    );
+  }
+
+  if (currentScreen === 'clinical-summary') {
+    return (
+      <ClinicalSummaryScreen
+        onBack={() => setCurrentScreen('export')}
+      />
+    );
+  }
+
+  if (currentScreen === 'structured-data') {
+    return (
+      <StructuredDataScreen
+        onBack={() => setCurrentScreen('export')}
       />
     );
   }

@@ -240,33 +240,33 @@ export const ChecklistItemEditScreen = ({
                   When was this evaluation completed?
                 </Text>
 
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(true)}
-                disabled={!isComplete}
-                className={combineClasses(
-                  inputs.default.container,
-                  inputs.default.input,
-                  !isComplete ? 'bg-gray-100' : 'bg-white'
-                )}>
-                <Text
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  disabled={!isComplete}
                   className={combineClasses(
-                    typography.body.medium,
-                    !isComplete ? 'text-gray-400' : 'text-gray-900'
+                    inputs.default.container,
+                    inputs.default.input,
+                    !isComplete ? 'bg-gray-100' : 'bg-white'
                   )}>
-                  {completedAt.toLocaleString()}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    className={combineClasses(
+                      typography.body.medium,
+                      !isComplete ? 'text-gray-400' : 'text-gray-900'
+                    )}>
+                    {completedAt.toLocaleString()}
+                  </Text>
+                </TouchableOpacity>
 
-              {Platform.OS === 'android' && showDatePicker && (
-                <DateTimePicker
-                  value={completedAt}
-                  mode="datetime"
-                  display="default"
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
-                />
-              )}
-            </View>
+                {Platform.OS === 'android' && showDatePicker && (
+                  <DateTimePicker
+                    value={completedAt}
+                    mode="datetime"
+                    display="default"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
+              </View>
 
               {/* Documents Card - Always visible */}
               {onRequestDocuments && (
@@ -277,25 +277,25 @@ export const ChecklistItemEditScreen = ({
                     !isComplete ? 'opacity-50' : ''
                   )}>
                   <Text className={combineClasses(typography.h5, 'mb-2 text-blue-900')}>
-                    Request Documents
+                    Upload Documents
                   </Text>
                   <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
                     Learn what documents you should request from your provider for this evaluation
                   </Text>
-                <TouchableOpacity
-                  className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
-                  onPress={async () => {
-                    // Save changes before navigating to documents screen
-                    // Skip the onSave callback to preserve editingChecklistItem state
-                    await handleSave(true);
-                    onRequestDocuments();
-                  }}
-                  disabled={!isComplete}
-                  activeOpacity={0.8}>
-                  <Text className={buttons.outline.text}>Request Documents</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+                  <TouchableOpacity
+                    className={combineClasses(buttons.outline.base, buttons.outline.enabled)}
+                    onPress={async () => {
+                      // Save changes before navigating to documents screen
+                      // Skip the onSave callback to preserve editingChecklistItem state
+                      await handleSave(true);
+                      onRequestDocuments();
+                    }}
+                    disabled={!isComplete}
+                    activeOpacity={0.8}>
+                    <Text className={buttons.outline.text}>Upload Documents</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Notes */}
               <View
@@ -308,77 +308,77 @@ export const ChecklistItemEditScreen = ({
                 <Text className={combineClasses(typography.body.small, 'mb-4 text-gray-600')}>
                   Add notes about where records are stored or other details
                 </Text>
-              <TextInput
-                ref={notesInputRef}
-                value={notes}
-                onChangeText={handleNotesChange}
-                placeholder="Enter your notes here..."
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={6}
-                editable={isComplete}
-                className={combineClasses(
-                  inputs.default.container,
-                  inputs.default.input,
-                  'min-h-[120px] text-left',
-                  !isComplete ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-900'
-                )}
-                textAlignVertical="top"
-              />
+                <TextInput
+                  ref={notesInputRef}
+                  value={notes}
+                  onChangeText={handleNotesChange}
+                  placeholder="Enter your notes here..."
+                  placeholderTextColor="#9ca3af"
+                  multiline
+                  numberOfLines={6}
+                  editable={isComplete}
+                  className={combineClasses(
+                    inputs.default.container,
+                    inputs.default.input,
+                    'min-h-[120px] text-left',
+                    !isComplete ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-900'
+                  )}
+                  textAlignVertical="top"
+                />
               </View>
             </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
 
-      {/* Keyboard Toolbar with Done Button */}
-      {isKeyboardVisible && (
-        <View
-          className="absolute left-0 right-0 border-t border-gray-200 bg-white"
-          style={{ bottom: insets.bottom }}>
-          <View className="flex-row justify-end px-4 py-2">
-            <TouchableOpacity onPress={handleDismissKeyboard}>
-              <Text className="text-lg font-semibold text-blue-500">Done</Text>
-            </TouchableOpacity>
+        {/* Keyboard Toolbar with Done Button */}
+        {isKeyboardVisible && (
+          <View
+            className="absolute left-0 right-0 border-t border-gray-200 bg-white"
+            style={{ bottom: insets.bottom }}>
+            <View className="flex-row justify-end px-4 py-2">
+              <TouchableOpacity onPress={handleDismissKeyboard}>
+                <Text className="text-lg font-semibold text-blue-500">Done</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Date/Time Picker Modal for iOS */}
-      {Platform.OS === 'ios' && (
-        <Modal
-          visible={showDatePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowDatePicker(false)}>
-          <View className="flex-1 justify-end bg-black/50">
-            <View className="overflow-hidden rounded-t-3xl bg-white">
-              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text className="text-xl text-blue-500">Cancel</Text>
-                </TouchableOpacity>
-                <Text className="text-xl font-semibold">Completion Date & Time</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDatePicker(false);
-                  }}>
-                  <Text className="text-xl font-semibold text-blue-500">Done</Text>
-                </TouchableOpacity>
-              </View>
-              <View className="items-center">
-                <DateTimePicker
-                  value={completedAt}
-                  mode="datetime"
-                  display="spinner"
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
-                  textColor="#000000"
-                  style={{ width: '100%', height: 280, transform: [{ scale: 1.05 }] }}
-                />
+        {/* Date/Time Picker Modal for iOS */}
+        {Platform.OS === 'ios' && (
+          <Modal
+            visible={showDatePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowDatePicker(false)}>
+            <View className="flex-1 justify-end bg-black/50">
+              <View className="overflow-hidden rounded-t-3xl bg-white">
+                <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-3">
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text className="text-xl text-blue-500">Cancel</Text>
+                  </TouchableOpacity>
+                  <Text className="text-xl font-semibold">Completion Date & Time</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowDatePicker(false);
+                    }}>
+                    <Text className="text-xl font-semibold text-blue-500">Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <View className="items-center">
+                  <DateTimePicker
+                    value={completedAt}
+                    mode="datetime"
+                    display="spinner"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    textColor="#000000"
+                    style={{ width: '100%', height: 280, transform: [{ scale: 1.05 }] }}
+                  />
+                </View>
               </View>
             </View>
-        </View>
-      </Modal>
-    )}
+          </Modal>
+        )}
       </SafeAreaView>
     </LinearGradient>
   );

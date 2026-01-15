@@ -37,26 +37,11 @@ export const FinancialIntroScreen = ({
     ]).start();
   }, []);
 
-  const handleBack = async () => {
-    // Only check for financial profile when back button is pressed (lazy check)
-    // This avoids unnecessary API calls for first-time users
-    try {
-      await apiService.getFinancialProfile();
-      // If profile exists, navigate to home
-      if (onNavigateToHome) {
-        onNavigateToHome();
-        return;
-      }
-    } catch (error: any) {
-      // If profile not found (404), that's okay - user hasn't completed it yet
-      // Use default onBack behavior
-      if (!error.message?.includes('404') && !error.message?.includes('not found')) {
-        console.error('Error checking financial profile:', error);
-      }
-    }
-
-    // Default: navigate back to previous screen (assessment intro)
-    if (onBack) {
+  const handleBack = () => {
+    // Always navigate to Settings screen (home with account tab)
+    if (onNavigateToHome) {
+      onNavigateToHome();
+    } else if (onBack) {
       onBack();
     }
   };
