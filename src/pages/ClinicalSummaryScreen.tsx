@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Animated, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,11 +14,13 @@ type ClinicalSummaryScreenProps = {
 };
 
 export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) => {
-  const [summary, setSummary] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   useEffect(() => {
     Animated.parallel([
@@ -39,40 +41,53 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
     fetchClinicalSummary();
   }, []);
 
+  // Auto-scroll to bottom as content streams in
+  useEffect(() => {
+    if (isStreaming && summary && scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [summary, isStreaming]);
+
   const fetchClinicalSummary = async () => {
     setIsLoading(true);
+    setIsStreaming(false);
     setError(null);
+    setSummary('');
+    
     try {
-      const data = await apiService.exportClinicalSummary();
-      setSummary(data.summary);
+      let accumulatedSummary = '';
+      
+      await apiService.exportClinicalSummaryStream(
+        (chunk: string) => {
+          // Update summary as chunks arrive
+          accumulatedSummary += chunk;
+          setSummary(accumulatedSummary);
+          setIsStreaming(true);
+          setIsLoading(false); // Stop showing spinner once first chunk arrives
+        },
+        () => {
+          // On complete
+          setIsStreaming(false);
+          setIsLoading(false);
+        },
+        (errorMsg: string) => {
+          // On error
+          console.error('Error streaming clinical summary:', errorMsg);
+          setError(errorMsg || 'Failed to generate clinical summary');
+          setIsStreaming(false);
+          setIsLoading(false);
+        }
+      );
     } catch (err: any) {
       console.error('Error fetching clinical summary:', err);
       setError(err?.message || 'Failed to generate clinical summary');
-    } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <LinearGradient
-        colors={['#90dcb5', '#57a67f']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.gradient}>
-        <PathwayBackground opacity={0.15} animate={false} />
-        <SafeAreaView className="flex-1">
-          <NavigationBar onBack={onBack} />
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#ffffff" />
-            <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
-              Generating clinical summary...
-            </Text>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
 
   return (
     <LinearGradient
@@ -83,7 +98,10 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
       <PathwayBackground opacity={0.15} animate={false} />
       <SafeAreaView className="flex-1">
         <NavigationBar onBack={onBack} />
-        <ScrollView className={layout.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          ref={scrollViewRef}
+          className={layout.scrollView} 
+          showsVerticalScrollIndicator={false}>
           <Animated.View
             style={[
               {
@@ -101,6 +119,16 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
               <View className="h-1 w-16 rounded-full bg-white shadow" />
             </View>
 
+            {/* Loading State - Only show if not streaming yet */}
+            {isLoading && !isStreaming && (
+              <View className="items-center py-8">
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text className={combineClasses(typography.body.medium, 'mt-4 text-white shadow')}>
+                  Generating clinical summary...
+                </Text>
+              </View>
+            )}
+
             {/* Error State */}
             {error && (
               <View className={combineClasses(cards.default.container, 'mb-8 bg-white/95')}>
@@ -111,10 +139,27 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
               </View>
             )}
 
-            {/* Clinical Summary Content */}
-            {summary && (
+            {/* Clinical Summary Content - Show as it streams */}
+            {(summary || isStreaming) && (
               <View className={combineClasses(cards.default.container, 'mb-6 bg-white/95 p-6')}>
-                <Markdown style={markdownStyles}>{summary}</Markdown>
+                {summary ? (
+                  <Markdown style={markdownStyles}>{summary}</Markdown>
+                ) : (
+                  <View className="items-center py-4">
+                    <ActivityIndicator size="small" color="#3b82f6" />
+                    <Text className={combineClasses(typography.body.small, 'mt-2 text-gray-600')}>
+                      Starting generation...
+                    </Text>
+                  </View>
+                )}
+                {isStreaming && (
+                  <View className="mt-4 flex-row items-center">
+                    <ActivityIndicator size="small" color="#3b82f6" />
+                    <Text className={combineClasses(typography.body.small, 'ml-2 text-gray-600')}>
+                      Generating...
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
           </Animated.View>

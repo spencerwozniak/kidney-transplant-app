@@ -169,9 +169,6 @@ export const DocumentTextViewerScreen = ({
             {/* Text Content */}
             {!isLoading && !error && textContent && (
               <View className={combineClasses(cards.default.container, 'bg-white/95')}>
-                <Text className={combineClasses(typography.h5, 'mb-4 text-gray-900')}>
-                  Extracted Text Content
-                </Text>
                 <Text
                   className={combineClasses(
                     typography.body.small,

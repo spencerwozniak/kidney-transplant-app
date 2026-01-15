@@ -1072,6 +1072,132 @@ class ApiService {
       '/api/v1/patients/clinical-summary'
     );
   }
+
+  /**
+   * Stream clinical summary generation
+   * 
+   * @param onChunk - Callback for each text chunk received
+   * @param onComplete - Callback when streaming completes
+   * @param onError - Callback for errors
+   */
+  async exportClinicalSummaryStream(
+    onChunk: (chunk: string) => void,
+    onComplete?: () => void,
+    onError?: (error: string) => void
+  ): Promise<void> {
+    const url = this.buildUrl(`/api/v1/patients/clinical-summary/stream`);
+
+    // Use canonical device id
+    const deviceId = DEVICE_ID || getOrCreateDeviceId();
+
+    // Use XMLHttpRequest for React Native streaming support
+    // React Native's fetch doesn't support streaming (response.body is null)
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.setRequestHeader('X-Device-ID', deviceId);
+
+      let buffer = '';
+      let lastProcessedIndex = 0;
+      let isDone = false;
+
+      xhr.onprogress = () => {
+        // Process new data as it arrives incrementally
+        const currentLength = xhr.responseText.length;
+        if (currentLength > lastProcessedIndex) {
+          const newData = xhr.responseText.substring(lastProcessedIndex);
+          lastProcessedIndex = currentLength;
+
+          buffer += newData;
+          const lines = buffer.split('\n');
+
+          // Keep the last incomplete line in the buffer
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() && line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.error) {
+                  if (onError) {
+                    onError(data.error);
+                  }
+                  xhr.abort();
+                  reject(new Error(data.error));
+                  return;
+                }
+                if (data.done) {
+                  isDone = true;
+                  if (onComplete) {
+                    onComplete();
+                  }
+                  resolve();
+                  return;
+                }
+                if (data.chunk !== undefined) {
+                  onChunk(data.chunk);
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                console.warn('Failed to parse SSE data:', line, e);
+              }
+            }
+          }
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // Process any remaining buffer
+          if (buffer.trim()) {
+            const lines = buffer.trim().split('\n');
+            for (const line of lines) {
+              if (line.trim() && line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.error && onError) {
+                    onError(data.error);
+                  } else if (data.done && !isDone) {
+                    if (onComplete) {
+                      onComplete();
+                    }
+                  } else if (data.chunk !== undefined) {
+                    onChunk(data.chunk);
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse final SSE data:', line, e);
+                }
+              }
+            }
+          }
+
+          // Ensure complete is called if not already done
+          if (!isDone && onComplete) {
+            onComplete();
+          }
+          if (!isDone) {
+            resolve();
+          }
+        } else {
+          const errorMsg = `HTTP error! status: ${xhr.status}`;
+          if (onError) {
+            onError(errorMsg);
+          }
+          reject(new Error(errorMsg));
+        }
+      };
+
+      xhr.onerror = () => {
+        const errorMsg = 'Network error while streaming clinical summary';
+        if (onError) {
+          onError(errorMsg);
+        }
+        reject(new Error(errorMsg));
+      };
+
+      xhr.send();
+    });
+  }
 }
 
 export const apiService = new ApiService();
