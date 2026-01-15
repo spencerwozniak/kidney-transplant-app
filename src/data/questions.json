@@ -6,12 +6,6 @@
     "description": "Cancer that has spread to other parts of the body or active cancer that is currently being treated"
   },
   {
-    "id": "metastatic_cancer",
-    "category": "absolute",
-    "question": "Do you have metastatic cancer or active malignancy?",
-    "description": "Cancer that has spread to other parts of the body or active cancer that is currently being treated"
-  },
-  {
     "id": "decompensated_cirrhosis",
     "category": "absolute",
     "question": "Do you have decompensated cirrhosis?",

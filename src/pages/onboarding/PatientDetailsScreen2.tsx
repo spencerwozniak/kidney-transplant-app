@@ -24,7 +24,12 @@ import { WheelPicker } from '../../components/WheelPicker';
 import { WheelDatePicker } from '../../components/WheelDatePicker';
 
 type PatientDetailsScreen2Props = {
-  onNext: (data: { date_of_birth: string; sex?: string; height_cm?: number; weight_kg?: number }) => void;
+  onNext: (data: {
+    date_of_birth: string;
+    sex?: string;
+    height_cm?: number;
+    weight_kg?: number;
+  }) => void;
   onBack?: () => void;
   initialData?: {
     date_of_birth?: string;
@@ -121,7 +126,7 @@ export const PatientDetailsScreen2 = ({
     const date = formData.dateOfBirth;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (!date) {
       newErrors.dateOfBirth = 'Date of birth is required.';
     } else if (date >= today) {
@@ -161,11 +166,13 @@ export const PatientDetailsScreen2 = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateField = (field: keyof typeof formData) => {
+  const validateField = (field: keyof typeof formData, value?: any) => {
     const newErrors = { ...errors };
+    // Use provided value or fall back to current formData
+    const fieldValue = value !== undefined ? value : formData[field];
 
     if (field === 'dateOfBirth') {
-      const date = formData.dateOfBirth;
+      const date = fieldValue as Date;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -184,7 +191,8 @@ export const PatientDetailsScreen2 = ({
     }
 
     if (field === 'sex') {
-      if (!formData.sex || formData.sex.trim() === '') {
+      const sexValue = fieldValue as string;
+      if (!sexValue || sexValue.trim() === '') {
         newErrors.sex = 'Please select sex assigned at birth.';
       } else {
         delete newErrors.sex;
@@ -192,7 +200,8 @@ export const PatientDetailsScreen2 = ({
     }
 
     if (field === 'heightFeet' || field === 'heightInches') {
-      if (!formData.heightFeet || formData.heightFeet === '') {
+      const heightFeetValue = field === 'heightFeet' ? (fieldValue as string) : formData.heightFeet;
+      if (!heightFeetValue || heightFeetValue === '') {
         newErrors.height = 'Height is required.';
       } else {
         delete newErrors.height;
@@ -200,7 +209,7 @@ export const PatientDetailsScreen2 = ({
     }
 
     if (field === 'weightLbs') {
-      const weightStr = formData.weightLbs.trim();
+      const weightStr = (fieldValue as string).trim();
       if (!weightStr) {
         newErrors.weight = 'Weight is required.';
       } else if (!/^\d+(\.\d+)?$/.test(weightStr)) {
@@ -245,7 +254,13 @@ export const PatientDetailsScreen2 = ({
         console.log('  Input:');
         console.log('    • DOB selected:', date);
         console.log('    • Sex selected:', formData.sex);
-        console.log('    • Height entered:', formData.heightFeet, 'ft', formData.heightInches, 'in');
+        console.log(
+          '    • Height entered:',
+          formData.heightFeet,
+          'ft',
+          formData.heightInches,
+          'in'
+        );
         console.log('    • Weight entered:', weightLbs, 'lbs');
         console.log('  Output:');
         console.log('    • DOB (ISO):', date_of_birth);
@@ -292,7 +307,7 @@ export const PatientDetailsScreen2 = ({
   const isFormValid = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Check DOB
     if (!formData.dateOfBirth || formData.dateOfBirth >= today) {
       return false;
@@ -434,7 +449,9 @@ export const PatientDetailsScreen2 = ({
                     )}
                     onPress={() => {
                       updateField('sex', option);
-                      handleBlur('sex');
+                      // Validate with the new value immediately
+                      validateField('sex', option);
+                      setTouched((prev) => ({ ...prev, sex: true }));
                     }}>
                     <Text
                       className={combineClasses(
