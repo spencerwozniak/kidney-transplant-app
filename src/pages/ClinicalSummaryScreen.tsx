@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Animated, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
-import { typography, combineClasses, layout, cards } from '../styles/theme';
+import { typography, combineClasses, layout, cards, getButtonClasses } from '../styles/theme';
 import { NavigationBar } from '../components/NavigationBar';
 import { PathwayBackground } from '../components/PathwayBackground';
 import { apiService } from '../services/api';
@@ -18,6 +27,9 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
   const [isLoading, setIsLoading] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
   const scrollViewRef = React.useRef<ScrollView>(null);
@@ -55,10 +67,10 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
     setIsStreaming(false);
     setError(null);
     setSummary('');
-    
+
     try {
       let accumulatedSummary = '';
-      
+
       await apiService.exportClinicalSummaryStream(
         (chunk: string) => {
           // Update summary as chunks arrive
@@ -88,6 +100,36 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
     }
   };
 
+  const handleShareWithProvider = async () => {
+    if (!summary) {
+      Alert.alert('Error', 'No summary available to share');
+      return;
+    }
+
+    setIsSharing(true);
+    setShareError(null);
+    setShareSuccess(false);
+
+    try {
+      const result = await apiService.shareClinicalSummary(summary);
+      if (result.success) {
+        setShareSuccess(true);
+        Alert.alert('Success', 'Clinical summary has been sent to your provider via email.');
+      } else {
+        throw new Error(result.message || 'Failed to share clinical summary');
+      }
+    } catch (err: any) {
+      console.error('Error sharing clinical summary:', err);
+      const errorMsg = err?.message || 'Failed to share clinical summary. Please try again.';
+      setShareError(errorMsg);
+      Alert.alert('Error', errorMsg);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // Determine if share button should be shown
+  const showShareButton = !isLoading && !isStreaming && summary && !error;
 
   return (
     <LinearGradient
@@ -98,9 +140,9 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
       <PathwayBackground opacity={0.15} animate={false} />
       <SafeAreaView className="flex-1">
         <NavigationBar onBack={onBack} />
-        <ScrollView 
+        <ScrollView
           ref={scrollViewRef}
-          className={layout.scrollView} 
+          className={layout.scrollView}
           showsVerticalScrollIndicator={false}>
           <Animated.View
             style={[
@@ -157,6 +199,56 @@ export const ClinicalSummaryScreen = ({ onBack }: ClinicalSummaryScreenProps) =>
                     <ActivityIndicator size="small" color="#3b82f6" />
                     <Text className={combineClasses(typography.body.small, 'ml-2 text-gray-600')}>
                       Generating...
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Share with Provider Button - Show when stream is complete */}
+            {showShareButton && (
+              <View className="mb-6">
+                <TouchableOpacity
+                  onPress={handleShareWithProvider}
+                  disabled={isSharing}
+                  activeOpacity={0.8}
+                  className={combineClasses(
+                    getButtonClasses('outline', isSharing ? 'disabled' : 'enabled').container,
+                    'w-full'
+                  )}>
+                  {isSharing ? (
+                    <View className="flex-row items-center justify-center">
+                      <ActivityIndicator size="small" color="#ffffff" />
+                      <Text
+                        className={combineClasses(
+                          getButtonClasses('outline', 'enabled').text,
+                          'ml-2'
+                        )}>
+                        Sending...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className={getButtonClasses('outline', 'enabled').text}>
+                      Share with Provider
+                    </Text>
+                  )}
+                </TouchableOpacity>
+                {shareSuccess && (
+                  <View className="mt-3 rounded-lg bg-green-50 p-3">
+                    <Text
+                      className={combineClasses(
+                        typography.body.small,
+                        'text-center text-green-800'
+                      )}>
+                      ✓ Summary sent successfully!
+                    </Text>
+                  </View>
+                )}
+                {shareError && (
+                  <View className="mt-3 rounded-lg bg-red-50 p-3">
+                    <Text
+                      className={combineClasses(typography.body.small, 'text-center text-red-800')}>
+                      {shareError}
                     </Text>
                   </View>
                 )}

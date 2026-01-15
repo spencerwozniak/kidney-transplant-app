@@ -1198,6 +1198,21 @@ class ApiService {
       xhr.send();
     });
   }
+
+  /**
+   * Share clinical summary with provider (convert to PDF and send via email)
+   * 
+   * @param markdownContent - The markdown content of the clinical summary
+   */
+  async shareClinicalSummary(markdownContent: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(
+      '/api/v1/patients/clinical-summary/share',
+      {
+        method: 'POST',
+        body: JSON.stringify({ markdown_content: markdownContent }),
+      }
+    );
+  }
 }
 
 export const apiService = new ApiService();
